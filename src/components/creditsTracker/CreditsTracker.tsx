@@ -1,13 +1,15 @@
 import React from 'react';
+import './CreditsTracker.css';
 
 interface CreditsTrackerProps {
-  // Props will be added later
+  credits?: number;
 }
 
-const CreditsTracker: React.FC<CreditsTrackerProps> = () => {
+const CreditsTracker: React.FC<CreditsTrackerProps> = ({ credits = 0 }) => {
   return (
-    <div>
-      {/* Component content will be added later */}
+    <div className="credits-tracker">
+      <div className="credits-label">Credits</div>
+      <div className="credits-amount">₵ {credits.toLocaleString()}</div>
     </div>
   );
 };

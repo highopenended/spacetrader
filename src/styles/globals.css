@@ -22,7 +22,8 @@
   
   /* Layout */
   --max-width: 1200px;
-  --border-radius: 4px;
+  --border-radius-small: 2px;
+  --border-radius-medium: 2px;
 }
 
 * {
