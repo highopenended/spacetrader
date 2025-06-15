@@ -6,8 +6,10 @@ interface CreditsTrackerProps {
 }
 
 const CreditsTracker: React.FC<CreditsTrackerProps> = ({ credits = 0 }) => {
+  const isNegative = credits < 0;
+  
   return (
-    <div className="credits-tracker">
+    <div className={`credits-tracker ${isNegative ? 'negative' : ''}`}>
       <div className="credits-label">Credits</div>
       <div className="credits-amount">₵ {credits.toLocaleString()}</div>
     </div>

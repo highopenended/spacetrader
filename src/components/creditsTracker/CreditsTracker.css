@@ -17,6 +17,17 @@
   text-align: right;
 }
 
+.credits-tracker.negative {
+  color: #ff0000;
+  text-shadow: 0 0 5px #ff0000;
+  border-color: #660000;
+}
+
+.credits-tracker.negative .credits-amount {
+  color: #ff0000;
+  text-shadow: 0 0 8px #ff0000;
+}
+
 .credits-label {
   font-size: var(--font-size-small);
   text-transform: uppercase;
