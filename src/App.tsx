@@ -14,7 +14,7 @@ function App() {
   return (
     <div className="App">
       <CreditsTracker credits={credits} />
-      <GameTimeTracker gameTime={gameTime} gamePhase={gamePhase} />
+      <GameTimeTracker gameTime={gameTime} gamePhase={gamePhase} isPaused={isPaused} />
       <AdminToolbar 
         credits={credits}
         gamePhase={gamePhase}
