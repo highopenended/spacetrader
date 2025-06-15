@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { GameTime, GameTimeState } from '../types/gameTime';
+import { GameTime } from '../types/gameState';
+import { advanceGameTime } from '../utils/gameStateUtils';
+
+interface GameTimeState {
+  currentTime: GameTime;
+  isPaused: boolean;
+  lastUpdate: number;
+}
 
 const initialGameTime: GameTime = {
   annumReckoning: 242,
@@ -15,39 +22,22 @@ const initialGameTimeState: GameTimeState = {
   lastUpdate: Date.now()
 };
 
-export const useGameTime = () => {
+export const useGameState_Time = () => {
   const [gameTimeState, setGameTimeState] = useState<GameTimeState>(initialGameTimeState);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const advanceTime = () => {
+    console.log('ADVANCING TIME');
+
     setGameTimeState(prev => {
       const newTime = { ...prev.currentTime };
+      newTime.grind++; // Increment grind first
       
-      // Advance grind (day)
-      newTime.grind++;
-      
-      // Check if we need to advance ledger cycle
-      if (newTime.grind > 8) {
-        newTime.grind = 1;
-        newTime.ledgerCycle++;
-        
-        // Check if we need to advance tithe
-        if (newTime.ledgerCycle > 20) {
-          newTime.ledgerCycle = 1;
-          newTime.tithe++;
-          
-          // Check if we need to advance annum reckoning
-          if (newTime.tithe > 4) {
-            newTime.tithe = 1;
-            newTime.annumReckoning++;
-            newTime.age++;
-          }
-        }
-      }
+      const advancedTime = advanceGameTime(newTime);
       
       return {
         ...prev,
-        currentTime: newTime,
+        currentTime: advancedTime,
         lastUpdate: Date.now()
       };
     });

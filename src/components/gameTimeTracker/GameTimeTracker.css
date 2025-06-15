@@ -11,7 +11,7 @@
   font-family: 'Courier New', monospace;
   color: #888;
   z-index: 1000;
-  min-width: 120px; /* Same width as credits tracker */
+  width: 15vw;
   text-align: right;
   font-size: var(--font-size-small);
   line-height: 1.2;

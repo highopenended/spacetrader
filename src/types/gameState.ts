@@ -1,3 +1,11 @@
+export interface GameTime {
+  annumReckoning: number;  // Year
+  ledgerCycle: number;     // Month (1-20)
+  grind: number;           // Day (1-8)
+  tithe: number;           // Period (1-4, 1 per 5 ledger cycles)
+  age: number;             // Player age
+}
+
 export type GamePhase = 
   | 'lineRat'
   | 'bayBoss' 
@@ -13,7 +21,9 @@ export type GamePhase =
 export interface GameState {
   gamePhase: GamePhase;
   credits: number;
-  // Add more game state properties as needed
+  currentTime: GameTime;
+  isPaused: boolean;
+  lastUpdate: number;      // Timestamp of last update
 }
 
 export const GAME_PHASES: Record<GamePhase, { id: number; title: string; description: string }> = {
