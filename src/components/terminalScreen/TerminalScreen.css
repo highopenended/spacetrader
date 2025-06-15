@@ -1,0 +1,186 @@
+.terminal-screen {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 18vw;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  border: 3px solid #333;
+  border-radius: 8px;
+  box-shadow: 
+    0 0 20px rgba(0, 0, 0, 0.8),
+    inset 0 0 20px rgba(255, 255, 255, 0.05);
+  font-family: 'Courier New', monospace;
+  z-index: 1000;
+  overflow: hidden;
+  transform: perspective(1000px) rotateX(1deg);
+  transform-origin: center center;
+}
+
+
+
+.terminal-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(ellipse at center, transparent 20%, rgba(0, 0, 0, 0.15) 70%, rgba(0, 0, 0, 0.4) 100%),
+    radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.2) 100%),
+    linear-gradient(0deg, transparent 2px, rgba(0, 255, 0, 0.03) 2px, rgba(0, 255, 0, 0.03) 4px, transparent 4px);
+  background-size: 100% 100%, 100% 100%, 100% 4px;
+  pointer-events: none;
+  z-index: 10;
+  border-radius: inherit;
+}
+
+/* Subtle lens distortion effect */
+.terminal-screen::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: 
+    radial-gradient(ellipse at center, 
+      transparent 30%, 
+      rgba(255, 255, 255, 0.02) 60%, 
+      rgba(255, 255, 255, 0.05) 80%, 
+      rgba(255, 255, 255, 0.08) 100%
+    );
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 25;
+  mix-blend-mode: overlay;
+}
+
+.terminal-header {
+  background: linear-gradient(135deg, #222 0%, #111 100%);
+  border-bottom: 2px solid #444;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.terminal-title {
+  color: #ccc;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-light {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid #333;
+  position: relative;
+}
+
+.status-indicator.online .status-light {
+  background: #00ff00;
+  box-shadow: 
+    0 0 8px #00ff00,
+    inset 0 0 4px rgba(255, 255, 255, 0.3);
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+.status-indicator.offline .status-light {
+  background: #ff0000;
+  box-shadow: 
+    0 0 8px #ff0000,
+    inset 0 0 4px rgba(255, 255, 255, 0.3);
+  animation: pulse-red 2s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.status-text {
+  font-size: 8px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.status-indicator.online .status-text {
+  color: #00ff00;
+  text-shadow: 0 0 3px #00ff00;
+}
+
+.status-indicator.offline .status-text {
+  color: #ff0000;
+  text-shadow: 0 0 3px #ff0000;
+}
+
+.terminal-content {
+  position: relative;
+  background: #0a0a0a;
+}
+
+.terminal-window {
+  position: relative;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid #333;
+}
+
+.terminal-window:last-child {
+  border-bottom: none;
+}
+
+.terminal-window .credits-tracker,
+.terminal-window .game-time-tracker {
+  position: relative;
+  top: auto;
+  right: auto;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  width: 100%;
+  margin: 0;
+}
+
+.terminal-window .credits-tracker::before,
+.terminal-window .game-time-tracker::before {
+  display: none;
+}
+
+.terminal-scanlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(255, 255, 255, 0.02) 2px,
+    rgba(255, 255, 255, 0.02) 4px
+  );
+  pointer-events: none;
+  z-index: 5;
+  animation: scanlines-flicker 3s linear infinite;
+}
+
+@keyframes scanlines-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.95; }
+} 

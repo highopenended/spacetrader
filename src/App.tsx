@@ -1,6 +1,5 @@
 import React from 'react';
-import CreditsTracker from './components/creditsTracker/CreditsTracker';
-import GameTimeTracker from './components/gameTimeTracker/GameTimeTracker';
+import TerminalScreen from './components/terminalScreen/TerminalScreen';
 import AdminToolbar from './components/adminToolbar/AdminToolbar';
 import { useGameState_Credits } from './hooks/useGameState_Credits';
 import { useGameState_Phases } from './hooks/useGameState_Phases';
@@ -13,8 +12,12 @@ function App() {
 
   return (
     <div className="App">
-      <CreditsTracker credits={credits} />
-      <GameTimeTracker gameTime={gameTime} gamePhase={gamePhase} isPaused={isPaused} />
+      <TerminalScreen 
+        credits={credits}
+        gameTime={gameTime}
+        gamePhase={gamePhase}
+        isOnline={!isPaused}
+      />
       <AdminToolbar 
         credits={credits}
         gamePhase={gamePhase}

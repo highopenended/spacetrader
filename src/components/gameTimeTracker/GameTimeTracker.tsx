@@ -6,23 +6,16 @@ import { getTitheName, getLedgerCycleName, getAnnumReckoningName, getGrindName }
 interface GameTimeTrackerProps {
   gameTime: GameTime;
   gamePhase: GamePhase;
-  isPaused?: boolean;
 }
 
-const GameTimeTracker: React.FC<GameTimeTrackerProps> = ({ gameTime, gamePhase, isPaused = false }) => {
+const GameTimeTracker: React.FC<GameTimeTrackerProps> = ({ gameTime, gamePhase }) => {
   const { annumReckoning, ledgerCycle, grind, tithe, age } = gameTime;
 
   // Only show grind (day) for lineRat and bayBoss phases
   const isEarlyPhase = gamePhase === 'lineRat' || gamePhase === 'bayBoss';
 
   return (
-    <div className={`game-time-tracker ${isPaused ? 'paused' : ''}`}>
-      {isPaused && (
-        <div className="pause-overlay">
-          <div className="pause-text">TEMPORAL STASIS</div>
-          <div className="pause-subtext">TIME LOCK ENGAGED</div>
-        </div>
-      )}
+    <div className="game-time-tracker">
       {isEarlyPhase ? (
         <div className="time-line">
           <span className="time-segment">G-{getGrindName(grind)}</span>
