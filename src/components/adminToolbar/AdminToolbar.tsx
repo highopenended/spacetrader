@@ -33,10 +33,14 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
   const [position, setPosition] = useState({ x: 20, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isMinimized, setIsMinimized] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!toolbarRef.current) return;
+    
+    // Don't start dragging if clicking on buttons
+    if ((e.target as HTMLElement).tagName === 'BUTTON') return;
     
     const rect = toolbarRef.current.getBoundingClientRect();
     setIsDragging(true);
@@ -58,6 +62,23 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
   }, []);
+
+  const toggleMinimized = () => {
+    if (!isMinimized) {
+      // When minimizing, move to bottom right
+      setPosition({ 
+        x: window.innerWidth - 120, 
+        y: window.innerHeight - 60 
+      });
+    } else {
+      // When expanding, center on screen
+      setPosition({
+        x: (window.innerWidth - 400) / 2,
+        y: (window.innerHeight - 400) / 2
+      });
+    }
+    setIsMinimized(!isMinimized);
+  };
 
   React.useEffect(() => {
     if (isDragging) {
@@ -100,7 +121,7 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
   return (
     <div 
       ref={toolbarRef}
-      className="admin-toolbar"
+      className={`admin-toolbar ${isMinimized ? 'minimized' : ''}`}
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -108,53 +129,68 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
       }}
       onMouseDown={handleMouseDown}
     >
-      <div className="admin-section">
-        <h4>Time Controls</h4>
-        <button onClick={isPaused ? resumeTime : pauseTime}>
-          {isPaused ? 'Resume' : 'Pause'} Time
+      {isMinimized ? (
+        <button onClick={toggleMinimized} className="expand-button">
+          Admin
         </button>
-        <button onClick={addGrind}>Add 1 Grind</button>
-        <button onClick={addLedgerCycle}>Add 1 Ledger Cycle</button>
-        <button onClick={addAnnumReckoning}>Add 1 Annum Reckoning</button>
-      </div>
-
-      <div className="admin-section">
-        <h4>Credits</h4>
-        <div className="credit-buttons">
-          <div className="button-group">
-            <span>Remove:</span>
-            {creditAmounts.map(amount => (
-              <button key={`remove-${amount}`} onClick={() => updateCredits(-amount)}>
-                {amount.toLocaleString()}
-              </button>
-            ))}
-          </div>
-          <div className="button-group">
-            <span>Add:</span>
-            {creditAmounts.map(amount => (
-              <button key={`add-${amount}`} onClick={() => updateCredits(amount)}>
-                {amount.toLocaleString()}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="admin-section">
-        <h4>Game Phase</h4>
-        <div className="phase-buttons">
-          {gamePhases.map((phase, index) => (
-            <button 
-              key={phase} 
-              onClick={() => setGamePhase(phase)}
-              className={gamePhase === phase ? 'active' : ''}
-            >
-              {index + 1}
+      ) : (
+        <>
+          <div className="admin-header">
+            <h3>Admin Tools</h3>
+            <button onClick={toggleMinimized} className="minimize-button">
+              −
             </button>
-          ))}
-          <button onClick={advanceGamePhase}>Advance Phase</button>
-        </div>
-      </div>
+          </div>
+          
+          <div className="admin-section">
+            <h4>Time Controls</h4>
+            <button onClick={isPaused ? resumeTime : pauseTime}>
+              {isPaused ? 'Resume' : 'Pause'} Time
+            </button>
+            <button onClick={addGrind}>Add 1 Grind</button>
+            <button onClick={addLedgerCycle}>Add 1 Ledger Cycle</button>
+            <button onClick={addAnnumReckoning}>Add 1 Annum Reckoning</button>
+          </div>
+
+          <div className="admin-section">
+            <h4>Credits</h4>
+            <div className="credit-buttons">
+              <div className="button-group">
+                <span>Remove:</span>
+                {creditAmounts.map(amount => (
+                  <button key={`remove-${amount}`} onClick={() => updateCredits(-amount)}>
+                    {amount.toLocaleString()}
+                  </button>
+                ))}
+              </div>
+              <div className="button-group">
+                <span>Add:</span>
+                {creditAmounts.map(amount => (
+                  <button key={`add-${amount}`} onClick={() => updateCredits(amount)}>
+                    {amount.toLocaleString()}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="admin-section">
+            <h4>Game Phase</h4>
+            <div className="phase-buttons">
+              {gamePhases.map((phase, index) => (
+                <button 
+                  key={phase} 
+                  onClick={() => setGamePhase(phase)}
+                  className={gamePhase === phase ? 'active' : ''}
+                >
+                  {index + 1}
+                </button>
+              ))}
+              <button onClick={advanceGamePhase}>Advance Phase</button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -11,6 +11,56 @@
   z-index: 2000;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   cursor: move;
+  transition: all 0.3s ease;
+}
+
+.admin-toolbar.minimized {
+  width: 100px;
+  height: 40px;
+  padding: 8px;
+  max-width: none;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #555;
+}
+
+.admin-header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+}
+
+.minimize-button, .expand-button {
+  background: #333 !important;
+  border: 1px solid #555 !important;
+  color: #ccc !important;
+  padding: 2px 6px !important;
+  margin: 0 !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+  border-radius: 3px !important;
+  transition: all 0.2s !important;
+  min-width: auto !important;
+}
+
+.minimize-button:hover, .expand-button:hover {
+  background: #444 !important;
+  border-color: #666 !important;
+  color: #fff !important;
+}
+
+.expand-button {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .admin-section {
