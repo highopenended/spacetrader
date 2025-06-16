@@ -9,7 +9,7 @@ interface GameTimeTrackerProps {
 }
 
 const GameTimeTracker: React.FC<GameTimeTrackerProps> = ({ gameTime, gamePhase }) => {
-  const { annumReckoning, ledgerCycle, grind, tithe, age } = gameTime;
+  const { annumReckoning, ledgerCycle, grind, tithe } = gameTime;
 
   // Only show grind (day) for lineRat and bayBoss phases
   const isEarlyPhase = gamePhase === 'lineRat' || gamePhase === 'bayBoss';
@@ -18,7 +18,7 @@ const GameTimeTracker: React.FC<GameTimeTrackerProps> = ({ gameTime, gamePhase }
     <div className="game-time-tracker">
       {isEarlyPhase ? (
         <div className="time-line">
-          <span className="time-segment">G-{getGrindName(grind)}</span>
+          <span className="time-segment">GRIND-{getGrindName(grind)}</span>
         </div>
       ) : (
         <>
@@ -31,9 +31,6 @@ const GameTimeTracker: React.FC<GameTimeTrackerProps> = ({ gameTime, gamePhase }
           </div>
           <div className="tithe-line">
             {getTitheName(tithe)}
-          </div>
-          <div className="age-line">
-            Age: {age}
           </div>
         </>
       )}

@@ -147,9 +147,9 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
             <button onClick={isPaused ? resumeTime : pauseTime}>
               {isPaused ? 'Resume' : 'Pause'} Time
             </button>
-            <button onClick={addGrind}>Add 1 Grind</button>
-            <button onClick={addLedgerCycle}>Add 1 Ledger Cycle</button>
             <button onClick={addAnnumReckoning}>Add 1 Annum Reckoning</button>
+            <button onClick={addLedgerCycle}>Add 1 Ledger Cycle</button>
+            <button onClick={addGrind}>Add 1 Grind</button>
           </div>
 
           <div className="admin-section">

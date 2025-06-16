@@ -2,6 +2,7 @@ import React from 'react';
 import './TerminalScreen.css';
 import CreditsTracker from '../creditsTracker/CreditsTracker';
 import GameTimeTracker from '../gameTimeTracker/GameTimeTracker';
+import AgeTracker from '../ageTracker/AgeTracker';
 import { GamePhase, GameTime } from '../../types/gameState';
 
 interface TerminalScreenProps {
@@ -20,17 +21,20 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   return (
     <div className="terminal-screen">
       <div className="terminal-header">
-        <div className="terminal-title">NAVCOM TERMINAL</div>
+        <div className="terminal-title">SCRAPCOM TERMINAL</div>
         <div className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>
           <div className="status-light"></div>
           <div className="status-text">{isOnline ? 'ONLINE' : 'OFFLINE'}</div>
         </div>
       </div>
-      <div className="terminal-content">
-        <div className="terminal-window credits-window">
+      <div className="terminal-content">  
+        <div className="terminal-window">
           <CreditsTracker credits={credits} />
+        </div>      
+        <div className="terminal-window">
+          <AgeTracker gameTime={gameTime} />
         </div>
-        <div className="terminal-window time-window">
+        <div className="terminal-window">
           <GameTimeTracker gameTime={gameTime} gamePhase={gamePhase} />
         </div>
       </div>

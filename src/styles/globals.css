@@ -8,6 +8,8 @@
   
   /* Typography */
   --font-family-primary: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-size-xxsmall: 10px;
+  --font-size-xsmall: 12px;
   --font-size-small: 14px;
   --font-size-base: 16px;
   --font-size-large: 18px;
