@@ -82,7 +82,7 @@
   background: #333;
   border: 1px solid #555;
   color: #ccc;
-  padding: 4px 8px;
+  padding: 4px;
   margin: 2px;
   font-size: 11px;
   cursor: pointer;
@@ -112,22 +112,38 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 0px;
 }
 
 .button-group span {
   color: #999;
   font-size: 11px;
-  min-width: 50px;
+  min-width: 60px;
+  text-align: left;
 }
 
 .phase-buttons {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 2px;
 }
 
 .phase-buttons button {
   min-width: 24px;
   text-align: center;
+}
+
+.reset-button {
+  background: #660000 !important;
+  border: 1px solid #880000 !important;
+  color: #ffcccc !important;
+  width: 100%;
+  padding: 6px !important;
+  font-weight: bold;
+}
+
+.reset-button:hover {
+  background: #880000 !important;
+  border-color: #aa0000 !important;
+  color: #fff !important;
 } 

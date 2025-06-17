@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { GameTime } from '../types/gameState';
 import { advanceGameTime } from '../utils/gameStateUtils';
+import { INITIAL_GAME_TIME } from '../constants/gameConstants';
 
 interface GameTimeState {
   currentTime: GameTime;
@@ -8,16 +9,8 @@ interface GameTimeState {
   lastUpdate: number;
 }
 
-const initialGameTime: GameTime = {
-  annumReckoning: 242,
-  ledgerCycle: 8,
-  grind: 1,
-  tithe: 2,
-  age: 18
-};
-
 const initialGameTimeState: GameTimeState = {
-  currentTime: initialGameTime,
+  currentTime: INITIAL_GAME_TIME,
   isPaused: false,
   lastUpdate: Date.now()
 };
@@ -59,6 +52,14 @@ export const useGameState_Time = () => {
     }));
   };
 
+  const resetGameTime = () => {
+    setGameTimeState({
+      currentTime: INITIAL_GAME_TIME,
+      isPaused: false,
+      lastUpdate: Date.now()
+    });
+  };
+
   useEffect(() => {
     if (!gameTimeState.isPaused) {
       // Advance time every 5 seconds (adjust as needed for game balance)
@@ -82,6 +83,7 @@ export const useGameState_Time = () => {
     isPaused: gameTimeState.isPaused,
     pauseTime,
     resumeTime,
-    setGameTime
+    setGameTime,
+    resetGameTime
   };
 }; 

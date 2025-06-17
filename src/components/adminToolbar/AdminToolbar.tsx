@@ -15,6 +15,7 @@ interface AdminToolbarProps {
   isPaused: boolean;
   pauseTime: () => void;
   resumeTime: () => void;
+  resetGame: () => void;
 }
 
 const AdminToolbar: React.FC<AdminToolbarProps> = ({ 
@@ -28,7 +29,8 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
   advanceGamePhase,
   isPaused,
   pauseTime,
-  resumeTime
+  resumeTime,
+  resetGame
 }) => {
   const [position, setPosition] = useState({ x: 20, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
@@ -112,7 +114,18 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
     setGameTime(newTime);
   };
 
-  const creditAmounts = [1, 10, 100, 1000, 10000, 100000];
+  const creditAmounts = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000];
+  
+  const formatCreditAmount = (amount: number): string => {
+    if (amount >= 1000000) {
+      return `${amount / 1000000}m`;
+    } else if (amount >= 1000) {
+      return `${amount / 1000}k`;
+    } else {
+      return amount.toString();
+    }
+  };
+
   const gamePhases: GamePhase[] = [
     'lineRat', 'bayBoss', 'scrapCaptain', 'fleetBoss', 'subsectorWarden',
     'sectorCommodore', 'ledgerPatrician', 'cathedraMinor', 'cathedraDominus', 'cathedraUltima'
@@ -156,18 +169,18 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
             <h4>Credits</h4>
             <div className="credit-buttons">
               <div className="button-group">
-                <span>Remove:</span>
+                <span>Add:</span>
                 {creditAmounts.map(amount => (
-                  <button key={`remove-${amount}`} onClick={() => updateCredits(-amount)}>
-                    {amount.toLocaleString()}
+                  <button key={`add-${amount}`} onClick={() => updateCredits(amount)}>
+                    {formatCreditAmount(amount)}
                   </button>
                 ))}
               </div>
               <div className="button-group">
-                <span>Add:</span>
+                <span>Remove:</span>
                 {creditAmounts.map(amount => (
-                  <button key={`add-${amount}`} onClick={() => updateCredits(amount)}>
-                    {amount.toLocaleString()}
+                  <button key={`remove-${amount}`} onClick={() => updateCredits(-amount)}>
+                    {formatCreditAmount(amount)}
                   </button>
                 ))}
               </div>
@@ -188,6 +201,13 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
               ))}
               <button onClick={advanceGamePhase}>Advance Phase</button>
             </div>
+          </div>
+
+          <div className="admin-section">
+            <h4>Game Reset</h4>
+            <button onClick={resetGame} className="reset-button">
+              Reset Game
+            </button>
           </div>
         </>
       )}

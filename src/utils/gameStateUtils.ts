@@ -1,4 +1,39 @@
-import { GamePhase, GAME_PHASES, GameTime } from '../types/gameState';
+/**
+ * Game State Utility Functions
+ * 
+ * This file contains pure utility functions for manipulating, calculating, and formatting
+ * game state data. These are stateless helper functions that perform calculations and
+ * transformations on game data.
+ * 
+ * Function Categories:
+ * 
+ * 1. Formatting Functions:
+ *    - getTitheName(): Convert tithe number to readable name
+ *    - getLedgerCycleName(): Format ledger cycle with zero padding
+ *    - getAnnumReckoningName(): Format annum reckoning for display
+ *    - getGrindName(): Format grind value for display
+ * 
+ * 2. Game Logic Functions:
+ *    - getNextGamePhase(): Calculate next phase in progression
+ *    - calculateTithe(): Determine tithe based on ledger cycle
+ *    - advanceGameTime(): Handle time progression with rollovers
+ * 
+ * Key Logic:
+ * - Time system: 8 grinds per ledger cycle, 20 ledger cycles per annum reckoning
+ * - Tithe system: Changes every 5 ledger cycles (1-5=1st, 6-10=2nd, etc.)
+ * - Phase progression: Uses GAME_PHASES configuration for sequential advancement
+ * 
+ * Used by:
+ * - Game time hooks for automatic time advancement
+ * - Admin toolbar for manual time manipulation
+ * - Display components for formatting time values
+ * - Game phase hooks for progression logic
+ * 
+ * Dependencies: gameState.ts (types), gameConstants.ts (GAME_PHASES config)
+ */
+
+import { GamePhase, GameTime } from '../types/gameState';
+import { GAME_PHASES } from '../constants/gameConstants';
 
 export const getTitheName = (tithe: number): string => {
   const titheNames = ['1st Tithe', '2nd Tithe', '3rd Tithe', '4th Tithe'];
@@ -40,13 +75,13 @@ export const advanceGameTime = (currentTime: GameTime): GameTime => {
   if (newTime.grind > 8) {
     newTime.grind = 1;
     newTime.ledgerCycle++;
-    
-    // Handle ledger cycle rollover
-    if (newTime.ledgerCycle > 20) {
-      newTime.ledgerCycle = 1;
-      newTime.annumReckoning++;
-      newTime.age++;
-    }
+  }
+
+  // Handle ledger cycle rollover
+  if (newTime.ledgerCycle > 20) {
+    newTime.ledgerCycle = 1;
+    newTime.annumReckoning++;
+    newTime.age++;
   }
   
   // Recalculate tithe based on current ledger cycle

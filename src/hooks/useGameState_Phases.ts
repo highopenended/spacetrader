@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { GamePhase } from '../types/gameState';
 import { getNextGamePhase } from '../utils/gameStateUtils';
+import { INITIAL_GAME_PHASE } from '../constants/gameConstants';
 
 export const useGameState_Phases = () => {
-  const [gamePhase, setGamePhaseState] = useState<GamePhase>('lineRat');
+  const [gamePhase, setGamePhaseState] = useState<GamePhase>(INITIAL_GAME_PHASE);
 
   const setGamePhase = (phase: GamePhase) => {
     setGamePhaseState(phase);
@@ -16,9 +17,14 @@ export const useGameState_Phases = () => {
     }
   };
 
+  const resetGamePhase = () => {
+    setGamePhaseState(INITIAL_GAME_PHASE);
+  };
+
   return {
     gamePhase,
     setGamePhase,
-    advanceGamePhase
+    advanceGamePhase,
+    resetGamePhase
   };
 }; 

@@ -3,6 +3,7 @@ import './TerminalScreen.css';
 import CreditsTracker from '../creditsTracker/CreditsTracker';
 import GameTimeTracker from '../gameTimeTracker/GameTimeTracker';
 import AgeTracker from '../ageTracker/AgeTracker';
+import JobTitleTracker from '../jobTitleTracker/JobTitleTracker';
 import { GamePhase, GameTime } from '../../types/gameState';
 
 interface TerminalScreenProps {
@@ -31,6 +32,9 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
         <div className="terminal-window">
           <CreditsTracker credits={credits} />
         </div>      
+        <div className="terminal-window">
+          <JobTitleTracker gamePhase={gamePhase} />
+        </div>
         <div className="terminal-window">
           <AgeTracker gameTime={gameTime} />
         </div>
