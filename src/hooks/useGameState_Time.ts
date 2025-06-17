@@ -62,8 +62,8 @@ export const useGameState_Time = () => {
 
   useEffect(() => {
     if (!gameTimeState.isPaused) {
-      // Advance time every 5 seconds (adjust as needed for game balance)
-      intervalRef.current = setInterval(advanceTime, 5000);
+      // Advance time every 1 seconds (adjust as needed for game balance)
+      intervalRef.current = setInterval(advanceTime, 1000);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
