@@ -6,7 +6,9 @@ interface ScrAppWindowProps {
   children: React.ReactNode;
   onClose: () => void;
   windowId: string;
+  appType: string;
   position?: { x: number; y: number };
+  onPositionChange?: (position: { x: number; y: number }) => void;
 }
 
 const ScrAppWindow: React.FC<ScrAppWindowProps> = ({ 
@@ -14,7 +16,9 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   children, 
   onClose, 
   windowId,
-  position = { x: 100, y: 100 }
+  appType,
+  position = { x: 100, y: 100 },
+  onPositionChange
 }) => {
   const [currentPosition, setCurrentPosition] = useState(position);
   const [isDragging, setIsDragging] = useState(false);
@@ -23,9 +27,6 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!windowRef.current) return;
-    
-    // Don't start dragging if clicking on buttons
-    if ((e.target as HTMLElement).tagName === 'BUTTON') return;
     
     const rect = windowRef.current.getBoundingClientRect();
     setIsDragging(true);
@@ -38,15 +39,25 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging) return;
     
-    setCurrentPosition({
+    const newPosition = {
       x: e.clientX - dragStart.x,
       y: e.clientY - dragStart.y
-    });
+    };
+    
+    setCurrentPosition(newPosition);
   }, [isDragging, dragStart]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  }, []);
+    // Report the final position back to parent
+    if (onPositionChange) {
+      onPositionChange(currentPosition);
+    }
+  }, [onPositionChange, currentPosition]);
+
+  const handleDoubleClick = useCallback(() => {
+    onClose();
+  }, [onClose]);
 
   React.useEffect(() => {
     if (isDragging) {
@@ -69,11 +80,13 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
         userSelect: isDragging ? 'none' : 'auto'
       }}
       data-window-id={windowId}
-      onMouseDown={handleMouseDown}
     >
-      <div className="window-header">
+      <div 
+        className="window-header"
+        onMouseDown={handleMouseDown}
+        onDoubleClick={handleDoubleClick}
+      >
         <div className="window-title">{title}</div>
-        <button className="window-close" onClick={onClose}>×</button>
       </div>
       <div className="window-content">
         {children}

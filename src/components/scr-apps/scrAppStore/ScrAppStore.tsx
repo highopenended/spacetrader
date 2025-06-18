@@ -11,7 +11,7 @@ const ScrAppStore: React.FC<ScrAppStoreProps> = ({ hasNewApps = false, onAppClic
   return (
     <ScrApp onClick={onAppClick}>
       <div className="scr-app-store">
-        <div className="app-label">App Store</div>
+        <div className="app-label">SCR-App Store</div>
         <div className="app-value store-status">
           {hasNewApps ? 'New Apps Available' : 'No Updates'}
         </div>

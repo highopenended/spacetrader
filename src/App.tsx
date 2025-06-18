@@ -20,6 +20,14 @@ function App() {
   const { gameTime, setGameTime, isPaused, pauseTime, resumeTime, resetGameTime } = useGameState_Time();
   
   const [windows, setWindows] = useState<WindowData[]>([]);
+  const [lastWindowPositions, setLastWindowPositions] = useState<Record<string, { x: number; y: number }>>({});
+
+  const updateWindowPosition = (appType: string, position: { x: number; y: number }) => {
+    setLastWindowPositions(prev => ({
+      ...prev,
+      [appType]: position
+    }));
+  };
 
   const openOrCloseWindow = (appType: string, title: string, content: React.ReactNode = <div>No Data Available</div>) => {
     // Check if a window for this app type already exists
@@ -30,12 +38,16 @@ function App() {
       setWindows(prev => prev.filter(window => window.appType !== appType));
     } else {
       // Window doesn't exist, open it
+      // Use last known position or default with offset
+      const lastPosition = lastWindowPositions[appType];
+      const defaultPosition = { x: 100 + (windows.length * 30), y: 100 + (windows.length * 30) };
+      
       const newWindow: WindowData = {
         id: `window-${appType}-${Date.now()}`,
         appType,
         title,
         content,
-        position: { x: 100 + (windows.length * 30), y: 100 + (windows.length * 30) }
+        position: lastPosition || defaultPosition
       };
       setWindows(prev => [...prev, newWindow]);
     }
@@ -80,9 +92,11 @@ function App() {
         <ScrAppWindow
           key={window.id}
           windowId={window.id}
+          appType={window.appType}
           title={window.title}
           position={window.position}
           onClose={() => closeWindow(window.id)}
+          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
         >
           {window.content}
         </ScrAppWindow>
