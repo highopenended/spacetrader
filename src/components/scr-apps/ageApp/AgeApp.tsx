@@ -5,15 +5,17 @@ import { GameTime } from '../../../types/gameState';
 
 interface AgeAppProps {
   gameTime: GameTime;
+  onAppClick?: () => void;
 }
 
-const AgeApp: React.FC<AgeAppProps> = ({ gameTime }) => {
+const AgeApp: React.FC<AgeAppProps> = ({ gameTime, onAppClick }) => {
   const { age } = gameTime;
 
   return (
-    <ScrApp>
+    <ScrApp onClick={onAppClick}>
       <div className="age-tracker">
-        <div className="age-display">AGE: {age}</div>
+        <div className="app-label">Age</div>
+        <div className="app-value age-years">{age} Years</div>
       </div>
     </ScrApp>
   );

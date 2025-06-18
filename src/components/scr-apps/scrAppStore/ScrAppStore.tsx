@@ -4,17 +4,18 @@ import ScrApp from '../ScrApp';
 
 interface ScrAppStoreProps {
   hasNewApps?: boolean;
+  onAppClick?: () => void;
 }
 
-const ScrAppStore: React.FC<ScrAppStoreProps> = ({ hasNewApps = false }) => {
+const ScrAppStore: React.FC<ScrAppStoreProps> = ({ hasNewApps = false, onAppClick }) => {
   return (
-    <ScrApp>
+    <ScrApp onClick={onAppClick}>
       <div className="scr-app-store">
-        <div className="store-content">
-          <div className="cargo-icon">▦</div>
-          <div className="store-name">SCRAPP STORE</div>
-          <div className={`alert-indicator ${hasNewApps ? 'active' : ''}`}></div>
+        <div className="app-label">App Store</div>
+        <div className="app-value store-status">
+          {hasNewApps ? 'New Apps Available' : 'No Updates'}
         </div>
+        {hasNewApps && <div className="notification-dot"></div>}
       </div>
     </ScrApp>
   );

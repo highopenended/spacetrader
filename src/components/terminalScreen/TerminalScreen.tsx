@@ -12,13 +12,15 @@ interface TerminalScreenProps {
   gameTime: GameTime;
   gamePhase: GamePhase;
   isOnline?: boolean;
+  onAppClick?: (appType: string, title: string, content?: React.ReactNode) => void;
 }
 
 const TerminalScreen: React.FC<TerminalScreenProps> = ({ 
   credits, 
   gameTime, 
   gamePhase, 
-  isOnline = true
+  isOnline = true,
+  onAppClick
 }) => {
   return (
     <div className="terminal-screen">
@@ -30,11 +32,27 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
         </div>
       </div>
       <div className="terminal-content">  
-        <CreditsApp credits={credits} />
-        <JobTitleApp gamePhase={gamePhase} />
-        <AgeApp gameTime={gameTime} />
-        <DateApp gameTime={gameTime} gamePhase={gamePhase} />
-        <ScrAppStore hasNewApps={true} />
+        <CreditsApp 
+          credits={credits} 
+          onAppClick={() => onAppClick?.('credits', 'Credits Tracker')} 
+        />
+        <JobTitleApp 
+          gamePhase={gamePhase} 
+          onAppClick={() => onAppClick?.('jobTitle', 'Job Title')} 
+        />
+        <AgeApp 
+          gameTime={gameTime} 
+          onAppClick={() => onAppClick?.('age', 'Age Tracker')} 
+        />
+        <DateApp 
+          gameTime={gameTime} 
+          gamePhase={gamePhase} 
+          onAppClick={() => onAppClick?.('date', 'Date Tracker')} 
+        />
+        <ScrAppStore 
+          hasNewApps={true} 
+          onAppClick={() => onAppClick?.('appStore', 'App Store')} 
+        />
       </div>
       <div className="terminal-scanlines"></div>
     </div>

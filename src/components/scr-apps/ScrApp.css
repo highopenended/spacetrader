@@ -17,6 +17,10 @@
   transition: all 0.2s ease-in-out;
 }
 
+.scr-app.clickable {
+  cursor: pointer;
+}
+
 .scr-app:hover {
   border-left-color: #666;
   border-right-color: #666;
@@ -28,6 +32,13 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.15),
     0 0 10px rgba(255, 255, 255, 0.1);
   transform: translateY(-1px);
+}
+
+.scr-app.clickable:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Common app element patterns */

@@ -7,16 +7,17 @@ import { getTitheName, getLedgerCycleName, getAnnumReckoningName, getGrindName }
 interface DateAppProps {
   gameTime: GameTime;
   gamePhase: GamePhase;
+  onAppClick?: () => void;
 }
 
-const DateApp: React.FC<DateAppProps> = ({ gameTime, gamePhase }) => {
+const DateApp: React.FC<DateAppProps> = ({ gameTime, gamePhase, onAppClick }) => {
   const { annumReckoning, ledgerCycle, grind, tithe } = gameTime;
 
   // Only show grind (day) for lineRat and bayBoss phases
   const isEarlyPhase = gamePhase === 'lineRat' || gamePhase === 'bayBoss';
 
   return (
-    <ScrApp>
+    <ScrApp onClick={onAppClick}>
       <div className="game-time-tracker">
         {isEarlyPhase ? (
           <div className="time-line">
