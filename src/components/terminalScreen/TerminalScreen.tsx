@@ -4,6 +4,7 @@ import CreditsApp from '../scr-apps/creditsApp/CreditsApp';
 import DateApp from '../scr-apps/dateApp/DateApp';
 import AgeApp from '../scr-apps/ageApp/AgeApp';
 import JobTitleApp from '../scr-apps/jobTitleApp/JobTitleApp';
+import ScrAppStore from '../scr-apps/scrAppStore/ScrAppStore';
 import { GamePhase, GameTime } from '../../types/gameState';
 
 interface TerminalScreenProps {
@@ -33,6 +34,7 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
         <JobTitleApp gamePhase={gamePhase} />
         <AgeApp gameTime={gameTime} />
         <DateApp gameTime={gameTime} gamePhase={gamePhase} />
+        <ScrAppStore hasNewApps={true} />
       </div>
       <div className="terminal-scanlines"></div>
     </div>

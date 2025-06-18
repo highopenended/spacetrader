@@ -29,3 +29,18 @@
     0 0 10px rgba(255, 255, 255, 0.1);
   transform: translateY(-1px);
 }
+
+/* Common app element patterns */
+.scr-app .app-label {
+  font-size: var(--font-size-small);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--spacing-xs);
+  opacity: 0.8;
+}
+
+.scr-app .app-value {
+  font-size: var(--font-size-large);
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}

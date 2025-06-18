@@ -14,8 +14,8 @@ const JobTitleApp: React.FC<JobTitleAppProps> = ({ gamePhase }) => {
   return (
     <ScrApp>
       <div className="job-title-tracker">
-        <div className="job-title-label">Position</div>
-        <div className="job-title-name">{phaseInfo.title}</div>
+        <div className="app-label">Position</div>
+        <div className="app-value job-title-name">{phaseInfo.title}</div>
       </div>
     </ScrApp>
   );

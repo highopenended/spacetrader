@@ -12,8 +12,8 @@ const CreditsApp: React.FC<CreditsAppProps> = ({ credits = 0 }) => {
   return (
     <ScrApp>
       <div className={`credits-tracker ${isNegative ? 'negative' : ''}`}>
-        <div className="credits-label">Credits</div>
-        <div className="credits-amount">₵ {credits.toLocaleString()}</div>
+        <div className="app-label">Credits</div>
+        <div className="app-value credits-amount">₵ {credits.toLocaleString()}</div>
       </div>
     </ScrApp>
   );
