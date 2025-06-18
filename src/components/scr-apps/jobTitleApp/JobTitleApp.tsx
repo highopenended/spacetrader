@@ -1,13 +1,13 @@
 import React from 'react';
-import './JobTitleTracker.css';
-import { GamePhase } from '../../types/gameState';
-import { GAME_PHASES } from '../../constants/gameConstants';
+import './JobTitleApp.css';
+import { GamePhase } from '../../../types/gameState';
+import { GAME_PHASES } from '../../../constants/gameConstants';
 
-interface JobTitleTrackerProps {
+interface JobTitleAppProps {
   gamePhase: GamePhase;
 }
 
-const JobTitleTracker: React.FC<JobTitleTrackerProps> = ({ gamePhase }) => {
+const JobTitleApp: React.FC<JobTitleAppProps> = ({ gamePhase }) => {
   const phaseInfo = GAME_PHASES[gamePhase];
   
   return (
@@ -18,4 +18,4 @@ const JobTitleTracker: React.FC<JobTitleTrackerProps> = ({ gamePhase }) => {
   );
 };
 
-export default JobTitleTracker; 
+export default JobTitleApp; 

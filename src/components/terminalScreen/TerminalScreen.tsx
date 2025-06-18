@@ -1,9 +1,9 @@
 import React from 'react';
 import './TerminalScreen.css';
-import CreditsTracker from '../creditsTracker/CreditsTracker';
-import GameTimeTracker from '../gameTimeTracker/GameTimeTracker';
-import AgeTracker from '../ageTracker/AgeTracker';
-import JobTitleTracker from '../jobTitleTracker/JobTitleTracker';
+import CreditsApp from '../scr-apps/creditsApp/CreditsApp';
+import DateApp from '../scr-apps/dateApp/DateApp';
+import AgeApp from '../scr-apps/ageApp/AgeApp';
+import JobTitleApp from '../scr-apps/jobTitleApp/JobTitleApp';
 import { GamePhase, GameTime } from '../../types/gameState';
 
 interface TerminalScreenProps {
@@ -17,7 +17,7 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   credits, 
   gameTime, 
   gamePhase, 
-  isOnline = true 
+  isOnline = true
 }) => {
   return (
     <div className="terminal-screen">
@@ -30,16 +30,16 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
       </div>
       <div className="terminal-content">  
         <div className="terminal-window">
-          <CreditsTracker credits={credits} />
+          <CreditsApp credits={credits} />
         </div>      
         <div className="terminal-window">
-          <JobTitleTracker gamePhase={gamePhase} />
+          <JobTitleApp gamePhase={gamePhase} />
         </div>
         <div className="terminal-window">
-          <AgeTracker gameTime={gameTime} />
+          <AgeApp gameTime={gameTime} />
         </div>
         <div className="terminal-window">
-          <GameTimeTracker gameTime={gameTime} gamePhase={gamePhase} />
+          <DateApp gameTime={gameTime} gamePhase={gamePhase} />
         </div>
       </div>
       <div className="terminal-scanlines"></div>

@@ -1,14 +1,14 @@
 import React from 'react';
-import './GameTimeTracker.css';
-import { GamePhase,GameTime } from '../../types/gameState';
-import { getTitheName, getLedgerCycleName, getAnnumReckoningName, getGrindName } from '../../utils/gameStateUtils';
+import './DateApp.css';
+import { GamePhase,GameTime } from '../../../types/gameState';
+import { getTitheName, getLedgerCycleName, getAnnumReckoningName, getGrindName } from '../../../utils/gameStateUtils';
 
-interface GameTimeTrackerProps {
+interface DateAppProps {
   gameTime: GameTime;
   gamePhase: GamePhase;
 }
 
-const GameTimeTracker: React.FC<GameTimeTrackerProps> = ({ gameTime, gamePhase }) => {
+const DateApp: React.FC<DateAppProps> = ({ gameTime, gamePhase }) => {
   const { annumReckoning, ledgerCycle, grind, tithe } = gameTime;
 
   // Only show grind (day) for lineRat and bayBoss phases
@@ -38,4 +38,4 @@ const GameTimeTracker: React.FC<GameTimeTrackerProps> = ({ gameTime, gamePhase }
   );
 };
 
-export default GameTimeTracker; 
+export default DateApp; 

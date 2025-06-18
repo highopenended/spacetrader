@@ -1,12 +1,12 @@
 import React from 'react';
-import './AgeTracker.css';
-import { GameTime } from '../../types/gameState';
+import './AgeApp.css';
+import { GameTime } from '../../../types/gameState';
 
-interface AgeTrackerProps {
+interface AgeAppProps {
   gameTime: GameTime;
 }
 
-const AgeTracker: React.FC<AgeTrackerProps> = ({ gameTime }) => {
+const AgeApp: React.FC<AgeAppProps> = ({ gameTime }) => {
   const { age } = gameTime;
 
   return (
@@ -16,4 +16,4 @@ const AgeTracker: React.FC<AgeTrackerProps> = ({ gameTime }) => {
   );
 };
 
-export default AgeTracker; 
+export default AgeApp; 
