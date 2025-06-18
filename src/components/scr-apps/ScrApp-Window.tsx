@@ -8,7 +8,10 @@ interface ScrAppWindowProps {
   windowId: string;
   appType: string;
   position?: { x: number; y: number };
+  size?: { width: number; height: number };
+  minSize?: { width: number; height: number };
   onPositionChange?: (position: { x: number; y: number }) => void;
+  onSizeChange?: (size: { width: number; height: number }) => void;
 }
 
 const ScrAppWindow: React.FC<ScrAppWindowProps> = ({ 
@@ -18,11 +21,17 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   windowId,
   appType,
   position = { x: 100, y: 100 },
-  onPositionChange
+  size = { width: 250, height: 120 },
+  minSize = { width: 200, height: 100 },
+  onPositionChange,
+  onSizeChange
 }) => {
   const [currentPosition, setCurrentPosition] = useState(position);
+  const [currentSize, setCurrentSize] = useState(size);
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -36,31 +45,59 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     });
   }, []);
 
+  const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering drag
+    setIsResizing(true);
+    setResizeStart({
+      x: e.clientX,
+      y: e.clientY,
+      width: currentSize.width,
+      height: currentSize.height
+    });
+  }, [currentSize]);
+
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging) return;
-    
-    const newPosition = {
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
-    };
-    
-    setCurrentPosition(newPosition);
-  }, [isDragging, dragStart]);
+    if (isDragging) {
+      const newPosition = {
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      };
+      setCurrentPosition(newPosition);
+    } else if (isResizing) {
+      const deltaX = e.clientX - resizeStart.x;
+      const deltaY = e.clientY - resizeStart.y;
+      
+      const newSize = {
+        width: Math.max(minSize.width, resizeStart.width + deltaX),
+        height: Math.max(minSize.height, resizeStart.height + deltaY)
+      };
+      
+      setCurrentSize(newSize);
+    }
+  }, [isDragging, isResizing, dragStart, resizeStart, minSize]);
 
   const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-    // Report the final position back to parent
-    if (onPositionChange) {
-      onPositionChange(currentPosition);
+    if (isDragging) {
+      setIsDragging(false);
+      // Report the final position back to parent
+      if (onPositionChange) {
+        onPositionChange(currentPosition);
+      }
+    } else if (isResizing) {
+      setIsResizing(false);
+      // Report the final size back to parent
+      if (onSizeChange) {
+        onSizeChange(currentSize);
+      }
     }
-  }, [onPositionChange, currentPosition]);
+  }, [isDragging, isResizing, onPositionChange, onSizeChange, currentPosition, currentSize]);
 
   const handleDoubleClick = useCallback(() => {
     onClose();
   }, [onClose]);
 
   React.useEffect(() => {
-    if (isDragging) {
+    if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       return () => {
@@ -68,7 +105,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
 
   return (
     <div 
@@ -77,7 +114,9 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
       style={{ 
         left: currentPosition.x, 
         top: currentPosition.y,
-        userSelect: isDragging ? 'none' : 'auto'
+        width: currentSize.width,
+        height: currentSize.height,
+        userSelect: (isDragging || isResizing) ? 'none' : 'auto'
       }}
       data-window-id={windowId}
     >
@@ -91,6 +130,10 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
       <div className="window-content">
         {children}
       </div>
+      <div 
+        className="resize-handle"
+        onMouseDown={handleResizeMouseDown}
+      />
     </div>
   );
 };

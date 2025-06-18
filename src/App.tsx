@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import TerminalScreen from './components/terminalScreen/TerminalScreen';
 import AdminToolbar from './components/adminToolbar/AdminToolbar';
 import ScrAppWindow from './components/scr-apps/ScrApp-Window';
+import AgeAppWindow from './components/scr-apps/ageApp/AgeApp-Window';
 import { useGameState_Credits } from './hooks/useGameState_Credits';
 import { useGameState_Phases } from './hooks/useGameState_Phases';
 import { useGameState_Time } from './hooks/useGameState_Time';
@@ -12,6 +13,7 @@ interface WindowData {
   title: string;
   content: React.ReactNode;
   position: { x: number; y: number };
+  size: { width: number; height: number };
 }
 
 function App() {
@@ -21,11 +23,19 @@ function App() {
   
   const [windows, setWindows] = useState<WindowData[]>([]);
   const [lastWindowPositions, setLastWindowPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [lastWindowSizes, setLastWindowSizes] = useState<Record<string, { width: number; height: number }>>({});
 
   const updateWindowPosition = (appType: string, position: { x: number; y: number }) => {
     setLastWindowPositions(prev => ({
       ...prev,
       [appType]: position
+    }));
+  };
+
+  const updateWindowSize = (appType: string, size: { width: number; height: number }) => {
+    setLastWindowSizes(prev => ({
+      ...prev,
+      [appType]: size
     }));
   };
 
@@ -42,12 +52,17 @@ function App() {
       const lastPosition = lastWindowPositions[appType];
       const defaultPosition = { x: 100 + (windows.length * 30), y: 100 + (windows.length * 30) };
       
+      // Use last known size or default
+      const lastSize = lastWindowSizes[appType];
+      const defaultSize = { width: 250, height: 120 };
+      
       const newWindow: WindowData = {
         id: `window-${appType}-${Date.now()}`,
         appType,
         title,
         content,
-        position: lastPosition || defaultPosition
+        position: lastPosition || defaultPosition,
+        size: lastSize || defaultSize
       };
       setWindows(prev => [...prev, newWindow]);
     }
@@ -61,6 +76,42 @@ function App() {
     resetCredits();
     resetGamePhase();
     resetGameTime();
+  };
+
+  const renderWindow = (window: WindowData) => {
+    // Use custom windows for specific app types
+    if (window.appType === 'age') {
+      return (
+        <AgeAppWindow
+          key={window.id}
+          gameTime={gameTime}
+          windowId={window.id}
+          appType={window.appType}
+          position={window.position}
+          size={window.size}
+          onClose={() => closeWindow(window.id)}
+          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
+          onSizeChange={(size) => updateWindowSize(window.appType, size)}
+        />
+      );
+    }
+
+    // Default window for other app types
+    return (
+      <ScrAppWindow
+        key={window.id}
+        windowId={window.id}
+        appType={window.appType}
+        title={window.title}
+        position={window.position}
+        size={window.size}
+        onClose={() => closeWindow(window.id)}
+        onPositionChange={(position) => updateWindowPosition(window.appType, position)}
+        onSizeChange={(size) => updateWindowSize(window.appType, size)}
+      >
+        {window.content}
+      </ScrAppWindow>
+    );
   };
 
   return (
@@ -88,19 +139,7 @@ function App() {
       />
       
       {/* Render windows */}
-      {windows.map(window => (
-        <ScrAppWindow
-          key={window.id}
-          windowId={window.id}
-          appType={window.appType}
-          title={window.title}
-          position={window.position}
-          onClose={() => closeWindow(window.id)}
-          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
-        >
-          {window.content}
-        </ScrAppWindow>
-      ))}
+      {windows.map(renderWindow)}
     </div>
   );
 }

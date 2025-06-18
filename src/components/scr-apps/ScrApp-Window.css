@@ -4,12 +4,12 @@
   background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
   border: 2px solid #444;
   font-family: 'Courier New', monospace;
-  min-width: 200px;
-  max-width: 300px;
   box-shadow: 
     0 4px 8px rgba(0, 0, 0, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   user-select: none;
+  display: flex;
+  flex-direction: column;
 }
 
 .window-header {
@@ -20,6 +20,7 @@
   justify-content: center;
   align-items: center;
   cursor: move;
+  flex-shrink: 0;
 }
 
 .window-title {
@@ -33,6 +34,35 @@
 .window-content {
   padding: var(--spacing-sm);
   color: #ccc;
-  min-height: 60px;
   font-size: var(--font-size-small);
+  flex: 1;
+  overflow: auto;
+}
+
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nw-resize;
+  background: linear-gradient(135deg, transparent 0%, transparent 40%, #666 50%, transparent 60%, transparent 100%);
+}
+
+.resize-handle:hover {
+  background: linear-gradient(135deg, transparent 0%, transparent 40%, #888 50%, transparent 60%, transparent 100%);
+}
+
+/* Universal styling for app window content */
+.detail-label {
+  color: #888;
+  font-size: var(--font-size-xsmall);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.detail-value {
+  color: #ccc;
+  font-size: var(--font-size-small);
+  font-weight: bold;
 } 
