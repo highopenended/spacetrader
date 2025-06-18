@@ -29,18 +29,10 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
         </div>
       </div>
       <div className="terminal-content">  
-        <div className="terminal-window">
-          <CreditsApp credits={credits} />
-        </div>      
-        <div className="terminal-window">
-          <JobTitleApp gamePhase={gamePhase} />
-        </div>
-        <div className="terminal-window">
-          <AgeApp gameTime={gameTime} />
-        </div>
-        <div className="terminal-window">
-          <DateApp gameTime={gameTime} gamePhase={gamePhase} />
-        </div>
+        <CreditsApp credits={credits} />
+        <JobTitleApp gamePhase={gamePhase} />
+        <AgeApp gameTime={gameTime} />
+        <DateApp gameTime={gameTime} gamePhase={gamePhase} />
       </div>
       <div className="terminal-scanlines"></div>
     </div>

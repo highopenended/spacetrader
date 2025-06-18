@@ -1,21 +1,7 @@
 .game-time-tracker {
-  position: fixed;
-  top: 60px;
-  right: 0;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  border: 2px solid #444;
-  padding: var(--spacing-sm) var(--spacing-md);
-  box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  font-family: 'Courier New', monospace;
   color: #888;
-  z-index: 1000;
-  width: 15vw;
-  text-align: right;
   font-size: var(--font-size-small);
   line-height: 1.2;
-  overflow: hidden;
 }
 
 .time-line {
@@ -37,16 +23,4 @@
   color: #999;
   font-size: 11px;
   font-style: italic;
-}
-
-.game-time-tracker::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(45deg, #333, #555, #333);
-  z-index: -1;
-  opacity: 0.3;
 } 

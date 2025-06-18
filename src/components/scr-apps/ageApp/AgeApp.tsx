@@ -1,5 +1,6 @@
 import React from 'react';
 import './AgeApp.css';
+import ScrApp from '../ScrApp';
 import { GameTime } from '../../../types/gameState';
 
 interface AgeAppProps {
@@ -10,9 +11,11 @@ const AgeApp: React.FC<AgeAppProps> = ({ gameTime }) => {
   const { age } = gameTime;
 
   return (
-    <div className="age-tracker">
-      <div className="age-display">AGE: {age}</div>
-    </div>
+    <ScrApp>
+      <div className="age-tracker">
+        <div className="age-display">AGE: {age}</div>
+      </div>
+    </ScrApp>
   );
 };
 

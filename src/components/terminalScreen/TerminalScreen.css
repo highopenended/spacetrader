@@ -95,34 +95,11 @@
 .terminal-content {
   position: relative;
   background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
 }
 
-.terminal-window {
-  position: relative;
-  background: rgba(0, 0, 0, 0.3);
-  border-bottom: 1px solid #333;
-}
 
-.terminal-window:last-child {
-  border-bottom: none;
-}
-
-.terminal-window .credits-tracker,
-.terminal-window .game-time-tracker {
-  position: relative;
-  top: auto;
-  right: auto;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  width: 100%;
-  margin: 0;
-}
-
-.terminal-window .credits-tracker::before,
-.terminal-window .game-time-tracker::before {
-  display: none;
-}
 
 .terminal-scanlines {
   position: absolute;
