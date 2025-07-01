@@ -1,9 +1,9 @@
 import React, { useState, useRef, useCallback } from 'react';
 import './ScrApp-Window.css';
+import { WINDOW_DEFAULTS } from '../../constants/windowConstants';
 
-interface ScrAppWindowProps {
-  title: string;
-  children: React.ReactNode;
+// Base interface for all window management props
+export interface BaseWindowProps {
   onClose: () => void;
   windowId: string;
   appType: string;
@@ -14,15 +14,20 @@ interface ScrAppWindowProps {
   onSizeChange?: (size: { width: number; height: number }) => void;
 }
 
+interface ScrAppWindowProps extends BaseWindowProps {
+  title: string;
+  children: React.ReactNode;
+}
+
 const ScrAppWindow: React.FC<ScrAppWindowProps> = ({ 
   title, 
   children, 
   onClose, 
   windowId,
   appType,
-  position = { x: 100, y: 100 },
-  size = { width: 250, height: 120 },
-  minSize = { width: 200, height: 100 },
+  position = WINDOW_DEFAULTS.POSITION,
+  size = WINDOW_DEFAULTS.SIZE,
+  minSize = WINDOW_DEFAULTS.MIN_SIZE,
   onPositionChange,
   onSizeChange
 }) => {

@@ -1,12 +1,1 @@
-.age-window-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.age-detail {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--spacing-md);
-} 
+/* This CSS file is no longer needed - styling is handled by the base ScrApp-Window component */ 
