@@ -10,7 +10,7 @@ const AgeAppWindow: React.FC<AgeAppWindowProps> = ({
   gameTime,
   ...windowProps
 }) => {
-  const { age, annumReckoning } = gameTime;
+  const { age, annumReckoning, yearOfDeath } = gameTime;
   const yearOfBirth = annumReckoning - age;
 
   const content = (
@@ -20,8 +20,12 @@ const AgeAppWindow: React.FC<AgeAppWindowProps> = ({
         <div className="detail-value">{age} Reckonings</div>
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--spacing-md)' }}>
-        <div className="detail-label">Year of Birth</div>
+        <div className="detail-label">Date of Birth</div>
         <div className="detail-value">AR {yearOfBirth}</div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+        <div className="detail-label">Date of Death</div>
+        <div className="detail-value">{yearOfDeath ? `AR ${yearOfDeath}` : 'Not Yet Assigned'}</div>
       </div>
     </div>
   );
@@ -30,6 +34,8 @@ const AgeAppWindow: React.FC<AgeAppWindowProps> = ({
     <ScrAppWindow
       title="Age Tracker"
       {...windowProps}
+      size={{ width: 300, height: 120 }}
+      minSize={{ width: 300, height: 120 }}
     >
       {content}
     </ScrAppWindow>

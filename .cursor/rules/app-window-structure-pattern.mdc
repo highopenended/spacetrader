@@ -1,0 +1,32 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+**App Window Structure Pattern:**
+- All app windows extend `BaseWindowProps` interface (from ScrApp-Window.tsx) for consistent window management
+- App-specific windows only define their unique props (e.g., `gameTime: GameTime`)
+- Use `{...windowProps}` spread operator to pass through base window management props
+- Use existing `.detail-label` and `.detail-value` CSS classes from ScrApp-Window.css for consistent styling
+- Focus purely on content logic - let ScrApp-Window handle all dragging, resizing, positioning
+- Avoid creating app-specific CSS files unless absolutely necessary for unique styling
+
+**Example:**
+```tsx
+interface AgeAppWindowProps extends BaseWindowProps {
+  gameTime: GameTime; // Only app-specific props
+}
+
+const AgeAppWindow: React.FC<AgeAppWindowProps> = ({
+  gameTime,
+  ...windowProps // Spread all window management props
+}) => {
+  return (
+    <ScrAppWindow title="Age Tracker" {...windowProps}>
+      <div className="detail-label">Current Age</div>
+      <div className="detail-value">{gameTime.age} Reckonings</div>
+    </ScrAppWindow>
+  );
+};
+```
+```

@@ -29,6 +29,7 @@ export interface GameTime {
   grind: number;           // Day (1-8)
   tithe: number;           // Period (1-4, 1 per 5 ledger cycles)
   age: number;             // Player age
+  yearOfDeath?: number;    // Year of death (optional, defaults to "Not Yet Assigned")
 }
 
 export type GamePhase = 

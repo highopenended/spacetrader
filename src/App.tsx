@@ -3,6 +3,7 @@ import TerminalScreen from './components/terminalScreen/TerminalScreen';
 import AdminToolbar from './components/adminToolbar/AdminToolbar';
 import ScrAppWindow from './components/scr-apps/ScrApp-Window';
 import AgeAppWindow from './components/scr-apps/ageApp/AgeApp-Window';
+import JobTitleAppWindow from './components/scr-apps/jobTitleApp/JobTitleApp-Window';
 import { useGameState_Credits } from './hooks/useGameState_Credits';
 import { useGameState_Phases } from './hooks/useGameState_Phases';
 import { useGameState_Time } from './hooks/useGameState_Time';
@@ -35,6 +36,22 @@ function App() {
         <AgeAppWindow
           key={window.id}
           gameTime={gameTime}
+          windowId={window.id}
+          appType={window.appType}
+          position={window.position}
+          size={window.size}
+          onClose={() => closeWindow(window.id)}
+          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
+          onSizeChange={(size) => updateWindowSize(window.appType, size)}
+        />
+      );
+    }
+
+    if (window.appType === 'jobTitle') {
+      return (
+        <JobTitleAppWindow
+          key={window.id}
+          gamePhase={gamePhase}
           windowId={window.id}
           appType={window.appType}
           position={window.position}
