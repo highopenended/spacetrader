@@ -5,6 +5,7 @@ import DateApp from '../scr-apps/dateApp/DateApp';
 import AgeApp from '../scr-apps/ageApp/AgeApp';
 import JobTitleApp from '../scr-apps/jobTitleApp/JobTitleApp';
 import ScrAppStore from '../scr-apps/scrAppStore/ScrAppStore';
+import ScrAppDragWrapper from '../scr-apps/ScrApp-DragWrapper';
 import { GamePhase, GameTime } from '../../types/gameState';
 
 interface TerminalScreenProps {
@@ -32,27 +33,36 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
         </div>
       </div>
       <div className="terminal-content">  
-        <CreditsApp 
-          credits={credits} 
-          onAppClick={() => onAppClick?.('credits', 'Credits Tracker')} 
-        />
-        <JobTitleApp 
-          gamePhase={gamePhase} 
-          onAppClick={() => onAppClick?.('jobTitle', 'Job Title')} 
-        />
-        <AgeApp 
-          gameTime={gameTime} 
-          onAppClick={() => onAppClick?.('age', 'Age Tracker')} 
-        />
-        <DateApp 
-          gameTime={gameTime} 
-          gamePhase={gamePhase} 
-          onAppClick={() => onAppClick?.('date', 'Date Tracker')} 
-        />
-        <ScrAppStore 
-          hasNewApps={true} 
-          onAppClick={() => onAppClick?.('appStore', 'App Store')} 
-        />
+        <ScrAppDragWrapper 
+          appId="credits"
+          onAppClick={() => onAppClick?.('credits', 'Credits Tracker')}
+        >
+          <CreditsApp credits={credits} />
+        </ScrAppDragWrapper>
+        <ScrAppDragWrapper 
+          appId="jobTitle"
+          onAppClick={() => onAppClick?.('jobTitle', 'Job Title')}
+        >
+          <JobTitleApp gamePhase={gamePhase} />
+        </ScrAppDragWrapper>
+        <ScrAppDragWrapper 
+          appId="age"
+          onAppClick={() => onAppClick?.('age', 'Age Tracker')}
+        >
+          <AgeApp gameTime={gameTime} />
+        </ScrAppDragWrapper>
+        <ScrAppDragWrapper 
+          appId="date"
+          onAppClick={() => onAppClick?.('date', 'Date Tracker')}
+        >
+          <DateApp gameTime={gameTime} gamePhase={gamePhase} />
+        </ScrAppDragWrapper>
+        <ScrAppDragWrapper 
+          appId="appStore"
+          onAppClick={() => onAppClick?.('appStore', 'App Store')}
+        >
+          <ScrAppStore hasNewApps={true} />
+        </ScrAppDragWrapper>
       </div>
       <div className="terminal-scanlines"></div>
     </div>

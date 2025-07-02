@@ -4,12 +4,11 @@ import ScrApp from '../ScrApp';
 
 interface ScrAppStoreProps {
   hasNewApps?: boolean;
-  onAppClick?: () => void;
 }
 
-const ScrAppStore: React.FC<ScrAppStoreProps> = ({ hasNewApps = false, onAppClick }) => {
+const ScrAppStore: React.FC<ScrAppStoreProps> = ({ hasNewApps = false }) => {
   return (
-    <ScrApp onClick={onAppClick}>
+    <ScrApp>
       <div className="scr-app-store">
         <div className="app-label">SCR-App Store</div>
         <div className="app-value store-status">

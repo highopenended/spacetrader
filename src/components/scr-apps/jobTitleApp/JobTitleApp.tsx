@@ -5,10 +5,9 @@ import { GamePhase } from '../../../types/gameState';
 
 interface JobTitleAppProps {
   gamePhase: GamePhase;
-  onAppClick?: () => void;
 }
 
-const JobTitleApp: React.FC<JobTitleAppProps> = ({ gamePhase, onAppClick }) => {
+const JobTitleApp: React.FC<JobTitleAppProps> = ({ gamePhase }) => {
   const getJobTitle = () => {
     switch (gamePhase) {
       case 'lineRat':
@@ -37,7 +36,7 @@ const JobTitleApp: React.FC<JobTitleAppProps> = ({ gamePhase, onAppClick }) => {
   };
 
   return (
-    <ScrApp onClick={onAppClick}>
+    <ScrApp>
       <div className="job-title-tracker">
         <div className="app-label">Job Title</div>
         <div className="app-value job-title">{getJobTitle()}</div>

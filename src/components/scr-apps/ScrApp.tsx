@@ -3,21 +3,11 @@ import './ScrApp.css';
 
 interface ScrAppProps {
   children: React.ReactNode;
-  onClick?: () => void;
 }
 
-const ScrApp: React.FC<ScrAppProps> = ({ children, onClick }) => {
-  const handleClick = () => {
-    if (onClick) {
-      onClick();
-    }
-  };
-
+const ScrApp: React.FC<ScrAppProps> = ({ children }) => {
   return (
-    <div 
-      className={`scr-app ${onClick ? 'clickable' : ''}`}
-      onClick={handleClick}
-    >
+    <div className="scr-app">
       {children}
     </div>
   );
