@@ -4,7 +4,6 @@ import { DndContext, DragOverlay, closestCenter, useSensor, PointerSensor } from
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import SortableItem from '../scr-apps/SortableItem';
 import DeleteZone from '../scr-apps/DeleteZone';
-import { useScrAppListManager } from '../../hooks/useScrAppListManager';
 import { GamePhase, GameTime } from '../../types/gameState';
 
 interface TerminalScreenProps {
@@ -13,6 +12,14 @@ interface TerminalScreenProps {
   gamePhase: GamePhase;
   isOnline?: boolean;
   onAppClick?: (appType: string, title: string, content?: React.ReactNode) => void;
+  apps: any[];
+  appOrder: string[];
+  dragState: any;
+  handleDragStart: (event: any) => void;
+  handleDragOver: (event: any) => void;
+  handleDragEnd: (event: any) => void;
+  installApp: (appId: string, position?: number) => void;
+  uninstallApp: (appId: string) => void;
 }
 
 const TerminalScreen: React.FC<TerminalScreenProps> = ({ 
@@ -20,17 +27,16 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   gameTime, 
   gamePhase, 
   isOnline = true,
-  onAppClick
+  onAppClick,
+  apps,
+  appOrder,
+  dragState,
+  handleDragStart,
+  handleDragOver,
+  handleDragEnd,
+  installApp,
+  uninstallApp
 }) => {
-  const { 
-    apps, 
-    appOrder, 
-    dragState,
-    handleDragStart,
-    handleDragOver,
-    handleDragEnd 
-  } = useScrAppListManager();
-
   // Render an app based on its configuration
   const renderApp = (appConfig: any) => {
     if (!appConfig) return null;
@@ -110,21 +116,21 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
         <div className="terminal-scanlines"></div>
       </div>
 
-              <DragOverlay 
-          dropAnimation={{
-            duration: 0, // Disable drop animation
-            easing: 'ease',
-          }}
-        >
-          {dragState.isDragging && dragState.draggedAppId ? (
-            <div 
-              className={`sortable-item dragging ${dragState.isOverDeleteZone ? 'over-delete-zone' : ''}`}
-              style={{ opacity: 0.8, position: 'relative' }}
-            >
-              {renderApp(apps.find(app => app.id === dragState.draggedAppId))}
-            </div>
-          ) : null}
-        </DragOverlay>
+      <DragOverlay 
+        dropAnimation={{
+          duration: 0, // Disable drop animation
+          easing: 'ease',
+        }}
+      >
+        {dragState.isDragging && dragState.draggedAppId ? (
+          <div 
+            className={`sortable-item dragging ${dragState.isOverDeleteZone ? 'over-delete-zone' : ''}`}
+            style={{ opacity: 0.8, position: 'relative' }}
+          >
+            {renderApp(apps.find(app => app.id === dragState.draggedAppId))}
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 };

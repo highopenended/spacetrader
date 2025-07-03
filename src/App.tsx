@@ -8,6 +8,7 @@ import { useGameState_Credits } from './hooks/useGameState_Credits';
 import { useGameState_Phases } from './hooks/useGameState_Phases';
 import { useGameState_Time } from './hooks/useGameState_Time';
 import { useWindowManager } from './hooks/useWindowManager';
+import { useScrAppListManager } from './hooks/useScrAppListManager';
 import { WindowData } from './types/gameState';
 
 function App() {
@@ -22,11 +23,23 @@ function App() {
     openOrCloseWindow,
     closeWindow,
   } = useWindowManager();
+  const {
+    apps,
+    appOrder,
+    dragState,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    resetToDefaults,
+    installApp,
+    uninstallApp
+  } = useScrAppListManager();
 
   const resetGame = () => {
     resetCredits();
     resetGamePhase();
     resetGameTime();
+    resetToDefaults();
   };
 
   const renderWindow = (window: WindowData) => {
@@ -89,6 +102,14 @@ function App() {
         gamePhase={gamePhase}
         isOnline={!isPaused}
         onAppClick={openOrCloseWindow}
+        apps={apps}
+        appOrder={appOrder}
+        dragState={dragState}
+        handleDragStart={handleDragStart}
+        handleDragOver={handleDragOver}
+        handleDragEnd={handleDragEnd}
+        installApp={installApp}
+        uninstallApp={uninstallApp}
       />
       <AdminToolbar 
         credits={credits}
