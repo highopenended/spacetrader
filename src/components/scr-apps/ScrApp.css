@@ -1,8 +1,11 @@
 .scr-app {
-    
+  /* ScrApp is now just a content container - all visual styling moved to wrapper */
+  font-family: 'Courier New', monospace;
+  text-align: right;
+  line-height: 1;
 }
 
-/* Interaction states moved to ScrApp-DragWrapper.css */
+
 
 /* Common app element patterns */
 .scr-app .app-label {

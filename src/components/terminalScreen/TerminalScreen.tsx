@@ -35,31 +35,31 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
       <div className="terminal-content">  
         <ScrAppDragWrapper 
           appId="credits"
-          onAppClick={() => onAppClick?.('credits', 'Credits Tracker')}
+          onAppClick={() => onAppClick?.('credits', 'Credits Tracker')} 
         >
           <CreditsApp credits={credits} />
         </ScrAppDragWrapper>
         <ScrAppDragWrapper 
           appId="jobTitle"
-          onAppClick={() => onAppClick?.('jobTitle', 'Job Title')}
+          onAppClick={() => onAppClick?.('jobTitle', 'Job Title')} 
         >
           <JobTitleApp gamePhase={gamePhase} />
         </ScrAppDragWrapper>
         <ScrAppDragWrapper 
           appId="age"
-          onAppClick={() => onAppClick?.('age', 'Age Tracker')}
+          onAppClick={() => onAppClick?.('age', 'Age Tracker')} 
         >
           <AgeApp gameTime={gameTime} />
         </ScrAppDragWrapper>
         <ScrAppDragWrapper 
           appId="date"
-          onAppClick={() => onAppClick?.('date', 'Date Tracker')}
+          onAppClick={() => onAppClick?.('date', 'Date Tracker')} 
         >
           <DateApp gameTime={gameTime} gamePhase={gamePhase} />
         </ScrAppDragWrapper>
         <ScrAppDragWrapper 
           appId="appStore"
-          onAppClick={() => onAppClick?.('appStore', 'App Store')}
+          onAppClick={() => onAppClick?.('appStore', 'App Store')} 
         >
           <ScrAppStore hasNewApps={true} />
         </ScrAppDragWrapper>
