@@ -1,11 +1,9 @@
 import React from 'react';
 import './TerminalScreen.css';
-import CreditsApp from '../scr-apps/creditsApp/CreditsApp';
-import DateApp from '../scr-apps/dateApp/DateApp';
-import AgeApp from '../scr-apps/ageApp/AgeApp';
-import JobTitleApp from '../scr-apps/jobTitleApp/JobTitleApp';
-import ScrAppStore from '../scr-apps/scrAppStore/ScrAppStore';
-import ScrAppDragWrapper from '../scr-apps/ScrApp-DragWrapper';
+import { DndContext, DragOverlay, closestCenter, useSensor, PointerSensor } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import SortableItem from '../scr-apps/SortableItem';
+import { useScrAppListManager } from '../../hooks/useScrAppListManager';
 import { GamePhase, GameTime } from '../../types/gameState';
 
 interface TerminalScreenProps {
@@ -23,6 +21,46 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   isOnline = true,
   onAppClick
 }) => {
+  const { 
+    apps, 
+    appOrder, 
+    dragState,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd 
+  } = useScrAppListManager();
+
+  // Render an app based on its configuration
+  const renderApp = (appConfig: any) => {
+    if (!appConfig) return null;
+    
+    const AppComponent = appConfig.component;
+    
+    // Build props based on app ID
+    const getAppProps = () => {
+      switch (appConfig.id) {
+        case 'credits':
+          return { credits };
+        case 'jobTitle':
+          return { gamePhase };
+        case 'age':
+          return { gameTime };
+        case 'date':
+          return { gameTime, gamePhase };
+        case 'scrAppStore':
+          return { hasNewApps: true };
+        default:
+          return {};
+      }
+    };
+
+    return (
+      <AppComponent 
+        {...getAppProps()}
+      />
+    );
+  };
+
   return (
     <div className="terminal-screen">
       <div className="terminal-header">
@@ -32,38 +70,52 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
           <div className="status-text">{isOnline ? 'ONLINE' : 'OFFLINE'}</div>
         </div>
       </div>
-      <div className="terminal-content">  
-        <ScrAppDragWrapper 
-          appId="credits"
-          onAppClick={() => onAppClick?.('credits', 'Credits Tracker')} 
+      
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+        sensors={[
+          // Require minimum distance before drag starts to prevent click interference
+          useSensor(PointerSensor, {
+            activationConstraint: {
+              distance: 10, // Must move 10px before drag activates
+            },
+          }),
+        ]}
+      >
+        <div className="terminal-content">
+          <SortableContext 
+            items={appOrder} 
+            strategy={verticalListSortingStrategy}
+          >
+            {apps.map((appConfig) => (
+              <SortableItem
+                key={appConfig.id}
+                id={appConfig.id}
+                onAppClick={() => onAppClick?.(appConfig.id, appConfig.title)}
+              >
+                {renderApp(appConfig)}
+              </SortableItem>
+            ))}
+          </SortableContext>
+        </div>
+
+        <DragOverlay 
+          dropAnimation={{
+            duration: 0, // Disable drop animation
+            easing: 'ease',
+          }}
         >
-          <CreditsApp credits={credits} />
-        </ScrAppDragWrapper>
-        <ScrAppDragWrapper 
-          appId="jobTitle"
-          onAppClick={() => onAppClick?.('jobTitle', 'Job Title')} 
-        >
-          <JobTitleApp gamePhase={gamePhase} />
-        </ScrAppDragWrapper>
-        <ScrAppDragWrapper 
-          appId="age"
-          onAppClick={() => onAppClick?.('age', 'Age Tracker')} 
-        >
-          <AgeApp gameTime={gameTime} />
-        </ScrAppDragWrapper>
-        <ScrAppDragWrapper 
-          appId="date"
-          onAppClick={() => onAppClick?.('date', 'Date Tracker')} 
-        >
-          <DateApp gameTime={gameTime} gamePhase={gamePhase} />
-        </ScrAppDragWrapper>
-        <ScrAppDragWrapper 
-          appId="appStore"
-          onAppClick={() => onAppClick?.('appStore', 'App Store')} 
-        >
-          <ScrAppStore hasNewApps={true} />
-        </ScrAppDragWrapper>
-      </div>
+          {dragState.isDragging && dragState.draggedAppId ? (
+            <div style={{ opacity: 0.8 }}>
+              {renderApp(apps.find(app => app.id === dragState.draggedAppId))}
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+      
       <div className="terminal-scanlines"></div>
     </div>
   );

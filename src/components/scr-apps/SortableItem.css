@@ -1,4 +1,9 @@
-.scr-app-drag-wrapper {
+/* Sortable Item CSS */
+
+.sortable-item {
+  cursor: default;
+  touch-action: none; /* Prevent scrolling on touch devices during drag */
+  /* Add basic app styling that was in the deleted wrapper */
   background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
   border-left: 2px solid #444;
   border-right: 2px solid #444;
@@ -10,15 +15,14 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   position: relative;
   user-select: none;
-  transition: all 0.2s ease-in-out;
-  cursor: default;
+  /* transition: all 0.2s ease-in-out; */
 }
 
-.scr-app-drag-wrapper.clickable {
+.sortable-item.clickable {
   cursor: pointer;
 }
 
-.scr-app-drag-wrapper.clickable:hover {
+.sortable-item.clickable:hover {
   border-left-color: #666;
   border-right-color: #666;
   border-top-color: #666;
@@ -31,19 +35,19 @@
   transform: translateY(-1px);
 }
 
-.scr-app-drag-wrapper.clickable:active {
+.sortable-item.clickable:active {
   transform: translateY(0);
   box-shadow: 
     0 2px 4px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Future drag states - styles applied to wrapper itself, not inner components */
-.scr-app-drag-wrapper.dragging {
-  opacity: 0.7;
-  /* Additional drag styling will be added later */
+.sortable-item.dragging {
+  opacity: 0.6;
+  z-index: 1000;
 }
 
-.scr-app-drag-wrapper.drop-zone {
-  /* Drop zone styling will be added later */
+/* Override cursor when dragging */
+.sortable-item.dragging * {
+  cursor: grabbing !important;
 } 
