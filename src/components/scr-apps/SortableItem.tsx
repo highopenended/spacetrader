@@ -15,13 +15,15 @@ interface SortableItemProps {
   children: React.ReactNode;
   onAppClick?: () => void;
   disabled?: boolean;
+  isOverDeleteZone?: boolean;
 }
 
 const SortableItem: React.FC<SortableItemProps> = ({ 
   id, 
   children, 
   onAppClick,
-  disabled = false 
+  disabled = false,
+  isOverDeleteZone = false
 }) => {
   const {
     attributes,
@@ -53,12 +55,14 @@ const SortableItem: React.FC<SortableItemProps> = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={`sortable-item ${isDragging ? 'dragging' : ''} ${onAppClick ? 'clickable' : ''}`}
+      className={`sortable-item ${isDragging ? 'dragging' : ''} ${onAppClick ? 'clickable' : ''} ${isOverDeleteZone ? 'over-delete-zone' : ''}`}
       onClick={handleClick}
       {...attributes}
       {...listeners}
     >
-      {children}
+      <div className={`sortable-item-content${isOverDeleteZone ? ' flicker' : ''}`}>
+        {children}
+      </div>
     </div>
   );
 };

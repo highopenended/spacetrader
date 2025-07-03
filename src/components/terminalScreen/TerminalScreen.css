@@ -14,9 +14,10 @@
   overflow: hidden;
   transform: perspective(1000px) rotateX(1deg);
   transform-origin: center center;
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
-
-
 
 .terminal-header {
   background: linear-gradient(135deg, #222 0%, #111 100%);
@@ -98,8 +99,6 @@
   display: flex;
   flex-direction: column;
 }
-
-
 
 .terminal-scanlines {
   position: absolute;
