@@ -60,9 +60,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
       {...attributes}
       {...listeners}
     >
-      <div className={`sortable-item-content${isOverDeleteZone ? ' flicker' : ''}`}>
-        {children}
-      </div>
+      {children}
     </div>
   );
 };
