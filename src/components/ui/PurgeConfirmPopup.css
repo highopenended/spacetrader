@@ -13,9 +13,9 @@
 }
 
 .purge-popup {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  border: 2px solid #a00;
-  box-shadow: 0 0 16px 2px #000, 0 0 0 2px #a00 inset;
+  background: linear-gradient(135deg, #2a1010 0%, #3a1818 100%);
+  border: 1.2px solid #b44;
+  box-shadow: 0 0 16px 2px #000, 0 0 0 2px #b44 inset, 0 0 12px 2px #b44;
   min-width: 320px;
   max-width: 90vw;
   padding: 2.5rem 2.5rem 2rem 2.5rem;
@@ -28,17 +28,17 @@
 }
 
 .purge-title {
-  color: #ff3b3b;
+  color: #e05a5a;
   font-size: 1.3rem;
   font-weight: bold;
   letter-spacing: 2px;
   text-transform: uppercase;
   margin-bottom: 0.5rem;
-  text-shadow: 0 0 2px #000, 0 0 6px #a00;
+  text-shadow: 0 0 2px #000, 0 0 6px #b44, 0 0 2px #fff1, 0 1px 0 #b44;
 }
 
 .purge-app-name {
-  color: #ccc;
+  color: #bfa8a8;
   font-size: 1.1rem;
   margin-bottom: 1.2rem;
   text-align: center;
@@ -58,8 +58,8 @@
   padding: 0.4rem 1.2rem;
   border: none;
   border-radius: 2px;
-  background: #181818;
-  color: #ccc;
+  background: #2a1010;
+  color: #bfa8a8;
   letter-spacing: 1px;
   cursor: pointer;
   box-shadow: 0 1px 0 #333 inset;
@@ -68,22 +68,22 @@
 }
 
 .purge-btn.confirm {
-  color: #ff3b3b;
-  border: 1px solid #a00;
-  background: #1a0000;
+  color: #e05a5a;
+  border: 1px solid #b44;
+  background: #3a1818;
 }
 .purge-btn.confirm:hover, .purge-btn.confirm:focus {
-  background: #2d0000;
+  background: #4a2222;
   color: #fff;
 }
 
 .purge-btn.cancel {
   color: #7fff7f;
   border: 1px solid #2a2;
-  background: #002200;
+  background: #1a2a1a;
 }
 .purge-btn.cancel:hover, .purge-btn.cancel:focus {
-  background: #003300;
+  background: #224422;
   color: #fff;
 }
 
@@ -95,11 +95,11 @@
     0deg,
     transparent 0px,
     transparent 2px,
-    rgba(255,255,255,0.03) 2px,
-    rgba(255,255,255,0.03) 4px
+    rgba(255,100,100,0.07) 2px,
+    rgba(255,100,100,0.07) 4px
   );
   z-index: 2;
-  opacity: 0.7;
+  opacity: 0.8;
   animation: scanlines-flicker 2.5s linear infinite, scanlines-move 1.5s linear infinite;
 }
 
