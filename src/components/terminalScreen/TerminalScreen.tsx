@@ -86,30 +86,35 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
       {/* Delete zone covers entire screen behind terminal */}
       <DeleteZone isActive={dragState.isOverDeleteZone} />
       
-      <div className="terminal-screen">
-        <div className="terminal-header">
-          <div className="terminal-title">SCRAPCOM TERMINAL</div>
-          <div className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>
-            <div className="status-light"></div>
-            <div className="status-text">{isOnline ? 'ONLINE' : 'OFFLINE'}</div>
-          </div>
+    <div className="terminal-screen">
+      <div className="terminal-header">
+        <div className="terminal-title">SCRAPCOM TERMINAL</div>
+        <div className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>
+          <div className="status-light"></div>
+          <div className="status-text">{isOnline ? 'ONLINE' : 'OFFLINE'}</div>
         </div>
+      </div>
       
-        <div className="terminal-content">
+      <div className="terminal-content">  
           <SortableContext 
             items={appOrder} 
             strategy={verticalListSortingStrategy}
           >
-            {apps.map((appConfig) => (
-              <SortableItem
-                key={appConfig.id}
-                id={appConfig.id}
-                onAppClick={() => onAppClick?.(appConfig.id, appConfig.title)}
-                isOverDeleteZone={dragState.isOverDeleteZone && dragState.draggedAppId === appConfig.id}
-              >
-                {renderApp(appConfig)}
-              </SortableItem>
-            ))}
+            {apps.map((appConfig) => {
+              // Hide the dragged app from the list only when it's being dragged and isOverDeleteZone is true
+              const isDraggedAndOutside = dragState.isDragging && dragState.draggedAppId === appConfig.id && dragState.isOverDeleteZone;
+              if (isDraggedAndOutside) return null;
+              return (
+                <SortableItem
+                  key={appConfig.id}
+                  id={appConfig.id}
+                  onAppClick={() => onAppClick?.(appConfig.id, appConfig.title)}
+                  isOverDeleteZone={dragState.isOverDeleteZone && dragState.draggedAppId === appConfig.id}
+                >
+                  {renderApp(appConfig)}
+                </SortableItem>
+              );
+            })}
           </SortableContext>
         </div>
       
@@ -122,9 +127,10 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
           easing: 'ease',
         }}
       >
-        {dragState.isDragging && dragState.draggedAppId ? (
+        {/* Only show overlay when dragging and outside terminal (isOverDeleteZone) */}
+        {dragState.isDragging && dragState.isOverDeleteZone && dragState.draggedAppId ? (
           <div 
-            className={`sortable-item dragging ${dragState.isOverDeleteZone ? 'over-delete-zone' : ''}`}
+            className={`sortable-item dragging over-delete-zone`}
             style={{ opacity: 0.8, position: 'relative' }}
           >
             {renderApp(apps.find(app => app.id === dragState.draggedAppId))}
