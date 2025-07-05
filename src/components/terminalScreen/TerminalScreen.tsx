@@ -5,6 +5,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import SortableItem from '../scr-apps/SortableItem';
 import DeleteZone from '../scr-apps/DeleteZone';
 import { GamePhase, GameTime } from '../../types/gameState';
+import { createPortal } from 'react-dom';
 
 interface TerminalScreenProps {
   credits: number;
@@ -121,22 +122,26 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
         <div className="terminal-scanlines"></div>
       </div>
 
-      <DragOverlay 
-        dropAnimation={{
-          duration: 0, // Disable drop animation
-          easing: 'ease',
-        }}
-      >
-        {/* Only show overlay when dragging and outside terminal (isOverDeleteZone) */}
-        {dragState.isDragging && dragState.isOverDeleteZone && dragState.draggedAppId ? (
-          <div 
-            className={`sortable-item dragging over-delete-zone`}
-            style={{ opacity: 0.8, position: 'relative' }}
-          >
-            {renderApp(apps.find(app => app.id === dragState.draggedAppId))}
-          </div>
-        ) : null}
-      </DragOverlay>
+      {createPortal(
+        <DragOverlay 
+          zIndex={2000}
+          dropAnimation={{
+            duration: 0, // Disable drop animation
+            easing: 'ease',
+          }}
+        >
+          {/* Only show overlay when dragging and outside terminal (isOverDeleteZone) */}
+          {dragState.isDragging && dragState.isOverDeleteZone && dragState.draggedAppId ? (
+            <div 
+              className={`sortable-item dragging over-delete-zone`}
+              style={{ opacity: 0.8, position: 'relative' }}
+            >
+              {renderApp(apps.find(app => app.id === dragState.draggedAppId))}
+            </div>
+          ) : null}
+        </DragOverlay>,
+        document.body
+      )}
     </DndContext>
   );
 };

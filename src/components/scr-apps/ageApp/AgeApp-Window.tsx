@@ -4,10 +4,12 @@ import { GameTime } from '../../../types/gameState';
 
 interface AgeAppWindowProps extends BaseWindowProps {
   gameTime: GameTime;
+  isOverDeleteZone?: boolean;
 }
 
 const AgeAppWindow: React.FC<AgeAppWindowProps> = ({
   gameTime,
+  isOverDeleteZone,
   ...windowProps
 }) => {
   const { age, annumReckoning, yearOfDeath } = gameTime;
@@ -36,6 +38,7 @@ const AgeAppWindow: React.FC<AgeAppWindowProps> = ({
       {...windowProps}
       size={{ width: 300, height: 120 }}
       minSize={{ width: 300, height: 120 }}
+      isOverDeleteZone={isOverDeleteZone}
     >
       {content}
     </ScrAppWindow>

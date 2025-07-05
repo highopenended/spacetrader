@@ -6,10 +6,12 @@ import { GAME_PHASES } from '../../../constants/gameConstants';
 
 interface JobTitleAppWindowProps extends BaseWindowProps {
   gamePhase: GamePhase;
+  isOverDeleteZone?: boolean;
 }
 
 const JobTitleAppWindow: React.FC<JobTitleAppWindowProps> = ({
   gamePhase,
+  isOverDeleteZone,
   ...windowProps
 }) => {
   const jobTitle = GAME_PHASES[gamePhase].title;
@@ -29,6 +31,7 @@ const JobTitleAppWindow: React.FC<JobTitleAppWindowProps> = ({
       {...windowProps}
       size={{ width: 300, height: 100 }}
       minSize={{ width: 300, height: 100 }}
+      isOverDeleteZone={isOverDeleteZone}
     >
       {content}
     </ScrAppWindow>

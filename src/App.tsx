@@ -43,6 +43,8 @@ function App() {
   };
 
   const renderWindow = (window: WindowData) => {
+    // Determine if this window should show the purge effect
+    const isOverDeleteZone = dragState.isOverDeleteZone && dragState.draggedAppId === window.appType;
     // Use custom windows for specific app types
     if (window.appType === 'age') {
       return (
@@ -56,6 +58,7 @@ function App() {
           onClose={() => closeWindow(window.id)}
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
+          isOverDeleteZone={isOverDeleteZone}
         />
       );
     }
@@ -72,6 +75,7 @@ function App() {
           onClose={() => closeWindow(window.id)}
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
+          isOverDeleteZone={isOverDeleteZone}
         />
       );
     }
@@ -88,6 +92,7 @@ function App() {
         onClose={() => closeWindow(window.id)}
         onPositionChange={(position) => updateWindowPosition(window.appType, position)}
         onSizeChange={(size) => updateWindowSize(window.appType, size)}
+        isOverDeleteZone={isOverDeleteZone}
       >
         {window.content}
       </ScrAppWindow>
