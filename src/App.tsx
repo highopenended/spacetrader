@@ -10,6 +10,7 @@ import { useGameState_Time } from './hooks/useGameState_Time';
 import { useWindowManager } from './hooks/useWindowManager';
 import { useScrAppListManager } from './hooks/useScrAppListManager';
 import { WindowData } from './types/gameState';
+import PurgeConfirmPopup from './components/ui/PurgeConfirmPopup';
 
 function App() {
   const { credits, updateCredits, setCredits, resetCredits } = useGameState_Credits();
@@ -22,6 +23,7 @@ function App() {
     updateWindowSize,
     openOrCloseWindow,
     closeWindow,
+    closeWindowsByAppType,
   } = useWindowManager();
   const {
     apps,
@@ -35,6 +37,65 @@ function App() {
     uninstallApp
   } = useScrAppListManager();
 
+  const [pendingDelete, setPendingDelete] = React.useState<{
+    appId: string | null;
+    prevOrder: string[];
+  }>({ appId: null, prevOrder: [] });
+
+  const handleDragEndWithConfirm = React.useCallback((event: any) => {
+    const { active, over } = event;
+    dragState.isDragging = false;
+    dragState.draggedAppId = null;
+    dragState.isOverDeleteZone = false;
+    if (!over) return;
+    if (over.id === 'delete-zone') {
+      const appDefinition = apps.find(app => app.id === active.id);
+      if (appDefinition && appDefinition.deletable) {
+        setPendingDelete({ appId: active.id, prevOrder: appOrder });
+        return;
+      }
+    }
+    handleDragEnd(event);
+  }, [apps, appOrder, handleDragEnd, dragState]);
+
+  const handleConfirmPurge = React.useCallback(() => {
+    if (pendingDelete.appId) {
+      closeWindowsByAppType(pendingDelete.appId);
+      uninstallApp(pendingDelete.appId);
+    }
+    setPendingDelete({ appId: null, prevOrder: [] });
+  }, [pendingDelete, uninstallApp, closeWindowsByAppType]);
+
+  const handleCancelPurge = React.useCallback(() => {
+    if (pendingDelete.prevOrder.length) {
+      installAppOrder(pendingDelete.prevOrder);
+    }
+    setPendingDelete({ appId: null, prevOrder: [] });
+  }, [pendingDelete]);
+
+  const installAppOrder = (order: string[]) => {
+    if (order.join(',') !== appOrder.join(',')) {
+      const newInstalled = order.map((id, idx) => {
+        const found = apps.find(app => app.id === id);
+        if (found) {
+          return {
+            id: found.id,
+            order: idx + 1,
+            purchased: true,
+            installedAt: found.installedAt || Date.now(),
+          };
+        }
+        return null;
+      }).filter(Boolean);
+      if (newInstalled.length === order.length) {
+        resetToDefaults();
+        newInstalled.forEach((app, idx) => {
+          if (app) installApp(app.id, idx + 1);
+        });
+      }
+    }
+  };
+
   const resetGame = () => {
     resetCredits();
     resetGamePhase();
@@ -43,9 +104,7 @@ function App() {
   };
 
   const renderWindow = (window: WindowData) => {
-    // Determine if this window should show the purge effect
-    const isOverDeleteZone = dragState.isOverDeleteZone && dragState.draggedAppId === window.appType;
-    // Use custom windows for specific app types
+    const isOverDeleteZone = (pendingDelete.appId === window.appType) || (dragState.isOverDeleteZone && dragState.draggedAppId === window.appType);
     if (window.appType === 'age') {
       return (
         <AgeAppWindow
@@ -80,7 +139,6 @@ function App() {
       );
     }
 
-    // Default window for other app types
     return (
       <ScrAppWindow
         key={window.id}
@@ -112,9 +170,10 @@ function App() {
         dragState={dragState}
         handleDragStart={handleDragStart}
         handleDragOver={handleDragOver}
-        handleDragEnd={handleDragEnd}
+        handleDragEnd={handleDragEndWithConfirm}
         installApp={installApp}
         uninstallApp={uninstallApp}
+        pendingDeleteAppId={pendingDelete.appId}
       />
       <AdminToolbar 
         credits={credits}
@@ -131,8 +190,13 @@ function App() {
         resetGame={resetGame}
       />
       
-      {/* Render windows */}
       {windows.map(renderWindow)}
+      <PurgeConfirmPopup
+        open={!!pendingDelete.appId}
+        appName={pendingDelete.appId ? (apps.find(a => a.id === pendingDelete.appId)?.title || pendingDelete.appId) : ''}
+        onConfirm={handleConfirmPurge}
+        onCancel={handleCancelPurge}
+      />
     </div>
   );
 }

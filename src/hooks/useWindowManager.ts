@@ -69,11 +69,17 @@ export const useWindowManager = () => {
     setWindows(prev => prev.filter(window => window.id !== windowId));
   };
 
+  // Close all windows for a given appType
+  const closeWindowsByAppType = (appType: string) => {
+    setWindows(prev => prev.filter(window => window.appType !== appType));
+  };
+
   return {
     windows,
     updateWindowPosition,
     updateWindowSize,
     openOrCloseWindow,
     closeWindow,
+    closeWindowsByAppType,
   };
 }; 

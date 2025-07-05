@@ -1,0 +1,114 @@
+.purge-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(10, 10, 10, 0.65);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.purge-popup {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  border: 2px solid #a00;
+  box-shadow: 0 0 16px 2px #000, 0 0 0 2px #a00 inset;
+  min-width: 320px;
+  max-width: 90vw;
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Courier New', monospace;
+  overflow: hidden;
+}
+
+.purge-title {
+  color: #ff3b3b;
+  font-size: 1.3rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 2px #000, 0 0 6px #a00;
+}
+
+.purge-app-name {
+  color: #ccc;
+  font-size: 1.1rem;
+  margin-bottom: 1.2rem;
+  text-align: center;
+  letter-spacing: 1px;
+  opacity: 0.85;
+}
+
+.purge-popup-actions {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.purge-btn {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  padding: 0.4rem 1.2rem;
+  border: none;
+  border-radius: 2px;
+  background: #181818;
+  color: #ccc;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 1px 0 #333 inset;
+  transition: background 0.12s, color 0.12s;
+  outline: none;
+}
+
+.purge-btn.confirm {
+  color: #ff3b3b;
+  border: 1px solid #a00;
+  background: #1a0000;
+}
+.purge-btn.confirm:hover, .purge-btn.confirm:focus {
+  background: #2d0000;
+  color: #fff;
+}
+
+.purge-btn.cancel {
+  color: #7fff7f;
+  border: 1px solid #2a2;
+  background: #002200;
+}
+.purge-btn.cancel:hover, .purge-btn.cancel:focus {
+  background: #003300;
+  color: #fff;
+}
+
+.purge-popup-scanlines {
+  pointer-events: none;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(255,255,255,0.03) 2px,
+    rgba(255,255,255,0.03) 4px
+  );
+  z-index: 2;
+  opacity: 0.7;
+  animation: scanlines-flicker 2.5s linear infinite, scanlines-move 1.5s linear infinite;
+}
+
+@keyframes scanlines-flicker {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes scanlines-move {
+  0% { background-position-x: 0; }
+  100% { background-position-x: 40px; }
+} 

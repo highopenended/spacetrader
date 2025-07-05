@@ -7,6 +7,9 @@ import DeleteZone from '../scr-apps/DeleteZone';
 import { GamePhase, GameTime } from '../../types/gameState';
 import { createPortal } from 'react-dom';
 
+// Placeholder for purge confirmation popup
+// import PurgeConfirmPopup from '../ui/PurgeConfirmPopup';
+
 interface TerminalScreenProps {
   credits: number;
   gameTime: GameTime;
@@ -21,6 +24,7 @@ interface TerminalScreenProps {
   handleDragEnd: (event: any) => void;
   installApp: (appId: string, position?: number) => void;
   uninstallApp: (appId: string) => void;
+  pendingDeleteAppId?: string | null;
 }
 
 const TerminalScreen: React.FC<TerminalScreenProps> = ({ 
@@ -36,7 +40,8 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   handleDragOver,
   handleDragEnd,
   installApp,
-  uninstallApp
+  uninstallApp,
+  pendingDeleteAppId = null
 }) => {
   // Render an app based on its configuration
   const renderApp = (appConfig: any) => {
@@ -102,9 +107,10 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
             strategy={verticalListSortingStrategy}
           >
             {apps.map((appConfig) => {
-              // Hide the dragged app from the list only when it's being dragged and isOverDeleteZone is true
+              // Hide the app if it's being dragged out OR if it's pending deletion confirmation
               const isDraggedAndOutside = dragState.isDragging && dragState.draggedAppId === appConfig.id && dragState.isOverDeleteZone;
-              if (isDraggedAndOutside) return null;
+              const isPendingDelete = pendingDeleteAppId === appConfig.id;
+              if (isDraggedAndOutside || isPendingDelete) return null;
               return (
                 <SortableItem
                   key={appConfig.id}
