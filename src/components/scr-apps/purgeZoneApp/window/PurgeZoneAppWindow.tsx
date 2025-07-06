@@ -5,10 +5,16 @@ import './PurgeZoneAppWindow.css';
 
 interface PurgeZoneAppWindowProps extends BaseWindowProps {
   overId?: UniqueIdentifier | null;
+  onCloseWindow?: (windowId: string) => void;
+  onUpdateWindowPosition?: (appType: string, position: { x: number; y: number }) => void;
+  onUpdateWindowSize?: (appType: string, size: { width: number; height: number }) => void;
 }
 
 const PurgeZoneAppWindow: React.FC<PurgeZoneAppWindowProps> = ({
   overId,
+  onCloseWindow,
+  onUpdateWindowPosition,
+  onUpdateWindowSize,
   ...windowProps
 }) => {
   const { setNodeRef } = useDroppable({
@@ -17,11 +23,27 @@ const PurgeZoneAppWindow: React.FC<PurgeZoneAppWindowProps> = ({
 
   const isActive = overId === 'purge-zone-window';
 
+  // Create callback handlers that match the expected interface
+  const handleClose = () => {
+    if (onCloseWindow && windowProps.windowId) {
+      onCloseWindow(windowProps.windowId);
+    }
+  };
+
+  const handlePositionChange = (position: { x: number; y: number }) => {
+    if (onUpdateWindowPosition && windowProps.appType) {
+      onUpdateWindowPosition(windowProps.appType, position);
+    }
+  };
+
+  const handleSizeChange = (size: { width: number; height: number }) => {
+    if (onUpdateWindowSize && windowProps.appType) {
+      onUpdateWindowSize(windowProps.appType, size);
+    }
+  };
+
   const content = (
     <div className="purge-zone-content">
-
-      
-      {/* Internal delete zone */}
       <div
         ref={setNodeRef}
         className={`purge-zone-drop-area${isActive ? ' active' : ''}`}
@@ -37,7 +59,10 @@ const PurgeZoneAppWindow: React.FC<PurgeZoneAppWindowProps> = ({
     <ScrAppWindow
       title="Purge Zone"
       {...windowProps}
-      minSize={{ width: 250, height: 150 }}
+      onClose={handleClose}
+      onPositionChange={handlePositionChange}
+      onSizeChange={handleSizeChange}
+      minSize={{ width: 100, height: 100 }}
     >
       {content}
     </ScrAppWindow>

@@ -1,6 +1,7 @@
 /* Sortable Item CSS */
 
 .sortable-item {
+  
   cursor: default;
   touch-action: none; /* Prevent scrolling on touch devices during drag */
   /* Add basic app styling that was in the deleted wrapper */
@@ -124,6 +125,7 @@
 .sortable-item.active .detail-label,
 .sortable-item.active .detail-value {
   color: #39ff14;
+  color: #eaeaea;
   text-shadow:
     0 0 2px #39ff14,
     0 0 6px #39ff14,

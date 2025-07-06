@@ -200,6 +200,9 @@ function App() {
           openAppTypes={new Set(windows.map(w => w.appType))}
           purgeZoneWindowProps={purgeZoneWindow}
           overId={overId}
+          onCloseWindow={closeWindow}
+          onUpdateWindowPosition={updateWindowPosition}
+          onUpdateWindowSize={updateWindowSize}
         />
         <AdminToolbar 
           credits={credits}

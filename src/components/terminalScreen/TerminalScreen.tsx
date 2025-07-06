@@ -29,6 +29,9 @@ interface TerminalScreenProps {
   openAppTypes?: Set<string>;
   purgeZoneWindowProps: any;
   overId: UniqueIdentifier | null;
+  onCloseWindow?: (windowId: string) => void;
+  onUpdateWindowPosition?: (appType: string, position: { x: number; y: number }) => void;
+  onUpdateWindowSize?: (appType: string, size: { width: number; height: number }) => void;
 }
 
 const TerminalScreen: React.FC<TerminalScreenProps> = ({ 
@@ -49,6 +52,9 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   openAppTypes = new Set(),
   purgeZoneWindowProps,
   overId,
+  onCloseWindow,
+  onUpdateWindowPosition,
+  onUpdateWindowSize,
 }) => {
   // Render an app based on its configuration
   const renderApp = (appConfig: any) => {
@@ -84,7 +90,13 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   return (
     <>
       {purgeZoneWindowProps && (
-        <PurgeZoneAppWindow {...purgeZoneWindowProps} overId={overId} />
+        <PurgeZoneAppWindow 
+          {...purgeZoneWindowProps} 
+          overId={overId}
+          onCloseWindow={onCloseWindow}
+          onUpdateWindowPosition={onUpdateWindowPosition}
+          onUpdateWindowSize={onUpdateWindowSize}
+        />
       )}
       <div className="terminal-screen">
         <div className="terminal-header">

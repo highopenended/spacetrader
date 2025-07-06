@@ -21,6 +21,9 @@
   align-items: center;
   cursor: move;
   flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  min-height: 20px;
 }
 
 .window-title {
@@ -29,10 +32,14 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 }
 
 .window-content {
-  padding: var(--spacing-sm);
+  /* Removed padding for full-bleed app content (e.g. Purge Zone) */
   color: #ccc;
   font-size: var(--font-size-small);
   flex: 1;
