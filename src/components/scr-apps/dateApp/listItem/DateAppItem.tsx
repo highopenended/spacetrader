@@ -1,6 +1,6 @@
 import React from 'react';
 import './DateAppItem.css';
-import ScrApp from '../../ScrApp';
+import ScrApp from '../../ScrAppItem';
 import { GamePhase,GameTime } from '../../../../types/gameState';
 import { getTitheName, getLedgerCycleName, getAnnumReckoningName, getGrindName } from '../../../../utils/gameStateUtils';
 

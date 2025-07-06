@@ -1,6 +1,6 @@
 import React from 'react';
 import './ScrAppStoreItem.css';
-import ScrApp from '../../ScrApp';
+import ScrApp from '../../ScrAppItem';
 
 interface ScrAppStoreProps {
   hasNewApps?: boolean;

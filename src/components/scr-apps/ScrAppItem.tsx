@@ -1,5 +1,5 @@
 import React from 'react';
-import './ScrApp.css';
+import './ScrAppItem.css';
 
 interface ScrAppProps {
   children: React.ReactNode;

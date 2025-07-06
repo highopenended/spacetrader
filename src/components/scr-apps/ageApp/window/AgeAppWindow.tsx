@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ScrAppWindow, { BaseWindowProps } from '../../ScrApp-Window';
+import ScrAppWindow, { BaseWindowProps } from '../../ScrAppWindow';
 import { GameTime } from '../../../../types/gameState';
 
 const COMPACT_LEVELS = {

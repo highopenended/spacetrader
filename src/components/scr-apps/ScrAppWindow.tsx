@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import './ScrApp-Window.css';
+import './ScrAppWindow.css';
 import { WINDOW_DEFAULTS } from '../../constants/windowConstants';
 
 // Base interface for all window management props

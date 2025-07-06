@@ -1,6 +1,6 @@
 import React from 'react';
 import './JobTitleAppWindow.css';
-import ScrAppWindow, { BaseWindowProps } from '../../ScrApp-Window';
+import ScrAppWindow, { BaseWindowProps } from '../../ScrAppWindow';
 import { GamePhase } from '../../../../types/gameState';
 import { GAME_PHASES } from '../../../../constants/gameConstants';
 

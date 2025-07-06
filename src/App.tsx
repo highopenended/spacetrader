@@ -1,7 +1,7 @@
 import React from 'react';
 import TerminalScreen from './components/terminalScreen/TerminalScreen';
 import AdminToolbar from './components/adminToolbar/AdminToolbar';
-import ScrAppWindow from './components/scr-apps/ScrApp-Window';
+import ScrAppWindow from './components/scr-apps/ScrAppWindow';
 import AgeAppWindow from './components/scr-apps/ageApp/window/AgeAppWindow';
 import JobTitleAppWindow from './components/scr-apps/jobTitleApp/window/JobTitleAppWindow';
 import { useGameState_Credits } from './hooks/useGameState_Credits';
