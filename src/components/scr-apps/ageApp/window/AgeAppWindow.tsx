@@ -11,12 +11,10 @@ const COMPACT_LEVELS = {
 
 interface AgeAppWindowProps extends BaseWindowProps {
   gameTime: GameTime;
-  isOverDeleteZone?: boolean;
 }
 
 const AgeAppWindow: React.FC<AgeAppWindowProps> = ({
   gameTime,
-  isOverDeleteZone,
   onWidthChange,
   ...windowProps
 }) => {
@@ -126,7 +124,6 @@ const AgeAppWindow: React.FC<AgeAppWindowProps> = ({
       title="Age Tracker"
       {...windowProps}
       minSize={{ width: 200, height: 120 }}
-      isOverDeleteZone={isOverDeleteZone}
       onWidthChange={handleWidthChange}
     >
       {content}

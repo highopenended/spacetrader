@@ -29,7 +29,6 @@ export interface InstalledApp {
 export interface DragState {
   isDragging: boolean;
   draggedAppId: string | null;
-  isOverDeleteZone: boolean;
 }
 
 export interface AppListState {
@@ -37,7 +36,7 @@ export interface AppListState {
   dragState: DragState;
 }
 
-export type AppType = 'credits' | 'jobTitle' | 'age' | 'date' | 'scrAppStore';
+export type AppType = 'credits' | 'jobTitle' | 'age' | 'date' | 'purgeZone' | 'scrAppStore';
 
 export interface AppOrderUpdateData {
   appId: string;

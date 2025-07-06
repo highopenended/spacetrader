@@ -23,8 +23,7 @@ export const useScrAppListManager = () => {
   
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
-    draggedAppId: null,
-    isOverDeleteZone: false
+    draggedAppId: null
   });
 
   // Get app order for dnd-kit
@@ -44,18 +43,14 @@ export const useScrAppListManager = () => {
   const handleDragStart = useCallback((event: any) => {
     setDragState({
       isDragging: true,
-      draggedAppId: event.active.id,
-      isOverDeleteZone: false
+      draggedAppId: event.active.id
     });
   }, []);
 
   // Handle drag over (for deletion zone detection)
   const handleDragOver = useCallback((event: any) => {
-    const { over } = event;
-    setDragState(prev => ({
-      ...prev,
-      isOverDeleteZone: over?.id === 'delete-zone'
-    }));
+    // Only track purge zone window for deletion effects
+    // No global delete zone tracking needed
   }, []);
 
   // Handle drag end - reorder or delete
@@ -65,14 +60,13 @@ export const useScrAppListManager = () => {
     // Reset drag state
     setDragState({
       isDragging: false,
-      draggedAppId: null,
-      isOverDeleteZone: false
+      draggedAppId: null
     });
 
     if (!over) return;
 
     // Handle deletion
-    if (over.id === 'delete-zone') {
+    if (over.id === 'purge-zone-window') {
       const appDefinition = APP_REGISTRY[active.id];
       if (appDefinition && appDefinition.deletable) {
         setInstalledApps(prev => {

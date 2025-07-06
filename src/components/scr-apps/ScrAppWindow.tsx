@@ -18,7 +18,6 @@ export interface BaseWindowProps {
 interface ScrAppWindowProps extends BaseWindowProps {
   title: string;
   children: React.ReactNode;
-  isOverDeleteZone?: boolean;
 }
 
 const ScrAppWindow: React.FC<ScrAppWindowProps> = ({ 
@@ -32,8 +31,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   minSize = WINDOW_DEFAULTS.MIN_SIZE,
   onPositionChange,
   onSizeChange,
-  onWidthChange,
-  isOverDeleteZone = false
+  onWidthChange
 }) => {
   const [currentPosition, setCurrentPosition] = useState(position);
   const [currentSize, setCurrentSize] = useState(size);
@@ -130,7 +128,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   return (
     <div 
       ref={windowRef}
-      className={`scr-app-window${isOverDeleteZone ? ' over-delete-zone' : ''}`}
+      className="scr-app-window"
       style={{ 
         left: currentPosition.x, 
         top: currentPosition.y,

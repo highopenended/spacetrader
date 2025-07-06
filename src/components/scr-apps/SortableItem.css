@@ -47,25 +47,7 @@
   z-index: 1000;
 }
 
-/* Style when dragging over delete zone - 80s terminal corruption */
-.sortable-item.over-delete-zone {
-  background: 
-    linear-gradient(135deg, #1a0000 0%, #330000 50%, #1a0000 100%),
-    repeating-linear-gradient(
-      90deg,
-      transparent 0px,
-      transparent 2px,
-      rgba(255, 0, 0, 0.1) 2px,
-      rgba(255, 0, 0, 0.1) 4px
-    ) !important;
-  border: 1px solid #ff0000 !important;
-  box-shadow: 
-    0 0 10px rgba(255, 0, 0, 0.6),
-    inset 0 0 20px rgba(255, 0, 0, 0.1),
-    0 4px 8px rgba(0, 0, 0, 0.5) !important;
-  animation: terminal-corruption 0.18s infinite, surge-cycle 6s infinite;
-  filter: contrast(1.08) brightness(1.04);
-}
+
 
 @keyframes surge-cycle {
   0%, 92% { filter: none; transform: none; }
@@ -112,152 +94,13 @@
   }
 }
 
-/* PURGE warning overlay */
-.sortable-item.over-delete-zone::after {
-  content: 'PURGE?';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: #ff3b3b;
-  font-family: 'Courier New', monospace;
-  font-size: calc(var(--font-size-small) + 2px);
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  text-shadow: 
-    0 0 2px #000,
-    0 0 1px #000,
-    0 0 6px #ff3b3b,
-    0 0 12px #ff3b3b,
-    1px 0 0 #ff3b3b,
-    -1px 0 0 #ff3b3b,
-    0 1px 0 #ff3b3b,
-    0 -1px 0 #ff3b3b;
-  pointer-events: none;
-  z-index: 10;
-  animation: purge-flicker 0.15s infinite, surge-text-cycle 6s infinite;
-}
 
-@keyframes surge-text-cycle {
-  0%, 92% {
-    filter: none;
-    text-shadow: 
-      0 0 2px #000,
-      0 0 1px #000,
-      0 0 6px #ff3b3b,
-      0 0 12px #ff3b3b,
-      1px 0 0 #ff3b3b,
-      -1px 0 0 #ff3b3b,
-      0 1px 0 #ff3b3b,
-      0 -1px 0 #ff3b3b;
-    color: #ff3b3b;
-    transform: translate(-50%, -50%) scale(1) skewX(0deg);
-  }
-  93% {
-    filter: blur(2.5px) brightness(1.5) contrast(2);
-    text-shadow:
-      2px 0 0 #00fff7,
-      -2px 0 0 #ff00ea,
-      0 0 8px #fff,
-      0 0 16px #fff;
-    color: #fff;
-    transform: translate(-50%, -50%) scale(1.08) skewX(10deg);
-  }
-  93.25% {
-    filter: blur(3px) brightness(1.7) contrast(2.2);
-    text-shadow:
-      -2px 0 0 #00fff7,
-      2px 0 0 #ff00ea,
-      0 0 10px #fff,
-      0 0 20px #fff;
-    color: #fff;
-    transform: translate(-50%, -50%) scale(1.12) skewX(-12deg);
-  }
-  93.5% {
-    filter: blur(2.5px) brightness(1.5) contrast(2);
-    text-shadow:
-      2px 0 0 #00fff7,
-      -2px 0 0 #ff00ea,
-      0 0 8px #fff,
-      0 0 16px #fff;
-    color: #fff;
-    transform: translate(-50%, -50%) scale(1.08) skewX(8deg);
-  }
-  93.75% {
-    filter: blur(3.5px) brightness(1.8) contrast(2.4);
-    text-shadow:
-      -3px 0 0 #00fff7,
-      3px 0 0 #ff00ea,
-      0 0 12px #fff,
-      0 0 24px #fff;
-    color: #fff;
-    transform: translate(-50%, -50%) scale(1.15) skewX(-15deg);
-  }
-  94%, 100% {
-    filter: none;
-    text-shadow: 
-      0 0 2px #000,
-      0 0 1px #000,
-      0 0 6px #ff3b3b,
-      0 0 12px #ff3b3b,
-      1px 0 0 #ff3b3b,
-      -1px 0 0 #ff3b3b,
-      0 1px 0 #ff3b3b,
-      0 -1px 0 #ff3b3b;
-    color: #ff3b3b;
-    transform: translate(-50%, -50%) scale(1) skewX(0deg);
-  }
-}
 
-/* Retro terminal flicker */
-@keyframes purge-flicker {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
 
-/* Static noise overlay */
-.sortable-item.over-delete-zone::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    repeating-linear-gradient(
-      0deg,
-      transparent 0px,
-      rgba(255, 0, 0, 0.03) 1px,
-      transparent 2px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent 0px,
-      rgba(255, 0, 0, 0.03) 1px,
-      transparent 2px
-    );
-  pointer-events: none;
-  z-index: 5;
-  animation: static-noise 0.25s infinite, surge-static-cycle 6s infinite;
-}
 
-@keyframes surge-static-cycle {
-  0%, 92% { opacity: 1; filter: none; }
-  93% { opacity: 0.3; filter: blur(2.5px) brightness(2) contrast(2); }
-  93.25% { opacity: 0.2; filter: blur(3.5px) brightness(2.2) contrast(2.2); }
-  93.5% { opacity: 0.3; filter: blur(2.5px) brightness(2) contrast(2); }
-  93.75% { opacity: 0.15; filter: blur(4px) brightness(2.5) contrast(2.5); }
-  94%, 100% { opacity: 1; filter: none; }
-}
 
-@keyframes static-noise {
-  0% { opacity: 0.8; transform: translateX(0px) translateY(0px); }
-  25% { opacity: 0.6; transform: translateX(0.5px) translateY(-0.5px); }
-  50% { opacity: 0.9; transform: translateX(-0.5px) translateY(0.5px); }
-  75% { opacity: 0.7; transform: translateX(0.5px) translateY(0px); }
-  100% { opacity: 0.8; transform: translateX(0px) translateY(0px); }
-}
+
+
 
 /* Override cursor when dragging */
 .sortable-item.dragging * {

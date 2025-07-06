@@ -1,9 +1,10 @@
 import React from 'react';
 import './TerminalScreen.css';
-import { DndContext, DragOverlay, closestCenter, useSensor, PointerSensor } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { UniqueIdentifier } from '@dnd-kit/core';
 import SortableItem from '../scr-apps/SortableItem';
-import DeleteZone from '../scr-apps/DeleteZone';
+import PurgeZoneAppWindow from '../scr-apps/purgeZoneApp/window/PurgeZoneAppWindow';
+
 import { GamePhase, GameTime } from '../../types/gameState';
 import { createPortal } from 'react-dom';
 
@@ -26,6 +27,8 @@ interface TerminalScreenProps {
   uninstallApp: (appId: string) => void;
   pendingDeleteAppId?: string | null;
   openAppTypes?: Set<string>;
+  purgeZoneWindowProps: any;
+  overId: UniqueIdentifier | null;
 }
 
 const TerminalScreen: React.FC<TerminalScreenProps> = ({ 
@@ -43,7 +46,9 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   installApp,
   uninstallApp,
   pendingDeleteAppId = null,
-  openAppTypes = new Set()
+  openAppTypes = new Set(),
+  purgeZoneWindowProps,
+  overId,
 }) => {
   // Render an app based on its configuration
   const renderApp = (appConfig: any) => {
@@ -77,82 +82,46 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   };
 
   return (
-    <DndContext
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-      sensors={[
-        // Require minimum distance before drag starts to prevent click interference
-        useSensor(PointerSensor, {
-          activationConstraint: {
-            distance: 10, // Must move 10px before drag activates
-          },
-        }),
-      ]}
-    >
-      {/* Delete zone covers entire screen behind terminal */}
-      <DeleteZone isActive={dragState.isOverDeleteZone} />
-      
-    <div className="terminal-screen">
-      <div className="terminal-header">
-        <div className="terminal-title">SCRAPCOM TERMINAL</div>
-        <div className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>
-          <div className="status-light"></div>
-          <div className="status-text">{isOnline ? 'ONLINE' : 'OFFLINE'}</div>
+    <>
+      {purgeZoneWindowProps && (
+        <PurgeZoneAppWindow {...purgeZoneWindowProps} overId={overId} />
+      )}
+      <div className="terminal-screen">
+        <div className="terminal-header">
+          <div className="terminal-title">SCRAPCOM TERMINAL</div>
+          <div className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>
+            <div className="status-light"></div>
+            <div className="status-text">{isOnline ? 'ONLINE' : 'OFFLINE'}</div>
+          </div>
         </div>
-      </div>
-      
-      <div className="terminal-content">  
-          <SortableContext 
-            items={appOrder} 
-            strategy={verticalListSortingStrategy}
-          >
-            {apps.map((appConfig) => {
-              // Hide the app if it's being dragged out OR if it's pending deletion confirmation
-              const isDraggedAndOutside = dragState.isDragging && dragState.draggedAppId === appConfig.id && dragState.isOverDeleteZone;
-              const isPendingDelete = pendingDeleteAppId === appConfig.id;
-              if (isDraggedAndOutside || isPendingDelete) return null;
-              const isWindowOpen = openAppTypes.has(appConfig.id);
-              return (
-                <SortableItem
-                  key={appConfig.id}
-                  id={appConfig.id}
-                  onAppClick={() => onAppClick?.(appConfig.id, appConfig.title)}
-                  isOverDeleteZone={dragState.isOverDeleteZone && dragState.draggedAppId === appConfig.id}
-                  isWindowOpen={isWindowOpen}
-                >
-                  {renderApp(appConfig)}
-                </SortableItem>
-              );
-            })}
-          </SortableContext>
-        </div>
-      
+        
+        <div className="terminal-content">  
+            <SortableContext 
+              items={appOrder} 
+              strategy={verticalListSortingStrategy}
+            >
+              {apps.map((appConfig) => {
+                // Hide the app if it's pending deletion confirmation
+                const isPendingDelete = pendingDeleteAppId === appConfig.id;
+                if (isPendingDelete) return null;
+                const isWindowOpen = openAppTypes.has(appConfig.id);
+                return (
+                  <SortableItem
+                    key={appConfig.id}
+                    id={appConfig.id}
+                    onAppClick={() => onAppClick?.(appConfig.id, appConfig.title)}
+                    isWindowOpen={isWindowOpen}
+                  >
+                    {renderApp(appConfig)}
+                  </SortableItem>
+                );
+              })}
+            </SortableContext>
+          </div>
+        
         <div className="terminal-scanlines"></div>
       </div>
-
-      {createPortal(
-        <DragOverlay 
-          zIndex={2000}
-          dropAnimation={{
-            duration: 0, // Disable drop animation
-            easing: 'ease',
-          }}
-        >
-          {/* Only show overlay when dragging and outside terminal (isOverDeleteZone) */}
-          {dragState.isDragging && dragState.isOverDeleteZone && dragState.draggedAppId ? (
-            <div 
-              className={`sortable-item dragging over-delete-zone`}
-              style={{ opacity: 0.8, position: 'relative' }}
-            >
-              {renderApp(apps.find(app => app.id === dragState.draggedAppId))}
-            </div>
-          ) : null}
-        </DragOverlay>,
-        document.body
-      )}
-    </DndContext>
+    </>
   );
 };
 

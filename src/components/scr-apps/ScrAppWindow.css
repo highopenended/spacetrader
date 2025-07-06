@@ -65,22 +65,4 @@
   font-weight: bold;
 }
 
-/* Purge/corruption effect for app window when dragged over delete zone */
-.scr-app-window.over-delete-zone {
-  background: 
-    linear-gradient(135deg, #1a0000 0%, #330000 50%, #1a0000 100%),
-    repeating-linear-gradient(
-      90deg,
-      transparent 0px,
-      transparent 2px,
-      rgba(255, 0, 0, 0.1) 2px,
-      rgba(255, 0, 0, 0.1) 4px
-    ) !important;
-  border: 2px solid #ff0000 !important;
-  box-shadow: 
-    0 0 10px rgba(255, 0, 0, 0.6),
-    inset 0 0 20px rgba(255, 0, 0, 0.1),
-    0 4px 8px rgba(0, 0, 0, 0.5) !important;
-  animation: terminal-corruption 0.18s infinite, surge-cycle 6s infinite;
-  filter: contrast(1.08) brightness(1.04);
-} 
+ 

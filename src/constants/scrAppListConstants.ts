@@ -10,6 +10,7 @@ import JobTitleApp from '../components/scr-apps/jobTitleApp/listItem/JobTitleApp
 import AgeApp from '../components/scr-apps/ageApp/listItem/AgeAppItem';
 import DateApp from '../components/scr-apps/dateApp/listItem/DateAppItem';
 import ScrAppStore from '../components/scr-apps/scrAppStoreApp/listItem/ScrAppStoreItem';
+import PurgeZoneApp from '../components/scr-apps/purgeZoneApp/listItem/PurgeZoneAppItem';
 import { AppDefinition, AppType } from '../types/scrAppListState';
 
 // Master registry of ALL possible apps (current + future)
@@ -67,6 +68,16 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     deletable: true,
     description: 'Current in-game date and time'
   },
+  purgeZone: {
+    id: 'purgeZone',
+    name: 'Purge Zone',
+    title: 'Purge Zone',
+    component: PurgeZoneApp,
+    category: 'utility',
+    cost: 0, // Free for now
+    deletable: true,
+    description: 'Purge zone management interface'
+  },
 
   // Future apps (not implemented yet)
   scanner: {
@@ -99,11 +110,11 @@ export const DEFAULT_INSTALLED_APPS: AppType[] = [
   'jobTitle', 
   'age',
   'date',
+  'purgeZone',
   'scrAppStore'
 ];
 
 export const DRAG_CONSTANTS = {
   ITEM_TYPE: 'SCR_APP',
-  DELETE_ZONE_ID: 'delete-zone',
   ANIMATION_DURATION: 200
 }; 

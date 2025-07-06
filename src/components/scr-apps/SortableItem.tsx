@@ -15,7 +15,6 @@ interface SortableItemProps {
   children: React.ReactNode;
   onAppClick?: () => void;
   disabled?: boolean;
-  isOverDeleteZone?: boolean;
   isWindowOpen?: boolean;
 }
 
@@ -24,7 +23,6 @@ const SortableItem: React.FC<SortableItemProps> = ({
   children, 
   onAppClick,
   disabled = false,
-  isOverDeleteZone = false,
   isWindowOpen = false
 }) => {
   const {
@@ -57,7 +55,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={`sortable-item${isDragging ? ' dragging' : ''}${onAppClick ? ' clickable' : ''}${isOverDeleteZone ? ' over-delete-zone' : ''}${isWindowOpen ? ' active' : ''}`}
+      className={`sortable-item${isDragging ? ' dragging' : ''}${onAppClick ? ' clickable' : ''}${isWindowOpen ? ' active' : ''}`}
       onClick={handleClick}
       {...attributes}
       {...listeners}
