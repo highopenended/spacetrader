@@ -25,6 +25,7 @@ interface TerminalScreenProps {
   installApp: (appId: string, position?: number) => void;
   uninstallApp: (appId: string) => void;
   pendingDeleteAppId?: string | null;
+  openAppTypes?: Set<string>;
 }
 
 const TerminalScreen: React.FC<TerminalScreenProps> = ({ 
@@ -41,7 +42,8 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   handleDragEnd,
   installApp,
   uninstallApp,
-  pendingDeleteAppId = null
+  pendingDeleteAppId = null,
+  openAppTypes = new Set()
 }) => {
   // Render an app based on its configuration
   const renderApp = (appConfig: any) => {
@@ -111,12 +113,14 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
               const isDraggedAndOutside = dragState.isDragging && dragState.draggedAppId === appConfig.id && dragState.isOverDeleteZone;
               const isPendingDelete = pendingDeleteAppId === appConfig.id;
               if (isDraggedAndOutside || isPendingDelete) return null;
+              const isWindowOpen = openAppTypes.has(appConfig.id);
               return (
                 <SortableItem
                   key={appConfig.id}
                   id={appConfig.id}
                   onAppClick={() => onAppClick?.(appConfig.id, appConfig.title)}
                   isOverDeleteZone={dragState.isOverDeleteZone && dragState.draggedAppId === appConfig.id}
+                  isWindowOpen={isWindowOpen}
                 >
                   {renderApp(appConfig)}
                 </SortableItem>

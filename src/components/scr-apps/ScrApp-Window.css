@@ -55,14 +55,12 @@
 
 /* Universal styling for app window content */
 .detail-label {
-  color: #888;
   font-size: var(--font-size-xsmall);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 .detail-value {
-  color: #ccc;
   font-size: var(--font-size-small);
   font-weight: bold;
 }

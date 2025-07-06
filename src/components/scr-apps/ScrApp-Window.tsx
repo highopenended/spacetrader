@@ -12,6 +12,7 @@ export interface BaseWindowProps {
   minSize?: { width: number; height: number };
   onPositionChange?: (position: { x: number; y: number }) => void;
   onSizeChange?: (size: { width: number; height: number }) => void;
+  onWidthChange?: (width: number) => void;
 }
 
 interface ScrAppWindowProps extends BaseWindowProps {
@@ -31,6 +32,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   minSize = WINDOW_DEFAULTS.MIN_SIZE,
   onPositionChange,
   onSizeChange,
+  onWidthChange,
   isOverDeleteZone = false
 }) => {
   const [currentPosition, setCurrentPosition] = useState(position);
@@ -96,8 +98,12 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
       if (onSizeChange) {
         onSizeChange(currentSize);
       }
+      // Report width change for responsive behavior
+      if (onWidthChange) {
+        onWidthChange(currentSize.width);
+      }
     }
-  }, [isDragging, isResizing, onPositionChange, onSizeChange, currentPosition, currentSize]);
+  }, [isDragging, isResizing, onPositionChange, onSizeChange, onWidthChange, currentPosition, currentSize]);
 
   const handleDoubleClick = useCallback(() => {
     onClose();
@@ -113,6 +119,13 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
       };
     }
   }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
+
+  // Report width changes during resizing for responsive behavior
+  React.useEffect(() => {
+    if (isResizing && onWidthChange) {
+      onWidthChange(currentSize.width);
+    }
+  }, [currentSize.width, isResizing, onWidthChange]);
 
   return (
     <div 

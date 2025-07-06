@@ -174,6 +174,7 @@ function App() {
         installApp={installApp}
         uninstallApp={uninstallApp}
         pendingDeleteAppId={pendingDelete.appId}
+        openAppTypes={new Set(windows.map(w => w.appType))}
       />
       <AdminToolbar 
         credits={credits}

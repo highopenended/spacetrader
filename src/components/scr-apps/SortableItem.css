@@ -262,4 +262,27 @@
 /* Override cursor when dragging */
 .sortable-item.dragging * {
   cursor: grabbing !important;
+}
+
+/* Default: all text grey */
+.sortable-item,
+.sortable-item .app-label,
+.sortable-item .app-value,
+.sortable-item .detail-label,
+.sortable-item .detail-value {
+  color: #bcbcbc;
+  text-shadow: none;
+}
+
+/* When window is open: glowing green */
+.sortable-item.active,
+.sortable-item.active .app-label,
+.sortable-item.active .app-value,
+.sortable-item.active .detail-label,
+.sortable-item.active .detail-value {
+  color: #39ff14;
+  text-shadow:
+    0 0 2px #39ff14,
+    0 0 6px #39ff14,
+    0 0 12px #39ff14;
 } 
