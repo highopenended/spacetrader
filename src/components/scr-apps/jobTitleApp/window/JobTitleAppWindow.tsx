@@ -1,8 +1,8 @@
 import React from 'react';
-import './JobTitleApp-Window.css';
-import ScrAppWindow, { BaseWindowProps } from '../ScrApp-Window';
-import { GamePhase } from '../../../types/gameState';
-import { GAME_PHASES } from '../../../constants/gameConstants';
+import './JobTitleAppWindow.css';
+import ScrAppWindow, { BaseWindowProps } from '../../ScrApp-Window';
+import { GamePhase } from '../../../../types/gameState';
+import { GAME_PHASES } from '../../../../constants/gameConstants';
 
 interface JobTitleAppWindowProps extends BaseWindowProps {
   gamePhase: GamePhase;

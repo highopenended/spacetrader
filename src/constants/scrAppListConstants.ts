@@ -5,11 +5,11 @@
  * Apps are installed/purchased through gameplay but defined here.
  */
 
-import CreditsApp from '../components/scr-apps/creditsApp/CreditsApp';
-import JobTitleApp from '../components/scr-apps/jobTitleApp/JobTitleApp';
-import AgeApp from '../components/scr-apps/ageApp/AgeApp';
-import DateApp from '../components/scr-apps/dateApp/DateApp';
-import ScrAppStore from '../components/scr-apps/scrAppStore/ScrAppStore';
+import CreditsApp from '../components/scr-apps/creditsApp/listItem/CreditsAppItem';
+import JobTitleApp from '../components/scr-apps/jobTitleApp/listItem/JobTitleAppItem';
+import AgeApp from '../components/scr-apps/ageApp/listItem/AgeAppItem';
+import DateApp from '../components/scr-apps/dateApp/listItem/DateAppItem';
+import ScrAppStore from '../components/scr-apps/scrAppStoreApp/listItem/ScrAppStoreItem';
 import { AppDefinition, AppType } from '../types/scrAppListState';
 
 // Master registry of ALL possible apps (current + future)

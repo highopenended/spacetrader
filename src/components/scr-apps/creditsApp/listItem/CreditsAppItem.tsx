@@ -1,6 +1,6 @@
 import React from 'react';
-import './CreditsApp.css';
-import ScrApp from '../ScrApp';
+import './CreditsAppItem.css';
+import ScrApp from '../../ScrApp';
 
 interface CreditsAppProps {
   credits?: number;

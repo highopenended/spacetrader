@@ -1,8 +1,8 @@
 import React from 'react';
-import './DateApp.css';
-import ScrApp from '../ScrApp';
-import { GamePhase,GameTime } from '../../../types/gameState';
-import { getTitheName, getLedgerCycleName, getAnnumReckoningName, getGrindName } from '../../../utils/gameStateUtils';
+import './DateAppItem.css';
+import ScrApp from '../../ScrApp';
+import { GamePhase,GameTime } from '../../../../types/gameState';
+import { getTitheName, getLedgerCycleName, getAnnumReckoningName, getGrindName } from '../../../../utils/gameStateUtils';
 
 interface DateAppProps {
   gameTime: GameTime;

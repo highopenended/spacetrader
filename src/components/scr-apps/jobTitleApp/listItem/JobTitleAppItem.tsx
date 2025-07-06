@@ -1,7 +1,7 @@
 import React from 'react';
-import './JobTitleApp.css';
-import ScrApp from '../ScrApp';
-import { GamePhase } from '../../../types/gameState';
+import './JobTitleAppItem.css';
+import ScrApp from '../../ScrApp';
+import { GamePhase } from '../../../../types/gameState';
 
 interface JobTitleAppProps {
   gamePhase: GamePhase;

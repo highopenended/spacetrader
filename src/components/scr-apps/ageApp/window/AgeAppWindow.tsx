@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import ScrAppWindow, { BaseWindowProps } from '../ScrApp-Window';
-import { GameTime } from '../../../types/gameState';
+import ScrAppWindow, { BaseWindowProps } from '../../ScrApp-Window';
+import { GameTime } from '../../../../types/gameState';
 
 const COMPACT_LEVELS = {
   C3: 300,    // Full text at 300px+

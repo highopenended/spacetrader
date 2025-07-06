@@ -1,7 +1,7 @@
 import React from 'react';
-import './AgeApp.css';
-import ScrApp from '../ScrApp';
-import { GameTime } from '../../../types/gameState';
+import './AgeAppItem.css';
+import ScrApp from '../../ScrApp';
+import { GameTime } from '../../../../types/gameState';
 
 interface AgeAppProps {
   gameTime: GameTime;
