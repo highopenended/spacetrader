@@ -3,10 +3,10 @@ import ScrAppWindow, { BaseWindowProps } from '../../ScrAppWindow';
 import { GameTime } from '../../../../types/gameState';
 
 const COMPACT_LEVELS = {
-  C3: 300,    // Full text at 300px+
-  C2: 250,  // Medium compact at 250px+
-  C1: 200, // Compact at 200px+
-  C0: 150     // Mini at 150px+
+  C3: 270,    // Full text at 300px+
+  C2: 170,  // Medium compact at 250px+
+  C1: 60, // Compact at 200px+
+  C0: 50    // Mini at 150px+
 };
 
 interface AgeAppWindowProps extends BaseWindowProps {
@@ -123,7 +123,7 @@ const AgeAppWindow: React.FC<AgeAppWindowProps> = ({
     <ScrAppWindow
       title="Age Tracker"
       {...windowProps}
-      minSize={{ width: 200, height: 120 }}
+      minSize={{ width: 100, height: 100 }}
       onWidthChange={handleWidthChange}
     >
       {content}

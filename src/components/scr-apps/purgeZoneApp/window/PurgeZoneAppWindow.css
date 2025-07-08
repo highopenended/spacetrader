@@ -5,6 +5,7 @@
   flex-direction: column;
   gap: var(--spacing-sm);
   height: 100%;
+  width: 95%;
 }
 
 .purge-zone-header {

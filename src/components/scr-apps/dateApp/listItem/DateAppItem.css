@@ -1,5 +1,4 @@
 .game-time-tracker {
-  color: #888;
   font-size: var(--font-size-small);
   line-height: 1.2;
 }
@@ -9,18 +8,15 @@
 }
 
 .time-segment {
-  color: #aaa;
-  font-weight: normal;
+  font-weight: var(--font-weight-normal);
 }
 
 .time-separator {
-  color: #666;
   margin: 0 4px;
-  font-weight: normal;
+  font-weight: var(--font-weight-normal);
 }
 
 .tithe-line {
-  color: #999;
   font-size: 11px;
   font-style: italic;
 } 

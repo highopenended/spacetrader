@@ -97,12 +97,6 @@
 
 
 
-
-
-
-
-
-
 /* Override cursor when dragging */
 .sortable-item.dragging * {
   cursor: grabbing !important;
@@ -114,8 +108,11 @@
 .sortable-item .app-value,
 .sortable-item .detail-label,
 .sortable-item .detail-value {
-  color: #bcbcbc;
-  text-shadow: none;
+  color: #727272;
+  text-shadow:
+    0 0 2px #333832,
+    0 0 6px #333832,
+    0 0 12px #333832;
 }
 
 /* When window is open: glowing green */
@@ -124,10 +121,20 @@
 .sortable-item.active .app-value,
 .sortable-item.active .detail-label,
 .sortable-item.active .detail-value {
-  color: #39ff14;
-  color: #eaeaea;
+  color: #cfcfcf;
   text-shadow:
-    0 0 2px #39ff14,
-    0 0 6px #39ff14,
-    0 0 12px #39ff14;
-} 
+    0 0 2px #27bd0c,
+    0 0 6px #27bd0c,
+    0 0 12px #27bd0c;
+}
+
+
+/* When window is open and negative: glowing red overrides green */
+.sortable-item.active .app-label-negative,
+.sortable-item.active .app-value-negative {
+  color: #fff;
+  text-shadow:
+    0 0 2px #ff2a1a,
+    0 0 6px #ff2a1a,
+    0 0 16px #ff2a1a;
+}
