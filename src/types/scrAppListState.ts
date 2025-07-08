@@ -7,6 +7,12 @@
 
 import React from 'react';
 
+export interface AppTier {
+  tier: number;
+  flatCost: number;
+  monthlyCost: number;
+}
+
 export interface AppDefinition {
   id: string;
   name: string;
@@ -17,6 +23,7 @@ export interface AppDefinition {
   deletable: boolean;
   description: string;
   unlockRequirements?: string[]; // Future: requirements to unlock this app
+  tiers: AppTier[]; // NEW: Array of upgrade tiers with costs
 }
 
 export interface InstalledApp {
@@ -24,6 +31,7 @@ export interface InstalledApp {
   order: number;
   purchased: boolean;
   installedAt: number; // timestamp
+  currentTier: number; // NEW: Current upgrade tier (1-4)
 }
 
 export interface DragState {

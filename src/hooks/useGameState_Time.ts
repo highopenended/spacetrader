@@ -15,7 +15,7 @@ const initialGameTimeState: GameTimeState = {
   lastUpdate: Date.now()
 };
 
-export const useGameState_Time = () => {
+export const useGameState_Time = (onLedgerCycleAdvance?: () => void) => {
   const [gameTimeState, setGameTimeState] = useState<GameTimeState>(initialGameTimeState);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -27,6 +27,12 @@ export const useGameState_Time = () => {
       newTime.grind++; // Increment grind first
       
       const advancedTime = advanceGameTime(newTime);
+      
+      // Check if ledger cycle advanced (new month)
+      if (advancedTime.ledgerCycle !== prev.currentTime.ledgerCycle && onLedgerCycleAdvance) {
+        // Delay the callback to next tick to avoid state conflicts
+        setTimeout(() => onLedgerCycleAdvance(), 0);
+      }
       
       return {
         ...prev,

@@ -1,0 +1,140 @@
+.tier-change-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(10, 10, 10, 0.65);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.tier-change-popup {
+  background: linear-gradient(135deg, #1a2a1a 0%, #2d3d2d 100%);
+  border: 1.2px solid #4a4;
+  box-shadow: 0 0 16px 2px #000, 0 0 0 2px #4a4 inset, 0 0 12px 2px #4a4;
+  min-width: 360px;
+  max-width: 90vw;
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Courier New', monospace;
+  overflow: hidden;
+}
+
+.tier-change-title {
+  color: #6c6;
+  font-size: 1.3rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 2px #000, 0 0 6px #4a4, 0 0 2px #fff1, 0 1px 0 #4a4;
+}
+
+.tier-change-app-name {
+  color: #a8bfa8;
+  font-size: 1.1rem;
+  margin-bottom: 1.2rem;
+  text-align: center;
+  letter-spacing: 1px;
+  opacity: 0.85;
+}
+
+.tier-change-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+  text-align: center;
+}
+
+.tier-change-info {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.tier-change-cost {
+  color: #6c6;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.tier-change-monthly {
+  color: #a8bfa8;
+  font-size: 0.9rem;
+}
+
+.tier-change-popup-actions {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tier-change-btn {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  padding: 0.4rem 1.2rem;
+  border: none;
+  border-radius: 2px;
+  background: #1a2a1a;
+  color: #a8bfa8;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 1px 0 #333 inset;
+  transition: background 0.12s, color 0.12s;
+  outline: none;
+}
+
+.tier-change-btn.confirm {
+  color: #6c6;
+  border: 1px solid #4a4;
+  background: #2d3d2d;
+}
+.tier-change-btn.confirm:hover, .tier-change-btn.confirm:focus {
+  background: #3d4d3d;
+  color: #fff;
+}
+
+.tier-change-btn.cancel {
+  color: #7fff7f;
+  border: 1px solid #2a2;
+  background: #1a2a1a;
+}
+.tier-change-btn.cancel:hover, .tier-change-btn.cancel:focus {
+  background: #224422;
+  color: #fff;
+}
+
+.tier-change-popup-scanlines {
+  pointer-events: none;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(100,255,100,0.07) 2px,
+    rgba(100,255,100,0.07) 4px
+  );
+  z-index: 2;
+  opacity: 0.8;
+  animation: tier-scanlines-flicker 2.5s linear infinite, tier-scanlines-move 1.5s linear infinite;
+}
+
+@keyframes tier-scanlines-flicker {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes tier-scanlines-move {
+  0% { background-position-x: 0; }
+  100% { background-position-x: 40px; }
+} 

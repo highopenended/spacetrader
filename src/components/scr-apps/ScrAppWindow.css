@@ -24,6 +24,7 @@
   white-space: nowrap;
   overflow: hidden;
   min-height: 20px;
+  position: relative;
 }
 
 .window-title {
@@ -36,6 +37,27 @@
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
+}
+
+.settings-cogwheel {
+  position: absolute;
+  right: var(--spacing-xs);
+  color: #888;
+  font-size: var(--font-size-small);
+  cursor: pointer;
+  transition: color 0.2s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+.settings-cogwheel:hover {
+  color: #ccc;
+  transform: rotate(90deg);
+  transition: color 0.2s ease, transform 0.3s ease;
 }
 
 .window-content {

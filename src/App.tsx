@@ -9,15 +9,16 @@ import { useGameState_Credits } from './hooks/useGameState_Credits';
 import { useGameState_Phases } from './hooks/useGameState_Phases';
 import { useGameState_Time } from './hooks/useGameState_Time';
 import { useWindowManager } from './hooks/useWindowManager';
-import { useScrAppListManager } from './hooks/useScrAppListManager';
+import { useGameState_AppList } from './hooks/useGameState_AppList';
 import { WindowData } from './types/gameState';
 import PurgeConfirmPopup from './components/ui/PurgeConfirmPopup';
+import TierChangeConfirmPopup from './components/ui/TierChangeConfirmPopup';
+import { APP_REGISTRY } from './constants/scrAppListConstants';
 import { DndContext, DragOverlay, useSensor, PointerSensor, rectIntersection, UniqueIdentifier } from '@dnd-kit/core';
 
 function App() {
   const { credits, updateCredits, setCredits, resetCredits } = useGameState_Credits();
   const { gamePhase, setGamePhase, advanceGamePhase, resetGamePhase } = useGameState_Phases();
-  const { gameTime, setGameTime, isPaused, pauseTime, resumeTime, resetGameTime } = useGameState_Time();
   const {
     windows,
     updateWindowPosition,
@@ -35,8 +36,22 @@ function App() {
     handleDragEnd,
     resetToDefaults,
     installApp,
-    uninstallApp
-  } = useScrAppListManager();
+    uninstallApp,
+    changeAppTier,
+    getAppTierData,
+    calculateMonthlyCosts
+  } = useGameState_AppList();
+
+  // Monthly cost deduction handler
+  const handleMonthlyCostDeduction = React.useCallback(() => {
+    const monthlyCost = calculateMonthlyCosts();
+    if (monthlyCost > 0) {
+      updateCredits(-monthlyCost);
+      console.log(`Monthly app costs deducted: ${monthlyCost} credits`);
+    }
+  }, [calculateMonthlyCosts, updateCredits]);
+
+  const { gameTime, setGameTime, isPaused, pauseTime, resumeTime, resetGameTime } = useGameState_Time(handleMonthlyCostDeduction);
 
   const [pendingDelete, setPendingDelete] = React.useState<{
     appId: string | null;
@@ -45,6 +60,13 @@ function App() {
 
   // Clean dnd-kit: track current droppable id
   const [overId, setOverId] = React.useState<UniqueIdentifier | null>(null);
+
+  // Tier change confirmation state
+  const [pendingTierChange, setPendingTierChange] = React.useState<{
+    appId: string | null;
+    currentTier: number;
+    targetTier: number;
+  }>({ appId: null, currentTier: 1, targetTier: 1 });
 
   // Custom collision detection to allow dropping on both sortable list and purge zone
   const customCollisionDetection = (args: any) => {
@@ -58,7 +80,7 @@ function App() {
     const { active, over } = event;
     if (!over) return;
     if (over.id === 'purge-zone-window') {
-      const appDefinition = apps.find(app => app.id === active.id);
+      const appDefinition = apps.find((app: any) => app.id === active.id);
       if (appDefinition && appDefinition.deletable) {
         setPendingDelete({ appId: active.id, prevOrder: appOrder });
         return;
@@ -84,10 +106,41 @@ function App() {
     setOverId(null);
   }, [pendingDelete]);
 
+  // Tier change handlers
+  const handleTierChangeRequest = React.useCallback((appId: string, newTier: number) => {
+    const tierData = getAppTierData(appId);
+    setPendingTierChange({
+      appId,
+      currentTier: tierData.currentTier,
+      targetTier: newTier
+    });
+  }, [getAppTierData]);
+
+  const handleConfirmTierChange = React.useCallback(() => {
+    if (pendingTierChange.appId) {
+      // Calculate cost and deduct credits
+      const tierData = APP_REGISTRY[pendingTierChange.appId]?.tiers.find(
+        t => t.tier === pendingTierChange.targetTier
+      );
+      
+      if (tierData && pendingTierChange.targetTier > pendingTierChange.currentTier) {
+        // Only charge for upgrades, not downgrades
+        updateCredits(-tierData.flatCost);
+      }
+      
+      changeAppTier(pendingTierChange.appId, pendingTierChange.targetTier);
+    }
+    setPendingTierChange({ appId: null, currentTier: 1, targetTier: 1 });
+  }, [pendingTierChange, changeAppTier, updateCredits]);
+
+  const handleCancelTierChange = React.useCallback(() => {
+    setPendingTierChange({ appId: null, currentTier: 1, targetTier: 1 });
+  }, []);
+
   const installAppOrder = (order: string[]) => {
     if (order.join(',') !== appOrder.join(',')) {
       const newInstalled = order.map((id, idx) => {
-        const found = apps.find(app => app.id === id);
+        const found = apps.find((app: any) => app.id === id);
         if (found) {
           return {
             id: found.id,
@@ -100,9 +153,9 @@ function App() {
       }).filter(Boolean);
       if (newInstalled.length === order.length) {
         resetToDefaults();
-        newInstalled.forEach((app, idx) => {
-          if (app) installApp(app.id, idx + 1);
-        });
+                  newInstalled.forEach((app: any, idx) => {
+            if (app) installApp(app.id, idx + 1);
+          });
       }
     }
   };
@@ -131,6 +184,9 @@ function App() {
           onClose={() => closeWindow(window.id)}
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
+          appId={window.appType}
+          currentTier={getAppTierData(window.appType).currentTier}
+          onTierChange={handleTierChangeRequest}
         />
       );
     }
@@ -146,6 +202,9 @@ function App() {
           onClose={() => closeWindow(window.id)}
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
+          appId={window.appType}
+          currentTier={getAppTierData(window.appType).currentTier}
+          onTierChange={handleTierChangeRequest}
         />
       );
     }
@@ -160,6 +219,9 @@ function App() {
         onClose={() => closeWindow(window.id)}
         onPositionChange={(position) => updateWindowPosition(window.appType, position)}
         onSizeChange={(size) => updateWindowSize(window.appType, size)}
+        appId={window.appType}
+        currentTier={getAppTierData(window.appType).currentTier}
+        onTierChange={handleTierChangeRequest}
       >
         {window.content}
       </ScrAppWindow>
@@ -221,9 +283,19 @@ function App() {
         {windows.filter(w => w.appType !== 'purgeZone').map(renderWindow)}
         <PurgeConfirmPopup
           open={!!pendingDelete.appId}
-          appName={pendingDelete.appId ? (apps.find(a => a.id === pendingDelete.appId)?.title || pendingDelete.appId) : ''}
+          appName={pendingDelete.appId ? (apps.find((a: any) => a.id === pendingDelete.appId)?.title || pendingDelete.appId) : ''}
           onConfirm={handleConfirmPurge}
           onCancel={handleCancelPurge}
+        />
+        <TierChangeConfirmPopup
+          open={!!pendingTierChange.appId}
+          appName={pendingTierChange.appId ? (apps.find((a: any) => a.id === pendingTierChange.appId)?.title || pendingTierChange.appId) : ''}
+          currentTier={pendingTierChange.currentTier}
+          targetTier={pendingTierChange.targetTier}
+          tierData={pendingTierChange.appId ? APP_REGISTRY[pendingTierChange.appId]?.tiers.find(t => t.tier === pendingTierChange.targetTier) : undefined}
+          isUpgrade={pendingTierChange.targetTier > pendingTierChange.currentTier}
+          onConfirm={handleConfirmTierChange}
+          onCancel={handleCancelTierChange}
         />
         <DragOverlay 
           zIndex={2000}

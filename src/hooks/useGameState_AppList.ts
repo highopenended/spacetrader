@@ -1,5 +1,5 @@
 /**
- * SCR App List Manager Hook
+ * Game State App List Hook
  * 
  * Custom hook that manages app ordering, drag state, and reordering logic.
  * Integrates with dnd-kit for drag-and-drop functionality.
@@ -10,14 +10,15 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { DEFAULT_INSTALLED_APPS, APP_REGISTRY } from '../constants/scrAppListConstants';
 import { AppDefinition, InstalledApp, DragState, AppType } from '../types/scrAppListState';
 
-export const useScrAppListManager = () => {
+export const useGameState_AppList = () => {
   // Initialize with default installed apps
   const [installedApps, setInstalledApps] = useState<InstalledApp[]>(
     DEFAULT_INSTALLED_APPS.map((appId, index) => ({
       id: appId,
       order: index + 1,
       purchased: true, // Default apps are "purchased"
-      installedAt: Date.now()
+      installedAt: Date.now(),
+      currentTier: 1 // All apps start at tier 1
     }))
   );
   
@@ -106,7 +107,8 @@ export const useScrAppListManager = () => {
       id: appId,
       order: position ?? installedApps.length + 1,
       purchased: true, // For now, assume all apps are purchased
-      installedAt: Date.now()
+      installedAt: Date.now(),
+      currentTier: 1 // New apps start at tier 1
     };
 
     setInstalledApps(prev => {
@@ -145,7 +147,8 @@ export const useScrAppListManager = () => {
         id: appId,
         order: index + 1,
         purchased: true,
-        installedAt: Date.now()
+        installedAt: Date.now(),
+        currentTier: 1
       }))
     );
   }, []);
@@ -156,6 +159,39 @@ export const useScrAppListManager = () => {
     return Object.values(APP_REGISTRY).filter(
       app => !installedIds.includes(app.id)
     );
+  }, [installedApps]);
+
+  // Change app tier (upgrade or downgrade)
+  const changeAppTier = useCallback((appId: string, newTier: number) => {
+    setInstalledApps(prev => 
+      prev.map(app => 
+        app.id === appId 
+          ? { ...app, currentTier: newTier }
+          : app
+      )
+    );
+  }, []);
+
+  // Calculate total monthly costs for all installed apps
+  const calculateMonthlyCosts = useCallback((): number => {
+    return installedApps.reduce((total, app) => {
+      const appDefinition = APP_REGISTRY[app.id];
+      if (appDefinition && appDefinition.tiers) {
+        const tierData = appDefinition.tiers.find(tier => tier.tier === app.currentTier);
+        return total + (tierData?.monthlyCost || 0);
+      }
+      return total;
+    }, 0);
+  }, [installedApps]);
+
+  // Get tier data for a specific app
+  const getAppTierData = useCallback((appId: string) => {
+    const appDefinition = APP_REGISTRY[appId];
+    const installedApp = installedApps.find(app => app.id === appId);
+    return {
+      tiers: appDefinition?.tiers || [],
+      currentTier: installedApp?.currentTier || 1
+    };
   }, [installedApps]);
 
   return {
@@ -169,6 +205,9 @@ export const useScrAppListManager = () => {
     installApp,
     uninstallApp,
     resetToDefaults,
-    getAvailableApps
+    getAvailableApps,
+    changeAppTier,
+    calculateMonthlyCosts,
+    getAppTierData
   };
 }; 

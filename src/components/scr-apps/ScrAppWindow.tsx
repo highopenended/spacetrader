@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback } from 'react';
 import './ScrAppWindow.css';
 import { WINDOW_DEFAULTS } from '../../constants/windowConstants';
+import AppSettingsPanel from './AppSettingsPanel';
+import { APP_REGISTRY } from '../../constants/scrAppListConstants';
 
 // Base interface for all window management props
 export interface BaseWindowProps {
@@ -13,6 +15,10 @@ export interface BaseWindowProps {
   onPositionChange?: (position: { x: number; y: number }) => void;
   onSizeChange?: (size: { width: number; height: number }) => void;
   onWidthChange?: (width: number) => void;
+  // NEW: Settings functionality
+  appId?: string;
+  currentTier?: number;
+  onTierChange?: (appId: string, newTier: number) => void;
 }
 
 interface ScrAppWindowProps extends BaseWindowProps {
@@ -31,7 +37,10 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   minSize = WINDOW_DEFAULTS.MIN_SIZE,
   onPositionChange,
   onSizeChange,
-  onWidthChange
+  onWidthChange,
+  appId,
+  currentTier = 1,
+  onTierChange
 }) => {
   const [currentPosition, setCurrentPosition] = useState(position);
   const [currentSize, setCurrentSize] = useState(size);
@@ -39,6 +48,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const windowRef = useRef<HTMLDivElement>(null);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -107,6 +117,35 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     onClose();
   }, [onClose]);
 
+  const handleSettingsToggle = useCallback(() => {
+    setIsSettingsOpen(prev => {
+      const newSettingsState = !prev;
+      // Auto-resize window when opening/closing settings
+      if (newSettingsState) {
+        // Opening settings - make window larger
+        const newSize = { width: 400, height: 300 };
+        setCurrentSize(newSize);
+        if (onSizeChange) {
+          onSizeChange(newSize);
+        }
+      } else {
+        // Closing settings - return to default size
+        const newSize = WINDOW_DEFAULTS.SIZE;
+        setCurrentSize(newSize);
+        if (onSizeChange) {
+          onSizeChange(newSize);
+        }
+      }
+      return newSettingsState;
+    });
+  }, [onSizeChange]);
+
+  const handleTierClick = useCallback((newTier: number) => {
+    if (appId && onTierChange) {
+      onTierChange(appId, newTier);
+    }
+  }, [appId, onTierChange]);
+
   React.useEffect(() => {
     if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -144,9 +183,29 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
         onDoubleClick={handleDoubleClick}
       >
         <div className="window-title">{title}</div>
+        {appId && (
+          <div 
+            className="settings-cogwheel"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSettingsToggle();
+            }}
+          >
+            ⚙
+          </div>
+        )}
       </div>
       <div className="window-content">
-        {children}
+        {isSettingsOpen && appId ? (
+          <AppSettingsPanel
+            appName={title}
+            tiers={APP_REGISTRY[appId]?.tiers || []}
+            currentTier={currentTier}
+            onTierClick={handleTierClick}
+          />
+        ) : (
+          children
+        )}
       </div>
       <div 
         className="resize-handle"
