@@ -11,6 +11,7 @@ export interface AppTier {
   tier: number;
   flatCost: number;
   monthlyCost: number;
+  information: string;
 }
 
 export interface AppDefinition {

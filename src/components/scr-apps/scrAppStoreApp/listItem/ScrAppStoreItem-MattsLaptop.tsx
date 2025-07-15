@@ -4,10 +4,9 @@ import ScrApp from '../../ScrAppItem';
 
 interface ScrAppStoreProps {
   hasNewApps?: boolean;
-  onAppClick?: () => void;
 }
 
-const ScrAppStore: React.FC<ScrAppStoreProps> = ({ hasNewApps = false, onAppClick }) => {
+const ScrAppStore: React.FC<ScrAppStoreProps> = ({ hasNewApps = false }) => {
   return (
     <ScrApp>
       <div className="scr-app-store">

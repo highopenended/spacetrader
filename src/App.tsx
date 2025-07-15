@@ -12,7 +12,7 @@ import { useWindowManager } from './hooks/useWindowManager';
 import { useGameState_AppList } from './hooks/useGameState_AppList';
 import { WindowData } from './types/gameState';
 import PurgeConfirmPopup from './components/ui/PurgeConfirmPopup';
-import TierChangeConfirmPopup from './components/ui/TierChangeConfirmPopup';
+
 import { APP_REGISTRY } from './constants/scrAppListConstants';
 import { DndContext, DragOverlay, useSensor, PointerSensor, rectIntersection, UniqueIdentifier } from '@dnd-kit/core';
 
@@ -37,8 +37,6 @@ function App() {
     resetToDefaults,
     installApp,
     uninstallApp,
-    changeAppTier,
-    getAppTierData,
     calculateMonthlyCosts
   } = useGameState_AppList();
 
@@ -61,12 +59,7 @@ function App() {
   // Clean dnd-kit: track current droppable id
   const [overId, setOverId] = React.useState<UniqueIdentifier | null>(null);
 
-  // Tier change confirmation state
-  const [pendingTierChange, setPendingTierChange] = React.useState<{
-    appId: string | null;
-    currentTier: number;
-    targetTier: number;
-  }>({ appId: null, currentTier: 1, targetTier: 1 });
+
 
   // Custom collision detection to allow dropping on both sortable list and purge zone
   const customCollisionDetection = (args: any) => {
@@ -106,36 +99,7 @@ function App() {
     setOverId(null);
   }, [pendingDelete]);
 
-  // Tier change handlers
-  const handleTierChangeRequest = React.useCallback((appId: string, newTier: number) => {
-    const tierData = getAppTierData(appId);
-    setPendingTierChange({
-      appId,
-      currentTier: tierData.currentTier,
-      targetTier: newTier
-    });
-  }, [getAppTierData]);
 
-  const handleConfirmTierChange = React.useCallback(() => {
-    if (pendingTierChange.appId) {
-      // Calculate cost and deduct credits
-      const tierData = APP_REGISTRY[pendingTierChange.appId]?.tiers.find(
-        t => t.tier === pendingTierChange.targetTier
-      );
-      
-      if (tierData && pendingTierChange.targetTier > pendingTierChange.currentTier) {
-        // Only charge for upgrades, not downgrades
-        updateCredits(-tierData.flatCost);
-      }
-      
-      changeAppTier(pendingTierChange.appId, pendingTierChange.targetTier);
-    }
-    setPendingTierChange({ appId: null, currentTier: 1, targetTier: 1 });
-  }, [pendingTierChange, changeAppTier, updateCredits]);
-
-  const handleCancelTierChange = React.useCallback(() => {
-    setPendingTierChange({ appId: null, currentTier: 1, targetTier: 1 });
-  }, []);
 
   const installAppOrder = (order: string[]) => {
     if (order.join(',') !== appOrder.join(',')) {
@@ -184,9 +148,6 @@ function App() {
           onClose={() => closeWindow(window.id)}
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
-          appId={window.appType}
-          currentTier={getAppTierData(window.appType).currentTier}
-          onTierChange={handleTierChangeRequest}
         />
       );
     }
@@ -202,9 +163,6 @@ function App() {
           onClose={() => closeWindow(window.id)}
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
-          appId={window.appType}
-          currentTier={getAppTierData(window.appType).currentTier}
-          onTierChange={handleTierChangeRequest}
         />
       );
     }
@@ -219,9 +177,6 @@ function App() {
         onClose={() => closeWindow(window.id)}
         onPositionChange={(position) => updateWindowPosition(window.appType, position)}
         onSizeChange={(size) => updateWindowSize(window.appType, size)}
-        appId={window.appType}
-        currentTier={getAppTierData(window.appType).currentTier}
-        onTierChange={handleTierChangeRequest}
       >
         {window.content}
       </ScrAppWindow>
@@ -287,16 +242,7 @@ function App() {
           onConfirm={handleConfirmPurge}
           onCancel={handleCancelPurge}
         />
-        <TierChangeConfirmPopup
-          open={!!pendingTierChange.appId}
-          appName={pendingTierChange.appId ? (apps.find((a: any) => a.id === pendingTierChange.appId)?.title || pendingTierChange.appId) : ''}
-          currentTier={pendingTierChange.currentTier}
-          targetTier={pendingTierChange.targetTier}
-          tierData={pendingTierChange.appId ? APP_REGISTRY[pendingTierChange.appId]?.tiers.find(t => t.tier === pendingTierChange.targetTier) : undefined}
-          isUpgrade={pendingTierChange.targetTier > pendingTierChange.currentTier}
-          onConfirm={handleConfirmTierChange}
-          onCancel={handleCancelTierChange}
-        />
+
         <DragOverlay 
           zIndex={2000}
           dropAnimation={{ duration: 0, easing: 'ease' }}

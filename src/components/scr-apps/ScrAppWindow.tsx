@@ -1,8 +1,8 @@
 import React, { useState, useRef, useCallback } from 'react';
 import './ScrAppWindow.css';
 import { WINDOW_DEFAULTS } from '../../constants/windowConstants';
-import AppSettingsPanel from './AppSettingsPanel';
 import { APP_REGISTRY } from '../../constants/scrAppListConstants';
+import { useGameState_AppList } from '../../hooks/useGameState_AppList';
 
 // Base interface for all window management props
 export interface BaseWindowProps {
@@ -15,10 +15,6 @@ export interface BaseWindowProps {
   onPositionChange?: (position: { x: number; y: number }) => void;
   onSizeChange?: (size: { width: number; height: number }) => void;
   onWidthChange?: (width: number) => void;
-  // NEW: Settings functionality
-  appId?: string;
-  currentTier?: number;
-  onTierChange?: (appId: string, newTier: number) => void;
 }
 
 interface ScrAppWindowProps extends BaseWindowProps {
@@ -37,10 +33,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   minSize = WINDOW_DEFAULTS.MIN_SIZE,
   onPositionChange,
   onSizeChange,
-  onWidthChange,
-  appId,
-  currentTier = 1,
-  onTierChange
+  onWidthChange
 }) => {
   const [currentPosition, setCurrentPosition] = useState(position);
   const [currentSize, setCurrentSize] = useState(size);
@@ -48,8 +41,13 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isFooterExpanded, setIsFooterExpanded] = useState(false);
   const windowRef = useRef<HTMLDivElement>(null);
+
+  // Get tier data for this app
+  const { getAppTierData, changeAppTier } = useGameState_AppList();
+  const tierData = getAppTierData(appType);
+  const appRegistry = APP_REGISTRY[appType];
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!windowRef.current) return;
@@ -117,34 +115,19 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     onClose();
   }, [onClose]);
 
-  const handleSettingsToggle = useCallback(() => {
-    setIsSettingsOpen(prev => {
-      const newSettingsState = !prev;
-      // Auto-resize window when opening/closing settings
-      if (newSettingsState) {
-        // Opening settings - make window larger
-        const newSize = { width: 400, height: 300 };
-        setCurrentSize(newSize);
-        if (onSizeChange) {
-          onSizeChange(newSize);
-        }
-      } else {
-        // Closing settings - return to default size
-        const newSize = WINDOW_DEFAULTS.SIZE;
-        setCurrentSize(newSize);
-        if (onSizeChange) {
-          onSizeChange(newSize);
-        }
-      }
-      return newSettingsState;
-    });
-  }, [onSizeChange]);
+  const handleFooterToggle = useCallback(() => {
+    setIsFooterExpanded(prev => !prev);
+  }, []);
 
-  const handleTierClick = useCallback((newTier: number) => {
-    if (appId && onTierChange) {
-      onTierChange(appId, newTier);
-    }
-  }, [appId, onTierChange]);
+  const handleUpgrade = useCallback(() => {
+    const nextTier = tierData.currentTier + 1;
+    const nextTierData = appRegistry?.tiers.find(t => t.tier === nextTier);
+    
+    if (nextTierData) {
+      changeAppTier(appType, nextTier);
+      // Could add credit deduction logic here if needed
+        }
+  }, [appType, tierData.currentTier, appRegistry, changeAppTier]);
 
   React.useEffect(() => {
     if (isDragging || isResizing) {
@@ -164,6 +147,14 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     }
   }, [currentSize.width, isResizing, onWidthChange]);
 
+  // Footer doesn't affect window height anymore - it protrudes outside
+
+  const currentTier = tierData.currentTier;
+  const nextTier = currentTier + 1;
+  const currentTierData = appRegistry?.tiers.find(t => t.tier === currentTier);
+  const nextTierData = appRegistry?.tiers.find(t => t.tier === nextTier);
+  const canUpgrade = nextTierData !== undefined;
+
   return (
     <div 
       ref={windowRef}
@@ -177,36 +168,55 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
       }}
       data-window-id={windowId}
     >
+      {/* Section 1: Window Header */}
       <div 
         className="window-header"
         onMouseDown={handleMouseDown}
         onDoubleClick={handleDoubleClick}
       >
         <div className="window-title">{title}</div>
-        {appId && (
-          <div 
-            className="settings-cogwheel"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleSettingsToggle();
-            }}
-          >
-            ⚙
+      </div>
+      
+      {/* Section 2: App Content */}
+      <div className="window-content">
+        {children}
+      </div>
+      
+      {/* Section 3: Collapsible Footer - positioned outside window */}
+      <div className={`window-footer ${isFooterExpanded ? 'expanded' : 'collapsed'}`}>
+        <div className="footer-toggle" onClick={handleFooterToggle}>
+          {isFooterExpanded ? '▲ HIDE' : '▼ DATA'}
+        </div>
+        
+        {isFooterExpanded && (
+          <div className="footer-content">
+            <div className="tier-info-line">
+              {canUpgrade ? (
+                <>App Tier: {currentTier} → {nextTier} (₵{nextTierData.flatCost} upgrade)</>
+              ) : (
+                <>App Tier: {currentTier} (Max Tier)</>
+              )}
+            </div>
+            <div className="monthly-info">
+              Monthly: ₵{currentTierData?.monthlyCost || 0}/cycle
+            </div>
+            <div className="tier-description">
+              {canUpgrade ? nextTierData.information : currentTierData?.information || 'No information available'}
+            </div>
+            <div className="footer-buttons">
+              {canUpgrade && (
+                <button className="upgrade-button" onClick={handleUpgrade}>
+                  Upgrade Tier
+                </button>
+              )}
+              <button className="close-info-button" onClick={handleFooterToggle}>
+                Close Info
+              </button>
+            </div>
           </div>
         )}
       </div>
-      <div className="window-content">
-        {isSettingsOpen && appId ? (
-          <AppSettingsPanel
-            appName={title}
-            tiers={APP_REGISTRY[appId]?.tiers || []}
-            currentTier={currentTier}
-            onTierClick={handleTierClick}
-          />
-        ) : (
-          children
-        )}
-      </div>
+      
       <div 
         className="resize-handle"
         onMouseDown={handleResizeMouseDown}
