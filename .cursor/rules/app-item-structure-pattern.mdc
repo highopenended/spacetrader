@@ -1,10 +1,10 @@
 ---
-description: Patterns and conventions for TerminalScreen app list items
+description: Patterns and conventions for app list item components
 globs: 
 alwaysApply: false
 ---
 
-**Terminal Screen Apps Pattern:**
+**App Item Structure Pattern:**
 
 ## Core Architecture
 - Apps appear in the TerminalScreen as compact list items
