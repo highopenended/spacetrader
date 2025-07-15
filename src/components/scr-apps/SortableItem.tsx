@@ -15,15 +15,13 @@ interface SortableItemProps {
   children: React.ReactNode;
   onAppClick?: () => void;
   disabled?: boolean;
-  isWindowOpen?: boolean;
 }
 
 const SortableItem: React.FC<SortableItemProps> = ({ 
   id, 
   children, 
   onAppClick,
-  disabled = false,
-  isWindowOpen = false
+  disabled = false
 }) => {
   const {
     attributes,
@@ -55,7 +53,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={`sortable-item${isDragging ? ' dragging' : ''}${onAppClick ? ' clickable' : ''}${isWindowOpen ? ' active' : ''}`}
+      className={`sortable-item${isDragging ? ' dragging' : ''}${onAppClick ? ' clickable' : ''}`}
       onClick={handleClick}
       {...attributes}
       {...listeners}

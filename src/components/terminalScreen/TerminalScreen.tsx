@@ -112,22 +112,22 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
               items={appOrder} 
               strategy={verticalListSortingStrategy}
             >
-              {apps.map((appConfig) => {
-                // Hide the app if it's pending deletion confirmation
-                const isPendingDelete = pendingDeleteAppId === appConfig.id;
-                if (isPendingDelete) return null;
-                const isWindowOpen = openAppTypes.has(appConfig.id);
-                return (
+              {apps
+                .filter((appConfig) => {
+                  const isPendingDelete = pendingDeleteAppId === appConfig.id;
+                  const isWindowOpen = openAppTypes.has(appConfig.id);
+                  return !isPendingDelete && !isWindowOpen;
+                })
+                .map((appConfig) => (
                   <SortableItem
                     key={appConfig.id}
                     id={appConfig.id}
                     onAppClick={() => onAppClick?.(appConfig.id, appConfig.title)}
-                    isWindowOpen={isWindowOpen}
                   >
                     {renderApp(appConfig)}
                   </SortableItem>
-                );
-              })}
+                ))
+              }
             </SortableContext>
           </div>
         
