@@ -15,10 +15,10 @@ import { AppDefinition, AppType, AppTier } from '../types/scrAppListState';
 
 // Standard tier costs (same for all apps initially, can be customized per app later)
 const STANDARD_TIERS: AppTier[] = [
-  { tier: 1, flatCost: 100, monthlyCost: 10, information: 'app information' },
-  { tier: 2, flatCost: 200, monthlyCost: 20, information: 'app information' },
-  { tier: 3, flatCost: 300, monthlyCost: 30, information: 'app information' },
-  { tier: 4, flatCost: 400, monthlyCost: 40, information: 'app information' }
+  { tier: 1, flatUpgradeCost: 100, flatDowngradeCost: 100, monthlyCost: 10, information: 'app information' },
+  { tier: 2, flatUpgradeCost: 200, flatDowngradeCost: 200, monthlyCost: 20, information: 'app information' },
+  { tier: 3, flatUpgradeCost: 300, flatDowngradeCost: 300, monthlyCost: 30, information: 'app information' },
+  { tier: 4, flatUpgradeCost: 400, flatDowngradeCost: 400, monthlyCost: 40, information: 'app information' }
 ];
 
 // Master registry of ALL possible apps (current + future)

@@ -131,6 +131,21 @@
   margin-top: auto;
 }
 
+.button-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.button-cost-text {
+  font-size: var(--font-size-xsmall);
+  color: #aaa;
+  text-align: center;
+  margin-bottom: var(--spacing-xs);
+  font-weight: bold;
+}
+
 .upgrade-button {
   padding: var(--spacing-xs) var(--spacing-sm);
   background: linear-gradient(135deg, #1a2a1a 0%, #2d3d2d 100%);
@@ -147,18 +162,26 @@
   flex: 1;
 }
 
-.upgrade-button:hover {
+.upgrade-button:hover:not(:disabled) {
   background: linear-gradient(135deg, #2a3a2a 0%, #3d4d3d 100%);
   border-color: #6a6;
   color: #6a6;
   text-shadow: 0 0 2px rgba(102, 170, 102, 0.5);
 }
 
-.close-info-button {
-  padding: var(--spacing-xs) var(--spacing-sm);
+.upgrade-button:disabled {
   background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  border: 2px solid #666;
-  color: #aaa;
+  border-color: #333;
+  color: #555;
+  cursor: not-allowed;
+  text-shadow: none;
+}
+
+.downgrade-button {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: linear-gradient(135deg, #2a1a1a 0%, #3d2d2d 100%);
+  border: 2px solid #a44;
+  color: #a44;
   font-family: 'Courier New', monospace;
   font-size: var(--font-size-xsmall);
   font-weight: bold;
@@ -170,11 +193,22 @@
   flex: 1;
 }
 
-.close-info-button:hover {
-  background: linear-gradient(135deg, #2a2a2a 0%, #3d3d3d 100%);
-  border-color: #888;
-  color: #ccc;
+.downgrade-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3a2a2a 0%, #4d3d3d 100%);
+  border-color: #a66;
+  color: #a66;
+  text-shadow: 0 0 2px rgba(170, 102, 102, 0.5);
 }
+
+.downgrade-button:disabled {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  border-color: #333;
+  color: #555;
+  cursor: not-allowed;
+  text-shadow: none;
+}
+
+
 
 .resize-handle {
   position: absolute;

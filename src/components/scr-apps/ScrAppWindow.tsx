@@ -129,6 +129,16 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
         }
   }, [appType, tierData.currentTier, appRegistry, changeAppTier]);
 
+  const handleDowngrade = useCallback(() => {
+    const prevTier = tierData.currentTier - 1;
+    const prevTierData = appRegistry?.tiers.find(t => t.tier === prevTier);
+    
+    if (prevTierData && prevTier >= 1) {
+      changeAppTier(appType, prevTier);
+      // Could add credit deduction logic here if needed
+    }
+  }, [appType, tierData.currentTier, appRegistry, changeAppTier]);
+
   React.useEffect(() => {
     if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -151,9 +161,12 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
 
   const currentTier = tierData.currentTier;
   const nextTier = currentTier + 1;
+  const prevTier = currentTier - 1;
   const currentTierData = appRegistry?.tiers.find(t => t.tier === currentTier);
   const nextTierData = appRegistry?.tiers.find(t => t.tier === nextTier);
+  const prevTierData = appRegistry?.tiers.find(t => t.tier === prevTier);
   const canUpgrade = nextTierData !== undefined;
+  const canDowngrade = prevTierData !== undefined && prevTier >= 1;
 
   return (
     <div 
@@ -191,11 +204,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
         {isFooterExpanded && (
           <div className="footer-content">
             <div className="tier-info-line">
-              {canUpgrade ? (
-                <>App Tier: {currentTier} → {nextTier} (₵{nextTierData.flatCost} upgrade)</>
-              ) : (
-                <>App Tier: {currentTier} (Max Tier)</>
-              )}
+              App Tier: {currentTier}
             </div>
             <div className="monthly-info">
               Monthly: ₵{currentTierData?.monthlyCost || 0}/cycle
@@ -204,14 +213,30 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
               {canUpgrade ? nextTierData.information : currentTierData?.information || 'No information available'}
             </div>
             <div className="footer-buttons">
-              {canUpgrade && (
-                <button className="upgrade-button" onClick={handleUpgrade}>
-                  Upgrade Tier
+              <div className="button-group">
+                <div className="button-cost-text">
+                  ₵{currentTierData?.flatDowngradeCost || 0}
+                </div>
+                <button 
+                  className="downgrade-button" 
+                  onClick={handleDowngrade}
+                  disabled={!canDowngrade}
+                >
+                  Downgrade
                 </button>
-              )}
-              <button className="close-info-button" onClick={handleFooterToggle}>
-                Close Info
-              </button>
+              </div>
+              <div className="button-group">
+                <div className="button-cost-text">
+                  ₵{nextTierData?.flatUpgradeCost || 0}
+                </div>
+                <button 
+                  className="upgrade-button" 
+                  onClick={handleUpgrade}
+                  disabled={!canUpgrade}
+                >
+                  Upgrade
+                </button>
+              </div>
             </div>
           </div>
         )}

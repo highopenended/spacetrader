@@ -9,7 +9,8 @@ import React from 'react';
 
 export interface AppTier {
   tier: number;
-  flatCost: number;
+  flatUpgradeCost: number;
+  flatDowngradeCost: number;
   monthlyCost: number;
   information: string;
 }
