@@ -10,12 +10,11 @@ interface ScrAppStoreProps {
 const ScrAppStore: React.FC<ScrAppStoreProps> = ({ hasNewApps = false, onAppClick }) => {
   return (
     <ScrApp>
-      <div className="scr-app-store">
+      <div style={{ position: 'relative' }}>
         <div className="app-label">SCR-App Store</div>
-        <div className="app-value store-status">
+        <div className="app-value">
           {hasNewApps ? 'New Apps Available' : 'No Updates'}
         </div>
-        {hasNewApps && <div className="notification-dot"></div>}
       </div>
     </ScrApp>
   );

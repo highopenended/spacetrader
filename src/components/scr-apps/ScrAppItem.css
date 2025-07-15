@@ -22,3 +22,25 @@
   font-weight: bold;
   font-family: 'Courier New', monospace;
 }
+
+/* Negative value styling for credits */
+.scr-app .app-label-negative {
+  font-size: var(--font-size-small);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--spacing-xs);
+  opacity: 0.8;
+  color: #ff6666;
+}
+
+.scr-app .app-value-negative {
+  font-size: var(--font-size-large);
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  color: #ff6666;
+}
+
+/* Age-specific styling */
+.scr-app .age-years {
+  /* Additional styling for age display if needed */
+}

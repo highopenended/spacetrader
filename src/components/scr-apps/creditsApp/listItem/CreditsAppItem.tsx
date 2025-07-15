@@ -1,5 +1,4 @@
 import React from 'react';
-import './CreditsAppItem.css';
 import ScrApp from '../../ScrAppItem';
 
 interface CreditsAppProps {
