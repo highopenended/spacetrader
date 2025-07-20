@@ -12,6 +12,7 @@ import { clampPositionToBounds } from '../utils/viewportConstraints';
 interface DragHandlerOptions {
   initialPosition?: { x: number; y: number };
   onPositionChange?: (position: { x: number; y: number }) => void;
+  onBringToFront?: () => void; // Callback to bring element to front when drag starts
   dragConstraint?: (element: HTMLElement, event: React.MouseEvent) => boolean;
   constrainToViewport?: boolean;
   elementSize?: { width: number; height: number };
@@ -22,6 +23,7 @@ export const useDragHandler = (options: DragHandlerOptions = {}) => {
   const {
     initialPosition = { x: 0, y: 0 },
     onPositionChange,
+    onBringToFront,
     dragConstraint,
     constrainToViewport = false,
     elementSize,
@@ -39,13 +41,16 @@ export const useDragHandler = (options: DragHandlerOptions = {}) => {
     // Check drag constraint if provided
     if (dragConstraint && !dragConstraint(elementRef.current, e)) return;
     
+    // Bring element to front when starting to drag
+    onBringToFront?.();
+    
     const rect = elementRef.current.getBoundingClientRect();
     setIsDragging(true);
     setDragStart({
       x: e.clientX - rect.left,
       y: e.clientY - rect.top
     });
-  }, [dragConstraint]);
+  }, [dragConstraint, onBringToFront]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging) return;

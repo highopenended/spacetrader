@@ -58,6 +58,19 @@ function App() {
     prevOrder: string[];
   }>({ appId: null, prevOrder: [] });
 
+  // PURGE NODE DRAG SYSTEM: Track purge node drag state separately from app list drag state
+  const [purgeNodeDragState, setPurgeNodeDragState] = React.useState<{
+    isPurgeNodeDragging: boolean;
+    draggedWindowTitle: string | null;
+    draggedAppType: string | null;
+    mousePosition: { x: number; y: number } | null;
+  }>({
+    isPurgeNodeDragging: false,
+    draggedWindowTitle: null,
+    draggedAppType: null,
+    mousePosition: null
+  });
+
   // Clean dnd-kit: track current droppable id
   const [overId, setOverId] = React.useState<UniqueIdentifier | null>(null);
 
@@ -71,17 +84,113 @@ function App() {
     return collisions;
   };
 
-  const handleDragEndWithConfirm = React.useCallback((event: any) => {
+  /**
+   * UNIFIED DRAG START HANDLER - Manages Both Drag Systems
+   * 
+   * This handler coordinates between two different drag systems:
+   * 1. Standard app list drag (for reordering apps in terminal)
+   * 2. Purge node drag (for deleting windows by dragging into PurgeZone)
+   * 
+   * The handler detects which system is being used based on the drag data type:
+   * - 'window-purge-node': Window deletion drag → Update purgeNodeDragState
+   * - Standard app IDs: App reordering drag → Use existing handleDragStart
+   * 
+   * This enables consistent drag behavior while maintaining separate state tracking
+   * for each system's specific needs.
+   */
+  const handleUnifiedDragStart = React.useCallback((event: any) => {
+    const { active } = event;
+    
+    // PURGE NODE DRAG SYSTEM: Handle window deletion drag start
+    if (active.data?.current?.type === 'window-purge-node') {
+      const { windowTitle, appType } = active.data.current;
+      setPurgeNodeDragState({
+        isPurgeNodeDragging: true,
+        draggedWindowTitle: windowTitle,
+        draggedAppType: appType,
+        mousePosition: null // Will be updated by mouse move handler
+      });
+      
+      // Add mouse move listener to track cursor position for purge indicator
+      const handlePurgeNodeMouseMove = (e: MouseEvent) => {
+        setPurgeNodeDragState(prev => ({
+          ...prev,
+          mousePosition: { x: e.clientX, y: e.clientY }
+        }));
+      };
+      
+      document.addEventListener('mousemove', handlePurgeNodeMouseMove);
+      
+      // Store cleanup function for drag end
+      (window as any).__purgeNodeMouseMoveCleanup = () => {
+        document.removeEventListener('mousemove', handlePurgeNodeMouseMove);
+      };
+    } else {
+      // STANDARD DRAG SYSTEM: Handle app list reordering drag start
+      handleDragStart(event);
+    }
+  }, [handleDragStart]);
+
+  /**
+   * UNIFIED DRAG END HANDLER - Coordinates Drag Completion for Both Systems
+   * 
+   * This handler manages the completion of drag operations for both drag systems:
+   * 1. Resets purge node drag state (always, regardless of drop target)
+   * 2. Handles deletion if dropped on PurgeZone (for both systems)
+   * 3. Delegates to standard drag handler for app reordering (when appropriate)
+   * 
+   * DELETION LOGIC:
+   * - Window purge nodes: Use appType from drag data for deletion
+   * - App list items: Use app ID to find definition and check deletability
+   * - Both trigger the same deletion confirmation popup
+   * 
+   * DELEGATION LOGIC:
+   * - Purge node drags: Handle entirely here, don't delegate
+   * - Standard drags: Delegate to useGameState_AppList handleDragEnd for reordering
+   */
+  const handleUnifiedDragEnd = React.useCallback((event: any) => {
     const { active, over } = event;
+    
+    // PURGE NODE DRAG SYSTEM: Always reset purge drag state when drag ends
+    setPurgeNodeDragState({
+      isPurgeNodeDragging: false,
+      draggedWindowTitle: null,
+      draggedAppType: null,
+      mousePosition: null
+    });
+    
+    // Clean up mouse move listener for purge node tracking
+    if ((window as any).__purgeNodeMouseMoveCleanup) {
+      (window as any).__purgeNodeMouseMoveCleanup();
+      delete (window as any).__purgeNodeMouseMoveCleanup;
+    }
+    
     if (!over) return;
+    
+    // DELETION HANDLING: Check if dropped on PurgeZone (handles both systems)
     if (over.id === 'purge-zone-window') {
+      // PURGE NODE DRAG SYSTEM: Handle window deletion via purge node
+      if (active.data?.current?.type === 'window-purge-node') {
+        const { appType, deletable, windowTitle } = active.data.current;
+        if (deletable) {
+          setPendingDelete({ appId: appType, prevOrder: appOrder });
+          return;
+        }
+      }
+      
+      // STANDARD DRAG SYSTEM: Handle app list item deletion (existing logic)
       const appDefinition = apps.find((app: any) => app.id === active.id);
       if (appDefinition && appDefinition.deletable) {
         setPendingDelete({ appId: active.id, prevOrder: appOrder });
         return;
       }
     }
-    handleDragEnd(event);
+    
+    // STANDARD DRAG SYSTEM: Delegate to app list handler for reordering
+    // Only call for non-purge-node drags to avoid interfering with window positioning
+    if (active.data?.current?.type !== 'window-purge-node') {
+      handleDragEnd(event);
+    }
   }, [apps, appOrder, handleDragEnd]);
 
   const handleConfirmPurge = React.useCallback(() => {
@@ -211,9 +320,9 @@ function App() {
   return (
     <DndContext
       collisionDetection={customCollisionDetection}
-      onDragStart={handleDragStart}
+      onDragStart={handleUnifiedDragStart}
       onDragOver={event => setOverId(event.over?.id ?? null)}
-      onDragEnd={handleDragEndWithConfirm}
+      onDragEnd={handleUnifiedDragEnd}
       sensors={[
         useSensor(PointerSensor, {
           activationConstraint: { distance: 10 },
@@ -232,7 +341,7 @@ function App() {
           dragState={dragState}
           handleDragStart={handleDragStart}
           handleDragOver={handleDragOver}
-          handleDragEnd={handleDragEndWithConfirm}
+          handleDragEnd={handleUnifiedDragEnd}
           installApp={installApp}
           uninstallApp={uninstallApp}
           pendingDeleteAppId={pendingDelete.appId}
@@ -263,8 +372,31 @@ function App() {
         <DragOverlay 
           zIndex={2000}
           dropAnimation={{ duration: 0, easing: 'ease' }}
+          style={{
+            // PURGE NODE DRAG SYSTEM: Position overlay at mouse cursor for purge indicator
+            ...(purgeNodeDragState.isPurgeNodeDragging && purgeNodeDragState.mousePosition && {
+              position: 'fixed',
+              left: purgeNodeDragState.mousePosition.x - 6, // Center 12px indicator on cursor
+              top: purgeNodeDragState.mousePosition.y - 6,
+              transform: 'none', // Override @dnd-kit's transform
+              pointerEvents: 'none'
+            })
+          }}
         >
-          {dragState.isDragging && dragState.draggedAppId ? (
+          {/* PURGE NODE DRAG SYSTEM: Invisible drag node for window deletion (no visual feedback) */}
+          {purgeNodeDragState.isPurgeNodeDragging ? (
+            <div 
+              className="purge-node-drag-indicator"
+              style={{ 
+                width: '1px', 
+                height: '1px',
+                opacity: 0,
+                pointerEvents: 'none'
+              }}
+            />
+          ) : 
+          /* STANDARD DRAG SYSTEM: Full app preview for app list reordering */
+          dragState.isDragging && dragState.draggedAppId ? (
             <div 
               className={`sortable-item dragging`}
               style={{ opacity: 0.8, position: 'relative' }}

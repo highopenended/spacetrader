@@ -15,6 +15,116 @@ alwaysApply: false
 - Focus purely on content logic - let ScrAppWindow handle all dragging, resizing, positioning
 - **Automatic viewport constraints** - All windows are automatically prevented from being dragged off-screen
 - **Dynamic z-ordering** - Windows automatically come to front when clicked
+- **Dual drag system** - Windows support both positioning and deletion through unified drag interaction
+
+## Dual Drag System Architecture
+
+### Overview
+All app windows implement a sophisticated dual drag system that enables both window positioning and deletion functionality through a single drag interaction. This creates a seamless user experience where dragging a window can either move it OR delete it depending on the drop target.
+
+### System 1: Window Positioning Drag (Custom Implementation)
+- **Purpose**: Moves windows around the screen for positioning
+- **Implementation**: Custom `useDragHandler` hook with mouse events  
+- **Visual feedback**: Window follows mouse cursor during drag
+- **Constraints**: Viewport bounds, footer-aware positioning
+- **State management**: Uses `isDragging` from useDragHandler
+- **Drop behavior**: Updates window position when dropped anywhere except PurgeZone
+
+### System 2: Purge Node Drag (@dnd-kit Implementation)  
+- **Purpose**: Enables deletion by dragging into PurgeZone
+- **Implementation**: @dnd-kit `useDraggable` hook
+- **Visual feedback**: Tiny red cursor-sized indicator (12x12px) follows mouse exactly
+- **Constraints**: Only works with deletable apps (`deletable: true`)
+- **State management**: Uses `purgeNodeDragState` with verbose naming
+- **Drop behavior**: Triggers deletion confirmation when dropped on PurgeZone
+
+### Integration Approach
+1. **Dual activation**: Both systems activate simultaneously on window header drag
+2. **Parallel operation**: useDragHandler handles visual movement, @dnd-kit handles deletion detection
+3. **Unified experience**: User sees single drag action with appropriate visual feedback
+4. **Smart delegation**: Drop handling routes to appropriate system based on drop target
+
+### Naming Convention (CRITICAL)
+All purge-related variables use verbose, descriptive names to prevent future confusion:
+
+```typescript
+// ✅ CORRECT: Purge node variables (verbose and obvious)
+isPurgeNodeDragging           // Not: isDragging
+purgeNodeDragAttributes       // Not: dndAttributes  
+purgeNodeDragListeners        // Not: dndListeners
+setPurgeNodeDragRef          // Not: setDndNodeRef
+purgeNodeDragState           // Not: dragState
+
+// ✅ CORRECT: State structure
+interface PurgeNodeDragState {
+  isPurgeNodeDragging: boolean;
+  draggedWindowTitle: string | null;
+  draggedAppType: string | null;
+}
+
+// ❌ AVOID: Generic names that could be confused
+isDragging, dragState, dndListeners, handleDragEnd
+```
+
+### Implementation Requirements
+
+#### In ScrAppWindow.tsx:
+```typescript
+// PURGE NODE DRAG SYSTEM: Setup @dnd-kit integration
+const { 
+  attributes: purgeNodeDragAttributes, 
+  listeners: purgeNodeDragListeners, 
+  setNodeRef: setPurgeNodeDragRef,
+  isDragging: isPurgeNodeDragging
+} = useDraggable({
+  id: `purge-window-${windowId}`,
+  data: { 
+    type: 'window-purge-node',
+    appType, 
+    windowId,
+    deletable: appRegistry?.deletable ?? true,
+    windowTitle: title
+  }
+});
+
+// Apply both drag systems to window header
+<div 
+  className="window-header"
+  onMouseDown={dragMouseDown}           // System 1: Positioning
+  {...purgeNodeDragAttributes}         // System 2: Deletion
+  {...purgeNodeDragListeners}          // System 2: Deletion
+>
+```
+
+#### In App.tsx:
+```typescript
+// UNIFIED DRAG HANDLERS: Coordinate both systems
+const handleUnifiedDragStart = (event) => {
+  if (event.active.data?.current?.type === 'window-purge-node') {
+    // Handle purge node drag start
+  } else {
+    // Handle standard app list drag start  
+  }
+};
+
+const handleUnifiedDragEnd = (event) => {
+  // Reset purge node state
+  // Handle deletions for both systems
+  // Delegate to standard handler when appropriate
+};
+```
+
+### Visual Feedback System
+- **Window positioning**: Full window follows mouse cursor
+- **Purge node deletion**: Tiny 12x12px red indicator follows mouse exactly
+- **PurgeZone activation**: Red "PURGE?" animation when hovering over drop zone
+- **Deletion confirmation**: Standard popup for both app list and window deletions
+
+### Documentation Requirements
+- **Extensive comments**: All dual drag components must include architecture explanation
+- **System identification**: Clear comments distinguishing System 1 vs System 2 code
+- **Naming rationale**: Document why verbose naming prevents future confusion
+- **Integration notes**: Explain how both systems work together seamlessly
 
 ## Standard Window Features (Built-in)
 - **Automatic boundary checking** - Windows cannot be dragged outside the viewport
@@ -42,8 +152,29 @@ interface BaseWindowProps {
   onWidthChange?: (width: number) => void; // For responsive behavior
   onBringToFront?: () => void;            // Bring window to front
   overId?: any;                           // For drag-over detection (PurgeZone specific)
+  updateCredits?: (amount: number) => void; // For credit transactions (upgrade/downgrade)
 }
 ```
+
+## Window Deletion System
+Windows can be deleted through the dual drag system:
+
+### Deletion Requirements
+- Window must be **deletable** (based on `APP_REGISTRY[appType].deletable`)
+- Core apps like `credits` and `scrAppStore` cannot be deleted (`deletable: false`)
+- Utility apps like `age`, `jobTitle`, `date` can be deleted (`deletable: true`)
+
+### Deletion Flow
+1. **Drag window header** → Both positioning and purge node systems activate
+2. **Tiny red indicator** appears following mouse cursor exactly (12x12px)
+3. **Drag over PurgeZone** → Zone shows red "PURGE?" animation
+4. **Drop on PurgeZone** → Deletion confirmation popup appears
+5. **Confirm deletion** → Window closes AND app removed from terminal list
+6. **Cancel deletion** → No changes, window remains
+
+### Deletion vs Minimize
+- **Minimize** (- button or double-click): Window closes, app returns to terminal list
+- **Delete** (drag to PurgeZone): Window closes, app permanently removed from terminal list
 
 ## CSS and Styling
 - **DO NOT create app-specific CSS files** unless absolutely necessary for unique styling
@@ -180,6 +311,9 @@ const getCompactLevel = (width: number): 'C3' | 'C2' | 'C1' | 'C0' => {
 - **Call original handlers** when overriding: `onWidthChange?.(width)`
 - **Use standard BaseWindowProps interface** for type safety
 - **Let ScrAppWindow handle** positioning, dragging, constraints, z-index
+- **Use verbose purge naming** - `isPurgeNodeDragging`, `purgeNodeDragState`, etc.
+- **Document dual drag architecture** - Extensive comments explaining both systems
+- **Test both drag systems** - Verify positioning AND deletion work correctly
 
 ### ❌ DON'T
 - **Never override standard props without calling originals** (onClose, onPositionChange, etc.)
@@ -187,6 +321,9 @@ const getCompactLevel = (width: number): 'C3' | 'C2' | 'C1' | 'C0' => {
 - **Never handle window management manually** - trust the base component
 - **Never create separate rendering paths** - use the standard renderWindow() pattern
 - **Never hardcode positions or z-indexes** - let the window manager handle it
+- **Never use generic drag variable names** - Avoid `isDragging`, `dragState`, `dndListeners`
+- **Never modify dual drag system** without updating both ScrAppWindow and App.tsx
+- **Never break purge node delegation** - Always route drag events to correct system
 
 ## Best Practices
 - **Trust the base component** - ScrAppWindow handles all window management correctly
@@ -201,3 +338,8 @@ const getCompactLevel = (width: number): 'C3' | 'C2' | 'C1' | 'C0' => {
 - **Creating custom wrapper components** - Adds complexity and breaks standard features
 - **Not spreading windowProps** - Loses all standard window functionality
 - **Hardcoding window behavior** - Should be handled by base component and window manager
+- **Using generic drag variable names** - Future developers won't understand which system is which
+- **Forgetting to update purge node state** - Causes drag state to persist between operations
+- **Breaking unified drag handlers** - Routing wrong drag types to wrong systems
+- **Missing @dnd-kit imports** - Purge node system requires useDraggable from @dnd-kit/core
+- **Conflicting drag event handlers** - Window positioning and purge detection can interfere
