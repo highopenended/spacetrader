@@ -14,9 +14,11 @@ export interface BaseWindowProps {
   position?: { x: number; y: number };
   size?: { width: number; height: number };
   minSize?: { width: number; height: number };
+  zIndex?: number;
   onPositionChange?: (position: { x: number; y: number }) => void;
   onSizeChange?: (size: { width: number; height: number }) => void;
   onWidthChange?: (width: number) => void;
+  onBringToFront?: () => void;
 }
 
 interface ScrAppWindowProps extends BaseWindowProps {
@@ -33,9 +35,11 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   position = WINDOW_DEFAULTS.POSITION,
   size = WINDOW_DEFAULTS.SIZE,
   minSize = WINDOW_DEFAULTS.MIN_SIZE,
+  zIndex = 1000,
   onPositionChange,
   onSizeChange,
-  onWidthChange
+  onWidthChange,
+  onBringToFront
 }) => {
   const [currentSize, setCurrentSize] = useState(size);
   const [isResizing, setIsResizing] = useState(false);
@@ -179,9 +183,13 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
         top: currentPosition.y,
         width: currentSize.width,
         height: currentSize.height,
+        zIndex: zIndex,
         userSelect: (isDragging || isResizing) ? 'none' : 'auto'
       }}
       data-window-id={windowId}
+      onClick={() => {
+        onBringToFront?.();
+      }}
     >
       {/* Section 1: Window Header */}
       <div 

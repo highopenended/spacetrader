@@ -15,6 +15,7 @@ export const useWindowManager = () => {
   const [windows, setWindows] = useState<WindowData[]>([]);
   const [lastWindowPositions, setLastWindowPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [lastWindowSizes, setLastWindowSizes] = useState<Record<string, { width: number; height: number }>>({});
+  const [nextZIndex, setNextZIndex] = useState(1000); // Start at 1000, increment for each new window
 
   const updateWindowPosition = (appType: string, position: { x: number; y: number }) => {
     setLastWindowPositions(prev => ({
@@ -59,8 +60,10 @@ export const useWindowManager = () => {
         title,
         content: windowContent,
         position: lastPosition || defaultPosition,
-        size: lastSize || defaultSize
+        size: lastSize || defaultSize,
+        zIndex: nextZIndex
       };
+      setNextZIndex(prev => prev + 1); // Increment for next window
       setWindows(prev => [...prev, newWindow]);
     }
   };
@@ -74,6 +77,18 @@ export const useWindowManager = () => {
     setWindows(prev => prev.filter(window => window.appType !== appType));
   };
 
+  // Bring a window to front (highest z-index)
+  const bringToFront = (windowId: string) => {
+    setWindows(prev => 
+      prev.map(window => 
+        window.id === windowId 
+          ? { ...window, zIndex: nextZIndex }
+          : window
+      )
+    );
+    setNextZIndex(prev => prev + 1);
+  };
+
   return {
     windows,
     updateWindowPosition,
@@ -81,5 +96,6 @@ export const useWindowManager = () => {
     openOrCloseWindow,
     closeWindow,
     closeWindowsByAppType,
+    bringToFront,
   };
 }; 

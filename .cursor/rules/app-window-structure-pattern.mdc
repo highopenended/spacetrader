@@ -1,3 +1,4 @@
+
 ---
 description: Patterns and conventions for app window components
 globs: 
@@ -11,6 +12,14 @@ alwaysApply: false
 - App-specific windows only define their unique props (e.g., `gameTime: GameTime`)
 - Use `{...windowProps}` spread operator to pass through base window management props
 - Focus purely on content logic - let ScrAppWindow handle all dragging, resizing, positioning
+- **Automatic viewport constraints** - All windows are automatically prevented from being dragged off-screen
+
+## Viewport Constraints (Built-in)
+- **Automatic boundary checking** - Windows cannot be dragged outside the viewport
+- **Footer-aware positioning** - Accounts for expanded footers (120px) vs collapsed (20px)
+- **Immediate repositioning** - Windows automatically move when footers expand or viewport resizes
+- **Resize constraints** - Windows cannot be resized larger than available screen space
+- **No configuration needed** - All ScrAppWindow instances automatically get viewport constraints
 
 ## CSS and Styling
 - **DO NOT create app-specific CSS files** unless absolutely necessary for unique styling
@@ -32,6 +41,7 @@ src/components/scr-apps/{appName}/
 ```tsx
 // Rendered in App.tsx renderWindow() using generic ScrAppWindow
 // No custom window component needed
+// Automatically gets viewport constraints, drag/resize, footer system
 ```
 
 ### Custom Window (needs specific behavior)
@@ -47,7 +57,7 @@ interface AgeAppWindowProps extends BaseWindowProps {
 const AgeAppWindow: React.FC<AgeAppWindowProps> = ({
   gameTime,
   onWidthChange, // For responsive behavior
-  ...windowProps // Spread all window management props
+  ...windowProps // Spread all window management props (includes position, size, callbacks)
 }) => {
   const [compactLevel, setCompactLevel] = useState<'C3' | 'C2' | 'C1' | 'C0'>('C3');
 
@@ -60,7 +70,7 @@ const AgeAppWindow: React.FC<AgeAppWindowProps> = ({
   return (
     <ScrAppWindow 
       title="Age Tracker" 
-      {...windowProps} 
+      {...windowProps} // Includes automatic viewport constraints
       minSize={{ width: 100, height: 100 }}
       onWidthChange={handleWidthChange}
     >
@@ -94,7 +104,20 @@ const getCompactLevel = (width: number): 'C3' | 'C2' | 'C1' | 'C0' => {
 };
 ```
 
+## Footer Behavior
+- **Collapsible footer** - All windows have ▼ DATA / ▲ HIDE footer toggle
+- **Outside window bounds** - Footer extends below the main window area
+- **Automatic repositioning** - When footer expands, window moves up if needed to keep footer on-screen
+- **Height-aware constraints** - Viewport constraints account for footer height (20px collapsed, 120px expanded)
+
 ## Integration with App.tsx
 - Register custom windows in `renderWindow()` function
 - Pass game state props as needed (credits, gameTime, gamePhase)
 - Use window manager callbacks for position/size updates
+- **No viewport constraint setup needed** - ScrAppWindow handles this automatically
+
+## Best Practices
+- **Trust the base component** - Don't override viewport constraint behavior
+- **Use spread props** - Always spread `{...windowProps}` to get all window management
+- **Focus on content** - Let ScrAppWindow handle positioning, dragging, constraints
+- **Test footer expansion** - Ensure your content works with the collapsible footer system

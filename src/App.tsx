@@ -27,6 +27,7 @@ function App() {
     openOrCloseWindow,
     closeWindow,
     closeWindowsByAppType,
+    bringToFront,
   } = useWindowManager();
   const {
     apps,
@@ -146,9 +147,11 @@ function App() {
           appType={window.appType}
           position={window.position}
           size={window.size}
+          zIndex={window.zIndex}
           onClose={() => closeWindow(window.id)}
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
+          onBringToFront={() => bringToFront(window.id)}
         />
       );
     }
@@ -161,9 +164,11 @@ function App() {
           appType={window.appType}
           position={window.position}
           size={window.size}
+          zIndex={window.zIndex}
           onClose={() => closeWindow(window.id)}
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
+          onBringToFront={() => bringToFront(window.id)}
         />
       );
     }
@@ -175,9 +180,11 @@ function App() {
         title={window.title}
         position={window.position}
         size={window.size}
+        zIndex={window.zIndex}
         onClose={() => closeWindow(window.id)}
         onPositionChange={(position) => updateWindowPosition(window.appType, position)}
         onSizeChange={(size) => updateWindowSize(window.appType, size)}
+        onBringToFront={() => bringToFront(window.id)}
       >
         {window.content}
       </ScrAppWindow>
