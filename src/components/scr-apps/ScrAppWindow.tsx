@@ -194,6 +194,16 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
         onDoubleClick={handleDoubleClick}
       >
         <div className="window-title">{title}</div>
+        <button 
+          className="window-minimize-button"
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent triggering drag
+            onClose();
+          }}
+          title="Minimize (or double-click header)"
+        >
+          −
+        </button>
       </div>
       
       {/* Section 2: App Content */}

@@ -11,15 +11,39 @@ alwaysApply: false
 - All app windows extend `BaseWindowProps` interface (from ScrAppWindow.tsx) for consistent window management
 - App-specific windows only define their unique props (e.g., `gameTime: GameTime`)
 - Use `{...windowProps}` spread operator to pass through base window management props
+- **NEVER override standard props** - Let ScrAppWindow handle all window management
 - Focus purely on content logic - let ScrAppWindow handle all dragging, resizing, positioning
 - **Automatic viewport constraints** - All windows are automatically prevented from being dragged off-screen
+- **Dynamic z-ordering** - Windows automatically come to front when clicked
 
-## Viewport Constraints (Built-in)
+## Standard Window Features (Built-in)
 - **Automatic boundary checking** - Windows cannot be dragged outside the viewport
 - **Footer-aware positioning** - Accounts for expanded footers (120px) vs collapsed (20px)
 - **Immediate repositioning** - Windows automatically move when footers expand or viewport resizes
 - **Resize constraints** - Windows cannot be resized larger than available screen space
-- **No configuration needed** - All ScrAppWindow instances automatically get viewport constraints
+- **Click-to-front** - Clicking anywhere in window brings it to front
+- **Double-click close** - Double-clicking title bar closes window
+- **Z-index management** - Proper window stacking order
+- **Drag-over detection** - Support for drag-and-drop operations (via overId prop)
+
+## BaseWindowProps Interface
+All custom windows receive these standard props:
+```typescript
+interface BaseWindowProps {
+  onClose: () => void;                    // Window close handler
+  windowId: string;                       // Unique window identifier
+  appType: string;                        // App type identifier
+  position?: { x: number; y: number };    // Window position
+  size?: { width: number; height: number }; // Window size
+  minSize?: { width: number; height: number }; // Minimum size
+  zIndex?: number;                        // Stacking order
+  onPositionChange?: (position: { x: number; y: number }) => void;
+  onSizeChange?: (size: { width: number; height: number }) => void;
+  onWidthChange?: (width: number) => void; // For responsive behavior
+  onBringToFront?: () => void;            // Bring window to front
+  overId?: any;                           // For drag-over detection (PurgeZone specific)
+}
+```
 
 ## CSS and Styling
 - **DO NOT create app-specific CSS files** unless absolutely necessary for unique styling
@@ -41,7 +65,7 @@ src/components/scr-apps/{appName}/
 ```tsx
 // Rendered in App.tsx renderWindow() using generic ScrAppWindow
 // No custom window component needed
-// Automatically gets viewport constraints, drag/resize, footer system
+// Automatically gets all standard window features
 ```
 
 ### Custom Window (needs specific behavior)
@@ -56,23 +80,23 @@ interface AgeAppWindowProps extends BaseWindowProps {
 
 const AgeAppWindow: React.FC<AgeAppWindowProps> = ({
   gameTime,
-  onWidthChange, // For responsive behavior
-  ...windowProps // Spread all window management props (includes position, size, callbacks)
+  onWidthChange, // For responsive behavior only
+  ...windowProps // Spread ALL window management props
 }) => {
   const [compactLevel, setCompactLevel] = useState<'C3' | 'C2' | 'C1' | 'C0'>('C3');
 
-  // Responsive behavior
+  // ONLY override props when you need to ADD behavior, not replace it
   const handleWidthChange = (width: number) => {
     setCompactLevel(getCompactLevel(width));
-    if (onWidthChange) onWidthChange(width);
+    onWidthChange?.(width); // Call original handler
   };
 
   return (
     <ScrAppWindow 
       title="Age Tracker" 
-      {...windowProps} // Includes automatic viewport constraints
+      {...windowProps} // ALWAYS spread first - gets all standard functionality
       minSize={{ width: 100, height: 100 }}
-      onWidthChange={handleWidthChange}
+      onWidthChange={handleWidthChange} // Only override when adding behavior
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -85,6 +109,37 @@ const AgeAppWindow: React.FC<AgeAppWindowProps> = ({
 };
 
 export default AgeAppWindow;
+```
+
+### Special Window (PurgeZone with drag-over detection)
+```tsx
+import React from 'react';
+import { useDroppable } from '@dnd-kit/core';
+import ScrAppWindow, { BaseWindowProps } from '../../ScrAppWindow';
+
+interface PurgeZoneAppWindowProps extends BaseWindowProps {
+  overId?: any; // For drag-over detection
+}
+
+const PurgeZoneAppWindow: React.FC<PurgeZoneAppWindowProps> = ({
+  overId,
+  ...windowProps // Gets ALL standard window functionality
+}) => {
+  const { setNodeRef } = useDroppable({ id: 'purge-zone-window' });
+  const isActive = overId === 'purge-zone-window';
+
+  return (
+    <ScrAppWindow
+      title="Purge Zone"
+      {...windowProps} // Standard props provide all window management
+      minSize={{ width: 100, height: 100 }}
+    >
+      <div ref={setNodeRef} className={`drop-area ${isActive ? 'active' : ''}`}>
+        {/* Content */}
+      </div>
+    </ScrAppWindow>
+  );
+};
 ```
 
 ## Responsive Design Pattern
@@ -111,13 +166,38 @@ const getCompactLevel = (width: number): 'C3' | 'C2' | 'C1' | 'C0' => {
 - **Height-aware constraints** - Viewport constraints account for footer height (20px collapsed, 120px expanded)
 
 ## Integration with App.tsx
-- Register custom windows in `renderWindow()` function
+- **Single rendering path** - ALL windows render through `renderWindow()` function
 - Pass game state props as needed (credits, gameTime, gamePhase)
-- Use window manager callbacks for position/size updates
-- **No viewport constraint setup needed** - ScrAppWindow handles this automatically
+- Pass standard window management props (position, size, callbacks, zIndex, overId)
+- **No special cases** - Every window gets same treatment and features
+- **Automatic z-index** - Windows get proper stacking order from window manager
+
+## Critical Rules
+
+### ✅ DO
+- **Always spread `{...windowProps}` first** to get all standard functionality
+- **Only override props when adding behavior** (like responsive width handling)
+- **Call original handlers** when overriding: `onWidthChange?.(width)`
+- **Use standard BaseWindowProps interface** for type safety
+- **Let ScrAppWindow handle** positioning, dragging, constraints, z-index
+
+### ❌ DON'T
+- **Never override standard props without calling originals** (onClose, onPositionChange, etc.)
+- **Never create custom wrapper functions** that replace standard functionality
+- **Never handle window management manually** - trust the base component
+- **Never create separate rendering paths** - use the standard renderWindow() pattern
+- **Never hardcode positions or z-indexes** - let the window manager handle it
 
 ## Best Practices
-- **Trust the base component** - Don't override viewport constraint behavior
-- **Use spread props** - Always spread `{...windowProps}` to get all window management
-- **Focus on content** - Let ScrAppWindow handle positioning, dragging, constraints
-- **Test footer expansion** - Ensure your content works with the collapsible footer system
+- **Trust the base component** - ScrAppWindow handles all window management correctly
+- **Focus on content** - Your job is to render the window content, not manage the window
+- **Test all standard features** - Ensure drag, resize, close, bring-to-front all work
+- **Use modern callback syntax** - `callback?.()` instead of `if (callback) callback()`
+- **Keep interfaces minimal** - Only add props your component actually needs
+
+## Common Pitfalls
+- **Overriding onClose without calling original** - Breaks double-click close
+- **Overriding position/size handlers without calling originals** - Breaks window manager state
+- **Creating custom wrapper components** - Adds complexity and breaks standard features
+- **Not spreading windowProps** - Loses all standard window functionality
+- **Hardcoding window behavior** - Should be handled by base component and window manager
