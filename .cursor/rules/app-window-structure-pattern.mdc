@@ -18,7 +18,7 @@ alwaysApply: false
 
 ## Standard Window Features (Built-in)
 - **Automatic boundary checking** - Windows cannot be dragged outside the viewport
-- **Footer-aware positioning** - Accounts for expanded footers (120px) vs collapsed (20px)
+- **Footer-aware positioning** - Accounts for expanded footers (140px) vs collapsed (20px)
 - **Immediate repositioning** - Windows automatically move when footers expand or viewport resizes
 - **Resize constraints** - Windows cannot be resized larger than available screen space
 - **Click-to-front** - Clicking anywhere in window brings it to front
@@ -163,7 +163,7 @@ const getCompactLevel = (width: number): 'C3' | 'C2' | 'C1' | 'C0' => {
 - **Collapsible footer** - All windows have ▼ DATA / ▲ HIDE footer toggle
 - **Outside window bounds** - Footer extends below the main window area
 - **Automatic repositioning** - When footer expands, window moves up if needed to keep footer on-screen
-- **Height-aware constraints** - Viewport constraints account for footer height (20px collapsed, 120px expanded)
+- **Height-aware constraints** - Viewport constraints account for footer height (20px collapsed, 140px expanded)
 
 ## Integration with App.tsx
 - **Single rendering path** - ALL windows render through `renderWindow()` function

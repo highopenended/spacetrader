@@ -20,6 +20,7 @@ export interface BaseWindowProps {
   onWidthChange?: (width: number) => void;
   onBringToFront?: () => void;
   overId?: any; // For drag-over detection (PurgeZone specific)
+  updateCredits?: (amount: number) => void; // For credit transactions
 }
 
 interface ScrAppWindowProps extends BaseWindowProps {
@@ -41,7 +42,8 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   onSizeChange,
   onWidthChange,
   onBringToFront,
-  overId
+  overId,
+  updateCredits
 }) => {
   const [currentSize, setCurrentSize] = useState(size);
   const [isResizing, setIsResizing] = useState(false);
@@ -49,7 +51,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   const [isFooterExpanded, setIsFooterExpanded] = useState(false);
 
   // Use shared drag handler for window dragging with viewport constraints
-  const footerHeight = isFooterExpanded ? 120 : 20;
+  const footerHeight = isFooterExpanded ? 140 : 20;
   const { elementRef: windowRef, position: currentPosition, isDragging, handleMouseDown: dragMouseDown, setPosition } = useDragHandler({
     initialPosition: position,
     onPositionChange,
@@ -112,21 +114,24 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     const nextTier = tierData.currentTier + 1;
     const nextTierData = appRegistry?.tiers.find(t => t.tier === nextTier);
     
-    if (nextTierData) {
+    if (nextTierData && updateCredits) {
+      // Deduct upgrade cost
+      updateCredits(-nextTierData.flatUpgradeCost);
       changeAppTier(appType, nextTier);
-      // Could add credit deduction logic here if needed
-        }
-  }, [appType, tierData.currentTier, appRegistry, changeAppTier]);
+    }
+  }, [appType, tierData.currentTier, appRegistry, changeAppTier, updateCredits]);
 
   const handleDowngrade = useCallback(() => {
     const prevTier = tierData.currentTier - 1;
     const prevTierData = appRegistry?.tiers.find(t => t.tier === prevTier);
+    const currentTierData = appRegistry?.tiers.find(t => t.tier === tierData.currentTier);
     
-    if (prevTierData && prevTier >= 1) {
+    if (prevTierData && prevTier >= 1 && currentTierData && updateCredits) {
+      // Deduct downgrade cost
+      updateCredits(-currentTierData.flatDowngradeCost);
       changeAppTier(appType, prevTier);
-      // Could add credit deduction logic here if needed
     }
-  }, [appType, tierData.currentTier, appRegistry, changeAppTier]);
+  }, [appType, tierData.currentTier, appRegistry, changeAppTier, updateCredits]);
 
   useEffect(() => {
     if (isResizing) {

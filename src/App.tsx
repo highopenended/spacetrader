@@ -148,6 +148,7 @@ function App() {
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
           onBringToFront={() => bringToFront(window.id)}
+          updateCredits={updateCredits}
         />
       );
     }
@@ -165,6 +166,7 @@ function App() {
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
           onBringToFront={() => bringToFront(window.id)}
+          updateCredits={updateCredits}
         />
       );
     }
@@ -182,6 +184,7 @@ function App() {
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
           onBringToFront={() => bringToFront(window.id)}
+          updateCredits={updateCredits}
         />
       );
     }
@@ -198,6 +201,7 @@ function App() {
         onPositionChange={(position) => updateWindowPosition(window.appType, position)}
         onSizeChange={(size) => updateWindowSize(window.appType, size)}
         onBringToFront={() => bringToFront(window.id)}
+        updateCredits={updateCredits}
       >
         {window.content}
       </ScrAppWindow>

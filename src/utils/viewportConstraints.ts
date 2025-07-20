@@ -35,7 +35,7 @@ export const getViewportBounds = (): Size => {
 /**
  * Calculate the allowed bounds for a window position
  * @param windowSize - Current size of the window
- * @param footerHeight - Additional height for footer (e.g., 120px for expanded footer)
+ * @param footerHeight - Additional height for footer (e.g., 140px for expanded footer)
  * @returns Bounds object with min/max allowed positions
  */
 export const calculateWindowBounds = (
