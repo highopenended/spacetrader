@@ -1,7 +1,8 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import './AdminToolbar.css';
 import { GamePhase, GameTime } from '../../types/gameState';
 import { advanceGameTime } from '../../utils/gameStateUtils';
+import { useDragHandler } from '../../hooks/useDragHandler';
 
 interface AdminToolbarProps {
   credits: number;
@@ -32,38 +33,17 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
   resumeTime,
   resetGame
 }) => {
-  const [position, setPosition] = useState({ x: 20, y: 20 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isMinimized, setIsMinimized] = useState(true);
-  const toolbarRef = useRef<HTMLDivElement>(null);
-
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (!toolbarRef.current) return;
-    
-    // Don't start dragging if clicking on buttons
-    if ((e.target as HTMLElement).tagName === 'BUTTON') return;
-    
-    const rect = toolbarRef.current.getBoundingClientRect();
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    });
+  
+  // Drag constraint: don't drag when clicking on buttons
+  const dragConstraint = useCallback((element: HTMLElement, event: React.MouseEvent) => {
+    return (event.target as HTMLElement).tagName !== 'BUTTON';
   }, []);
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging) return;
-    
-    setPosition({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
-    });
-  }, [isDragging, dragStart]);
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
+  
+  const { elementRef: toolbarRef, position, isDragging, handleMouseDown, setPosition } = useDragHandler({
+    initialPosition: { x: 20, y: 20 },
+    dragConstraint
+  });
 
   const toggleMinimized = () => {
     if (!isMinimized) {
@@ -81,17 +61,6 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
     }
     setIsMinimized(!isMinimized);
   };
-
-  React.useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
 
   const addGrind = () => {
     const newTime = { ...gameTime };
