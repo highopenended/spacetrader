@@ -15,6 +15,7 @@ import PurgeConfirmPopup from './components/ui/PurgeConfirmPopup';
 
 import { APP_REGISTRY } from './constants/scrAppListConstants';
 import { DndContext, DragOverlay, useSensor, PointerSensor, rectIntersection, UniqueIdentifier } from '@dnd-kit/core';
+import { getAppProps } from './utils/appPropsBuilder';
 
 function App() {
   const { credits, updateCredits, setCredits, resetCredits } = useGameState_Credits();
@@ -257,26 +258,9 @@ function App() {
                 const appConfig = apps.find(app => app.id === dragState.draggedAppId);
                 if (!appConfig) return null;
                 const AppComponent = appConfig.component;
-                
-                // Build props based on app ID
-                const getAppProps = () => {
-                  switch (appConfig.id) {
-                    case 'credits':
-                      return { credits };
-                    case 'jobTitle':
-                      return { gamePhase };
-                    case 'age':
-                      return { gameTime };
-                    case 'date':
-                      return { gameTime, gamePhase };
-                    case 'scrAppStore':
-                      return { hasNewApps: true };
-                    default:
-                      return {};
-                  }
-                };
+                const appProps = getAppProps(appConfig.id, { credits, gameTime, gamePhase });
 
-                return <AppComponent {...getAppProps()} />;
+                return <AppComponent {...appProps} />;
               })()}
             </div>
           ) : null}
