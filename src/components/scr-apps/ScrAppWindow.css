@@ -77,8 +77,9 @@
 .window-footer {
   position: absolute;
   bottom: -20px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  width: 100%;
+  min-width: 200px;
   background: linear-gradient(135deg, #2a2a2a 0%, #3d3d3d 100%);
   border: 2px solid #444;
   border-top: none;
@@ -88,12 +89,10 @@
 }
 
 .window-footer.collapsed {
-  width: 60px;
   height: 20px;
 }
 
 .window-footer.expanded {
-  width: 280px;
   height: 140px;
   bottom: -140px;
 }
