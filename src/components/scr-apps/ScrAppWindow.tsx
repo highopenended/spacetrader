@@ -62,6 +62,7 @@ export interface BaseWindowProps {
   onBringToFront?: () => void;
   overId?: any; // For drag-over detection (PurgeZone specific)
   updateCredits?: (amount: number) => void; // For credit transactions
+  draggedAppType?: string | null; // For debug: which app is being dragged
 }
 
 interface ScrAppWindowProps extends BaseWindowProps {
@@ -84,7 +85,8 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   onWidthChange,
   onBringToFront,
   overId,
-  updateCredits
+  updateCredits,
+  draggedAppType
 }) => {
   const [currentSize, setCurrentSize] = useState(size);
   const [isResizing, setIsResizing] = useState(false);
@@ -236,6 +238,9 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   const canUpgrade = nextTierData !== undefined;
   const canDowngrade = prevTierData !== undefined && prevTier >= 1;
 
+  // DEBUG: Check if this window is being dragged over purge zone
+  const isOverPurgeZone = overId === 'purge-zone-window' && draggedAppType === appType;
+
   // PURGE NODE DRAG SYSTEM: Combine refs for both drag systems
   // The window needs refs for both positioning drag (useDragHandler) and purge drag (@dnd-kit)
   const combinedWindowRef = useCallback((node: HTMLDivElement | null) => {
@@ -253,7 +258,17 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
         width: currentSize.width,
         height: currentSize.height,
         zIndex: zIndex,
-        userSelect: (isDragging || isResizing) ? 'none' : 'auto'
+        userSelect: (isDragging || isResizing) ? 'none' : 'auto',
+        background: isOverPurgeZone ? 
+          `linear-gradient(135deg, #1a0000 0%, #330000 50%, #1a0000 100%), 
+           repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(255, 0, 0, 0.1) 2px, rgba(255, 0, 0, 0.1) 4px)` 
+          : undefined,
+        borderColor: isOverPurgeZone ? '#ff0000' : undefined,
+        boxShadow: isOverPurgeZone ? 
+          '0 0 10px rgba(255, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.1), 0 0 30px rgba(255, 0, 0, 0.3)' 
+          : undefined,
+        filter: isOverPurgeZone ? 'contrast(1.08) brightness(1.04)' : undefined,
+        animation: isOverPurgeZone ? 'terminal-corruption 0.18s infinite, surge-cycle 6s infinite' : undefined
       }}
       data-window-id={windowId}
       onClick={() => {
@@ -267,6 +282,13 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
         onDoubleClick={handleDoubleClick}
         {...purgeNodeDragAttributes}
         {...purgeNodeDragListeners}
+        style={{
+          background: isOverPurgeZone ? 
+            'linear-gradient(135deg, #2a0000 0%, #440000 100%)' : undefined,
+          borderBottomColor: isOverPurgeZone ? '#ff0000' : undefined,
+          boxShadow: isOverPurgeZone ? '0 0 5px rgba(255, 0, 0, 0.5)' : undefined,
+          textShadow: isOverPurgeZone ? '0 0 2px #ff0000, 0 0 6px #ff0000' : undefined
+        }}
       >
         <div className="window-title">{title}</div>
         <button 
@@ -276,10 +298,34 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
             onClose();
           }}
           title="Minimize (or double-click header)"
+          style={{
+            background: isOverPurgeZone ? 
+              'linear-gradient(135deg, #2a0000 0%, #440000 100%)' : undefined,
+            borderColor: isOverPurgeZone ? '#ff0000' : undefined,
+            color: isOverPurgeZone ? '#ff4444' : undefined,
+            textShadow: isOverPurgeZone ? '0 0 2px #ff0000' : undefined,
+            boxShadow: isOverPurgeZone ? '0 0 4px rgba(255, 0, 0, 0.3)' : undefined
+          }}
         >
           −
         </button>
       </div>
+      
+      {/* DEBUG: Purge Zone Detection Status - Only show when at risk */}
+      {isOverPurgeZone && (
+        <div style={{ 
+          background: 'linear-gradient(90deg, #330000 0%, #110000 50%, #330000 100%)', 
+          color: '#ff0000', 
+          padding: '2px', 
+          fontSize: '10px', 
+          textAlign: 'center',
+          textShadow: '0 0 2px #ff0000, 0 0 6px #ff0000, 0 0 12px #ff0000',
+          animation: 'text-flicker 0.18s infinite',
+          border: '1px solid #ff0000'
+        }}>
+          PURGE RISK
+        </div>
+      )}
       
       {/* Section 2: App Content */}
       <div className="window-content">
@@ -287,20 +333,55 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
       </div>
       
       {/* Section 3: Collapsible Footer - positioned outside window */}
-      <div className={`window-footer ${isFooterExpanded ? 'expanded' : 'collapsed'}`}>
-        <div className="footer-toggle" onClick={handleFooterToggle}>
+      <div 
+        className={`window-footer ${isFooterExpanded ? 'expanded' : 'collapsed'}`}
+        style={{
+          background: isOverPurgeZone ? 
+            'linear-gradient(135deg, #1a0000 0%, #2a0000 100%)' : undefined,
+          borderColor: isOverPurgeZone ? '#ff0000' : undefined,
+          boxShadow: isOverPurgeZone ? 
+            '0 0 8px rgba(255, 0, 0, 0.4), inset 0 0 10px rgba(255, 0, 0, 0.1)' : undefined
+        }}
+      >
+        <div 
+          className="footer-toggle" 
+          onClick={handleFooterToggle}
+          style={{
+            background: isOverPurgeZone ? 
+              'linear-gradient(135deg, #2a0000 0%, #440000 100%)' : undefined,
+            color: isOverPurgeZone ? '#ff0000' : undefined,
+            textShadow: isOverPurgeZone ? '0 0 2px #ff0000' : undefined
+          }}
+        >
           {isFooterExpanded ? '▲ HIDE' : '▼ DATA'}
         </div>
         
         {isFooterExpanded && (
-          <div className="footer-content">
+          <div 
+            className="footer-content"
+            style={{
+              background: isOverPurgeZone ? 
+                'linear-gradient(135deg, #1a0000 0%, #2a0000 50%, #1a0000 100%)' : undefined,
+              color: isOverPurgeZone ? '#ff4444' : undefined
+            }}
+          >
             <div className="tier-info-line">
               App Tier: {currentTier}
             </div>
             <div className="monthly-info">
               Monthly: ₵{currentTierData?.monthlyCost || 0}/cycle
             </div>
-            <div className="tier-description">
+            <div 
+              className="tier-description"
+              style={{
+                background: isOverPurgeZone ? 
+                  'linear-gradient(135deg, #110000 0%, #220000 100%)' : undefined,
+                borderColor: isOverPurgeZone ? '#ff0000' : undefined,
+                boxShadow: isOverPurgeZone ? 
+                  'inset 0 0 5px rgba(255, 0, 0, 0.3), 0 0 3px rgba(255, 0, 0, 0.2)' : undefined,
+                color: isOverPurgeZone ? '#ff6666' : undefined
+              }}
+            >
               {canUpgrade ? nextTierData.information : currentTierData?.information || 'No information available'}
             </div>
             <div className="footer-buttons">
@@ -312,6 +393,14 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
                   className="downgrade-button" 
                   onClick={handleDowngrade}
                   disabled={!canDowngrade}
+                  style={{
+                    background: isOverPurgeZone ? 
+                      'linear-gradient(135deg, #2a0a0a 0%, #440000 100%)' : undefined,
+                    borderColor: isOverPurgeZone ? '#ff0000' : undefined,
+                    color: isOverPurgeZone ? '#ff4444' : undefined,
+                    textShadow: isOverPurgeZone ? '0 0 2px #ff0000' : undefined,
+                    boxShadow: isOverPurgeZone ? '0 0 4px rgba(255, 0, 0, 0.3)' : undefined
+                  }}
                 >
                   Downgrade
                 </button>
@@ -324,6 +413,14 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
                   className="upgrade-button" 
                   onClick={handleUpgrade}
                   disabled={!canUpgrade}
+                  style={{
+                    background: isOverPurgeZone ? 
+                      'linear-gradient(135deg, #0a2a0a 0%, #004400 100%)' : undefined,
+                    borderColor: isOverPurgeZone ? '#ff0000' : undefined,
+                    color: isOverPurgeZone ? '#ff4444' : undefined,
+                    textShadow: isOverPurgeZone ? '0 0 2px #ff0000' : undefined,
+                    boxShadow: isOverPurgeZone ? '0 0 4px rgba(255, 0, 0, 0.3)' : undefined
+                  }}
                 >
                   Upgrade
                 </button>
@@ -336,6 +433,11 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
       <div 
         className="resize-handle"
         onMouseDown={handleResizeMouseDown}
+        style={{
+          background: isOverPurgeZone ? 
+            'linear-gradient(135deg, transparent 0%, transparent 40%, #ff0000 50%, transparent 60%, transparent 100%)' : undefined,
+          filter: isOverPurgeZone ? 'drop-shadow(0 0 2px #ff0000)' : undefined
+        }}
       />
     </div>
   );

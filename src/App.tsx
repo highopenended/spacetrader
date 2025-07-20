@@ -253,6 +253,7 @@ function App() {
           size={window.size}
           zIndex={window.zIndex}
           overId={overId}
+          draggedAppType={purgeNodeDragState.draggedAppType}
           onClose={() => closeWindow(window.id)}
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
@@ -271,6 +272,8 @@ function App() {
           position={window.position}
           size={window.size}
           zIndex={window.zIndex}
+          overId={overId}
+          draggedAppType={purgeNodeDragState.draggedAppType}
           onClose={() => closeWindow(window.id)}
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
@@ -289,6 +292,8 @@ function App() {
           position={window.position}
           size={window.size}
           zIndex={window.zIndex}
+          overId={overId}
+          draggedAppType={purgeNodeDragState.draggedAppType}
           onClose={() => closeWindow(window.id)}
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
@@ -306,6 +311,8 @@ function App() {
         position={window.position}
         size={window.size}
         zIndex={window.zIndex}
+        overId={overId}
+        draggedAppType={purgeNodeDragState.draggedAppType}
         onClose={() => closeWindow(window.id)}
         onPositionChange={(position) => updateWindowPosition(window.appType, position)}
         onSizeChange={(size) => updateWindowSize(window.appType, size)}
@@ -383,16 +390,21 @@ function App() {
             })
           }}
         >
-          {/* PURGE NODE DRAG SYSTEM: Invisible drag node for window deletion (no visual feedback) */}
+          {/* PURGE NODE DRAG SYSTEM: Tiny mouse-cursor-sized indicator for window deletion */}
           {purgeNodeDragState.isPurgeNodeDragging ? (
             <div 
               className="purge-node-drag-indicator"
               style={{ 
-                width: '1px', 
-                height: '1px',
-                opacity: 0,
+                width: '12px', 
+                height: '12px',
+                background: 'linear-gradient(135deg, #ff4444 0%, #aa2222 100%)',
+                border: '1px solid #ff6666',
+                borderRadius: '2px',
+                boxShadow: '0 0 8px rgba(255, 68, 68, 0.6)',
+                opacity: 0.9,
                 pointerEvents: 'none'
               }}
+              title={`Deleting: ${purgeNodeDragState.draggedWindowTitle}`}
             />
           ) : 
           /* STANDARD DRAG SYSTEM: Full app preview for app list reordering */
