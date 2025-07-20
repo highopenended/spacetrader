@@ -135,8 +135,21 @@ function App() {
 
   const renderWindow = (window: WindowData) => {
     if (window.appType === 'purgeZone') {
-      // Do not render here; handled in TerminalScreen
-      return null;
+      return (
+        <PurgeZoneAppWindow
+          key={window.id}
+          windowId={window.id}
+          appType={window.appType}
+          position={window.position}
+          size={window.size}
+          zIndex={window.zIndex}
+          overId={overId}
+          onClose={() => closeWindow(window.id)}
+          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
+          onSizeChange={(size) => updateWindowSize(window.appType, size)}
+          onBringToFront={() => bringToFront(window.id)}
+        />
+      );
     }
     if (window.appType === 'age') {
       return (
@@ -191,9 +204,6 @@ function App() {
     );
   };
 
-  // Find the purgeZone window data (if open)
-  const purgeZoneWindow = windows.find(w => w.appType === 'purgeZone');
-
   return (
     <DndContext
       collisionDetection={customCollisionDetection}
@@ -223,11 +233,6 @@ function App() {
           uninstallApp={uninstallApp}
           pendingDeleteAppId={pendingDelete.appId}
           openAppTypes={new Set(windows.map(w => w.appType))}
-          purgeZoneWindowProps={purgeZoneWindow}
-          overId={overId}
-          onCloseWindow={closeWindow}
-          onUpdateWindowPosition={updateWindowPosition}
-          onUpdateWindowSize={updateWindowSize}
         />
         <AdminToolbar 
           credits={credits}
@@ -243,7 +248,7 @@ function App() {
           resumeTime={resumeTime}
           resetGame={resetGame}
         />
-        {windows.filter(w => w.appType !== 'purgeZone').map(renderWindow)}
+        {windows.map(renderWindow)}
         <PurgeConfirmPopup
           open={!!pendingDelete.appId}
           appName={pendingDelete.appId ? (apps.find((a: any) => a.id === pendingDelete.appId)?.title || pendingDelete.appId) : ''}

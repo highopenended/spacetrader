@@ -19,6 +19,7 @@ export interface BaseWindowProps {
   onSizeChange?: (size: { width: number; height: number }) => void;
   onWidthChange?: (width: number) => void;
   onBringToFront?: () => void;
+  overId?: any; // For drag-over detection (PurgeZone specific)
 }
 
 interface ScrAppWindowProps extends BaseWindowProps {
@@ -39,7 +40,8 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   onPositionChange,
   onSizeChange,
   onWidthChange,
-  onBringToFront
+  onBringToFront,
+  overId
 }) => {
   const [currentSize, setCurrentSize] = useState(size);
   const [isResizing, setIsResizing] = useState(false);
@@ -92,13 +94,9 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     if (isResizing) {
       setIsResizing(false);
       // Report the final size back to parent
-      if (onSizeChange) {
-        onSizeChange(currentSize);
-      }
+      onSizeChange?.(currentSize);
       // Report width change for responsive behavior
-      if (onWidthChange) {
-        onWidthChange(currentSize.width);
-      }
+      onWidthChange?.(currentSize.width);
     }
   }, [isResizing, onSizeChange, onWidthChange, currentSize]);
 
@@ -157,9 +155,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
       setPosition(constrainedPosition);
       
       // Report the position change
-      if (onPositionChange) {
-        onPositionChange(constrainedPosition);
-      }
+      onPositionChange?.(constrainedPosition);
     }
   }, [isFooterExpanded, currentSize.width, currentSize.height]); // Re-check when footer or size changes
 

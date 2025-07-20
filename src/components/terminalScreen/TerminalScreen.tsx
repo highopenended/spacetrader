@@ -1,9 +1,7 @@
 import React from 'react';
 import './TerminalScreen.css';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { UniqueIdentifier } from '@dnd-kit/core';
 import SortableItem from '../scr-apps/SortableItem';
-import PurgeZoneAppWindow from '../scr-apps/purgeZoneApp/window/PurgeZoneAppWindow';
 
 import { GamePhase, GameTime } from '../../types/gameState';
 import { createPortal } from 'react-dom';
@@ -28,11 +26,6 @@ interface TerminalScreenProps {
   uninstallApp: (appId: string) => void;
   pendingDeleteAppId?: string | null;
   openAppTypes?: Set<string>;
-  purgeZoneWindowProps: any;
-  overId: UniqueIdentifier | null;
-  onCloseWindow?: (windowId: string) => void;
-  onUpdateWindowPosition?: (appType: string, position: { x: number; y: number }) => void;
-  onUpdateWindowSize?: (appType: string, size: { width: number; height: number }) => void;
 }
 
 const TerminalScreen: React.FC<TerminalScreenProps> = ({ 
@@ -50,12 +43,7 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   installApp,
   uninstallApp,
   pendingDeleteAppId = null,
-  openAppTypes = new Set(),
-  purgeZoneWindowProps,
-  overId,
-  onCloseWindow,
-  onUpdateWindowPosition,
-  onUpdateWindowSize,
+  openAppTypes = new Set()
 }) => {
   // Render an app based on its configuration
   const renderApp = (appConfig: any) => {
@@ -72,17 +60,7 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   };
 
   return (
-    <>
-      {purgeZoneWindowProps && (
-        <PurgeZoneAppWindow 
-          {...purgeZoneWindowProps} 
-          overId={overId}
-          onCloseWindow={onCloseWindow}
-          onUpdateWindowPosition={onUpdateWindowPosition}
-          onUpdateWindowSize={onUpdateWindowSize}
-        />
-      )}
-      <div className="terminal-screen">
+    <div className="terminal-screen">
         <div className="terminal-header">
           <div className="terminal-title">SCRAPCOM TERMINAL</div>
           <div className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>
@@ -117,7 +95,6 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
         
         <div className="terminal-scanlines"></div>
       </div>
-    </>
   );
 };
 
