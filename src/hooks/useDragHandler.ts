@@ -3,21 +3,29 @@
  * 
  * Reusable hook for handling drag functionality across components.
  * Consolidates drag logic from ScrAppWindow and AdminToolbar.
+ * Supports optional viewport boundary constraints.
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { clampPositionToBounds } from '../utils/viewportConstraints';
 
 interface DragHandlerOptions {
   initialPosition?: { x: number; y: number };
   onPositionChange?: (position: { x: number; y: number }) => void;
   dragConstraint?: (element: HTMLElement, event: React.MouseEvent) => boolean;
+  constrainToViewport?: boolean;
+  elementSize?: { width: number; height: number };
+  footerHeight?: number;
 }
 
 export const useDragHandler = (options: DragHandlerOptions = {}) => {
   const {
     initialPosition = { x: 0, y: 0 },
     onPositionChange,
-    dragConstraint
+    dragConstraint,
+    constrainToViewport = false,
+    elementSize,
+    footerHeight = 20
   } = options;
 
   const [position, setPosition] = useState(initialPosition);
@@ -42,23 +50,51 @@ export const useDragHandler = (options: DragHandlerOptions = {}) => {
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging) return;
     
-    const newPosition = {
+    let newPosition = {
       x: e.clientX - dragStart.x,
       y: e.clientY - dragStart.y
     };
     
+    // Apply viewport constraints if enabled
+    if (constrainToViewport) {
+      const size = elementSize || (elementRef.current ? {
+        width: elementRef.current.offsetWidth,
+        height: elementRef.current.offsetHeight
+      } : { width: 250, height: 120 }); // fallback size
+      
+      newPosition = clampPositionToBounds(newPosition, size, footerHeight);
+    }
+    
     setPosition(newPosition);
-  }, [isDragging, dragStart]);
+  }, [isDragging, dragStart, constrainToViewport, elementSize, footerHeight]);
 
   const handleMouseUp = useCallback(() => {
     if (isDragging) {
       setIsDragging(false);
+      
+      let finalPosition = position;
+      
+      // Apply final viewport constraint check
+      if (constrainToViewport) {
+        const size = elementSize || (elementRef.current ? {
+          width: elementRef.current.offsetWidth,
+          height: elementRef.current.offsetHeight
+        } : { width: 250, height: 120 }); // fallback size
+        
+        finalPosition = clampPositionToBounds(position, size, footerHeight);
+        
+        // Update position if it was constrained
+        if (finalPosition.x !== position.x || finalPosition.y !== position.y) {
+          setPosition(finalPosition);
+        }
+      }
+      
       // Report final position if callback provided
       if (onPositionChange) {
-        onPositionChange(position);
+        onPositionChange(finalPosition);
       }
     }
-  }, [isDragging, position, onPositionChange]);
+  }, [isDragging, position, onPositionChange, constrainToViewport, elementSize, footerHeight]);
 
   // Set up and clean up event listeners
   useEffect(() => {

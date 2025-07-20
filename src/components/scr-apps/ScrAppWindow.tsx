@@ -4,6 +4,7 @@ import { WINDOW_DEFAULTS } from '../../constants/windowConstants';
 import { APP_REGISTRY } from '../../constants/scrAppListConstants';
 import { useGameState_AppList } from '../../hooks/useGameState_AppList';
 import { useDragHandler } from '../../hooks/useDragHandler';
+import { clampPositionToBounds } from '../../utils/viewportConstraints';
 
 // Base interface for all window management props
 export interface BaseWindowProps {
@@ -41,10 +42,14 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [isFooterExpanded, setIsFooterExpanded] = useState(false);
 
-  // Use shared drag handler for window dragging
-  const { elementRef: windowRef, position: currentPosition, isDragging, handleMouseDown: dragMouseDown } = useDragHandler({
+  // Use shared drag handler for window dragging with viewport constraints
+  const footerHeight = isFooterExpanded ? 120 : 20;
+  const { elementRef: windowRef, position: currentPosition, isDragging, handleMouseDown: dragMouseDown, setPosition } = useDragHandler({
     initialPosition: position,
-    onPositionChange
+    onPositionChange,
+    constrainToViewport: true,
+    elementSize: currentSize,
+    footerHeight
   });
 
   // Get tier data for this app
@@ -138,6 +143,21 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
       onWidthChange(currentSize.width);
     }
   }, [currentSize.width, isResizing, onWidthChange]);
+
+  // Check position when footer expands/collapses
+  useEffect(() => {
+    const constrainedPosition = clampPositionToBounds(currentPosition, currentSize, footerHeight);
+    
+    // Only update if position needs to change
+    if (constrainedPosition.x !== currentPosition.x || constrainedPosition.y !== currentPosition.y) {
+      setPosition(constrainedPosition);
+      
+      // Report the position change
+      if (onPositionChange) {
+        onPositionChange(constrainedPosition);
+      }
+    }
+  }, [isFooterExpanded, currentSize.width, currentSize.height]); // Re-check when footer or size changes
 
   // Footer doesn't affect window height anymore - it protrudes outside
 

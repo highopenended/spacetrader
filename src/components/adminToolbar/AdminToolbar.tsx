@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import './AdminToolbar.css';
 import { GamePhase, GameTime } from '../../types/gameState';
 import { advanceGameTime } from '../../utils/gameStateUtils';
 import { useDragHandler } from '../../hooks/useDragHandler';
+import { clampPositionToBounds } from '../../utils/viewportConstraints';
 
 interface AdminToolbarProps {
   credits: number;
@@ -42,7 +43,8 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
   
   const { elementRef: toolbarRef, position, isDragging, handleMouseDown, setPosition } = useDragHandler({
     initialPosition: { x: 20, y: 20 },
-    dragConstraint
+    dragConstraint,
+    constrainToViewport: true
   });
 
   const toggleMinimized = () => {
@@ -61,6 +63,23 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
     }
     setIsMinimized(!isMinimized);
   };
+
+  // Check position when toolbar size changes (minimize/expand)
+  useEffect(() => {
+    if (!toolbarRef.current) return;
+    
+    const toolbarSize = {
+      width: toolbarRef.current.offsetWidth,
+      height: toolbarRef.current.offsetHeight
+    };
+    
+    const constrainedPosition = clampPositionToBounds(position, toolbarSize, 0);
+    
+    // Only update if position needs to change
+    if (constrainedPosition.x !== position.x || constrainedPosition.y !== position.y) {
+      setPosition(constrainedPosition);
+    }
+  }, [isMinimized]); // Re-check when minimize state changes
 
   const addGrind = () => {
     const newTime = { ...gameTime };
