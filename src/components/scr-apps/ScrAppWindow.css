@@ -304,4 +304,38 @@
   75% { opacity: 0.7; }
 }
 
+/* Dock overlay for terminal docking */
+.dock-overlay {
+  position: absolute;
+  top: 20px; /* Below header */
+  left: 0;
+  right: 0;
+  bottom: 0; /* Above footer */
+  background: linear-gradient(135deg, rgba(0, 26, 0, 0.8) 0%, rgba(0, 42, 0, 0.9) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  pointer-events: none;
+  border-radius: 0 0 6px 6px;
+}
+
+.dock-overlay-text {
+  color: #4a4;
+  font-size: 32px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  text-shadow: 
+    0 0 4px #4a4,
+    0 0 8px #4a4,
+    0 0 16px #4a4;
+  animation: dock-pulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes dock-pulse {
+  0% { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.05); }
+}
+
  

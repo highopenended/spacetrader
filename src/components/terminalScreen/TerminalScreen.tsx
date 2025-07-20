@@ -1,6 +1,7 @@
 import React from 'react';
 import './TerminalScreen.css';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 import SortableItem from '../scr-apps/SortableItem';
 
 import { GamePhase, GameTime } from '../../types/gameState';
@@ -26,6 +27,7 @@ interface TerminalScreenProps {
   uninstallApp: (appId: string) => void;
   pendingDeleteAppId?: string | null;
   openAppTypes?: Set<string>;
+  overId?: any; // For drag-over detection (window docking)
 }
 
 const TerminalScreen: React.FC<TerminalScreenProps> = ({ 
@@ -43,8 +45,15 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   installApp,
   uninstallApp,
   pendingDeleteAppId = null,
-  openAppTypes = new Set()
+  openAppTypes = new Set(),
+  overId
 }) => {
+  // WINDOW DOCKING SYSTEM: Make terminal droppable for window docking
+  const { setNodeRef } = useDroppable({
+    id: 'terminal-dock-zone',
+  });
+
+  const isDockActive = overId === 'terminal-dock-zone';
   // Render an app based on its configuration
   const renderApp = (appConfig: any) => {
     if (!appConfig) return null;
@@ -69,7 +78,10 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
           </div>
         </div>
         
-        <div className="terminal-content">  
+        <div 
+          ref={setNodeRef}
+          className={`terminal-content${isDockActive ? ' dock-active' : ''}`}
+        >  
             <SortableContext 
               items={appOrder} 
               strategy={verticalListSortingStrategy}

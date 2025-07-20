@@ -76,11 +76,17 @@ function App() {
 
 
 
-  // Custom collision detection to allow dropping on both sortable list and purge zone
+  // Custom collision detection to allow dropping on multiple zones (purge zone, terminal dock, sortable list)
   const customCollisionDetection = (args: any) => {
     const collisions = rectIntersection(args);
+    
+    // Prioritize special drop zones over sortable list items
     const purgeZone = collisions.find(c => c.id === 'purge-zone-window');
+    const terminalDock = collisions.find(c => c.id === 'terminal-dock-zone');
+    
     if (purgeZone) return [purgeZone];
+    if (terminalDock) return [terminalDock];
+    
     return collisions;
   };
 
@@ -182,6 +188,17 @@ function App() {
       const appDefinition = apps.find((app: any) => app.id === active.id);
       if (appDefinition && appDefinition.deletable) {
         setPendingDelete({ appId: active.id, prevOrder: appOrder });
+        return;
+      }
+    }
+    
+    // WINDOW DOCKING SYSTEM: Check if dropped on Terminal for docking (minimize)
+    if (over.id === 'terminal-dock-zone') {
+      // PURGE NODE DRAG SYSTEM: Handle window docking via purge node
+      if (active.data?.current?.type === 'window-purge-node') {
+        const { appType } = active.data.current;
+        closeWindowsByAppType(appType); // Same behavior as minimize button
+        setOverId(null); // Reset overId to hide dock message
         return;
       }
     }
@@ -353,6 +370,7 @@ function App() {
           uninstallApp={uninstallApp}
           pendingDeleteAppId={pendingDelete.appId}
           openAppTypes={new Set(windows.map(w => w.appType))}
+          overId={overId}
         />
         <AdminToolbar 
           credits={credits}
