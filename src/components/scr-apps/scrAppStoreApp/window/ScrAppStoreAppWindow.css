@@ -1,0 +1,11 @@
+/* ScrAppStoreAppWindow styling */
+
+.scr-app-store-window-content {
+  display: flex;
+  height: 100%;
+  gap: 4px;
+}
+
+.scr-app-store-window-half {
+  flex: 1;
+} 

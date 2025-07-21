@@ -5,6 +5,7 @@ import ScrAppWindow from './components/scr-apps/scrAppWindow/ScrAppWindow';
 import AgeAppWindow from './components/scr-apps/ageApp/window/AgeAppWindow';
 import JobTitleAppWindow from './components/scr-apps/jobTitleApp/window/JobTitleAppWindow';
 import PurgeZoneAppWindow from './components/scr-apps/purgeZoneApp/window/PurgeZoneAppWindow';
+import ScrAppStoreAppWindow from './components/scr-apps/scrAppStoreApp/window/ScrAppStoreAppWindow';
 import { useGameState_Credits } from './hooks/useGameState_Credits';
 import { useGameState_Phases } from './hooks/useGameState_Phases';
 import { useGameState_Time } from './hooks/useGameState_Time';
@@ -39,7 +40,9 @@ function App() {
     resetToDefaults,
     installApp,
     uninstallApp,
-    calculateMonthlyCosts
+    calculateMonthlyCosts,
+    getAvailableApps,
+    installedApps
   } = useGameState_AppList();
 
   // Monthly cost deduction handler
@@ -336,6 +339,30 @@ function App() {
         <JobTitleAppWindow
           key={window.id}
           gamePhase={gamePhase}
+          windowId={window.id}
+          appType={window.appType}
+          position={window.position}
+          size={window.size}
+          zIndex={window.zIndex}
+          overId={overId}
+          draggedAppType={purgeNodeDragState.draggedAppType}
+          onClose={() => closeWindow(window.id)}
+          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
+          onSizeChange={(size) => updateWindowSize(window.appType, size)}
+          onBringToFront={() => bringToFront(window.id)}
+          updateCredits={updateCredits}
+        />
+      );
+    }
+    if (window.appType === 'scrAppStore') {
+      return (
+        <ScrAppStoreAppWindow
+          key={window.id}
+          credits={credits}
+          gamePhase={gamePhase}
+          getAvailableApps={getAvailableApps}
+          installedApps={installedApps}
+          installApp={installApp}
           windowId={window.id}
           appType={window.appType}
           position={window.position}

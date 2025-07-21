@@ -1,0 +1,214 @@
+/* SCR-App Store List - Gritty 80s Dystopian Sci-Fi */
+
+.scr-app-store-list {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  border: 1px solid #333;
+  font-family: 'Courier New', monospace;
+}
+
+/* Search Bar */
+.app-search-container {
+  padding: var(--spacing-sm);
+  border-bottom: 1px solid #333;
+  background: linear-gradient(135deg, #111 0%, #222 100%);
+}
+
+.app-search-input {
+  width: 100%;
+  background: linear-gradient(135deg, #000 0%, #111 100%);
+  border: 1px solid #444;
+  color: #ccc;
+  font-family: 'Courier New', monospace;
+  font-size: var(--font-size-xsmall);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: var(--spacing-xs);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.app-search-input:focus {
+  border-color: #666;
+  color: #fff;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.app-search-input::placeholder {
+  color: #555;
+  font-weight: bold;
+}
+
+/* Data Table */
+.app-table-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-table-headers {
+  display: flex;
+  background: linear-gradient(135deg, #222 0%, #333 100%);
+  border-bottom: 2px solid #444;
+}
+
+.app-table-header {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  color: #aaa;
+  font-size: var(--font-size-xsmall);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  border-right: 1px solid #333;
+}
+
+.app-table-header:hover {
+  background: linear-gradient(135deg, #333 0%, #444 100%);
+  color: #ccc;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.app-name-header {
+  flex: 2;
+}
+
+.app-price-header {
+  flex: 1;
+  text-align: right;
+  border-right: none;
+}
+
+/* Table Body */
+.app-table-body {
+  flex: 1;
+  overflow-y: auto;
+  background: #0a0a0a;
+}
+
+.app-table-row {
+  display: flex;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid #222;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: #ccc;
+  font-size: var(--font-size-small);
+}
+
+.app-table-row:hover {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  color: #fff;
+}
+
+.app-table-row.selected {
+  background: linear-gradient(135deg, #1a2a1a 0%, #2a3a2a 100%);
+  border-color: #4a4;
+  color: #4a4;
+  text-shadow: 0 0 2px rgba(102, 170, 102, 0.3);
+}
+
+.app-table-row.selected:hover {
+  background: linear-gradient(135deg, #2a3a2a 0%, #3a4a3a 100%);
+  color: #6a6;
+}
+
+.app-name-cell {
+  flex: 2;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.app-price-cell {
+  flex: 1;
+  text-align: right;
+  font-weight: bold;
+  color: #aaa;
+}
+
+.app-table-row.selected .app-price-cell {
+  color: #4a4;
+}
+
+.app-table-row.purchased.selected {
+  background: linear-gradient(135deg, #1a241a 0%, #1f291f 100%);
+  color: #6a8a6a;
+  opacity: 0.8;
+}
+
+.app-table-row.purchased.selected .app-name-cell {
+  color: #6a8a6a;
+}
+
+.app-table-row.purchased.selected .app-price-cell {
+  color: #5a7a5a;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-style: italic;
+}
+
+/* Purchased Apps - Subdued/Greyed Out Feel */
+.app-table-row.purchased {
+  background: linear-gradient(135deg, #151a15 0%, #1a1f1a 100%);
+  color: #5a7a5a;
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.app-table-row.purchased:hover {
+  background: linear-gradient(135deg, #1a1f1a 0%, #1f241f 100%);
+  color: #6a8a6a;
+  opacity: 0.7;
+}
+
+.app-table-row.purchased .app-name-cell {
+  color: #5a7a5a;
+}
+
+.app-table-row.purchased .app-price-cell {
+  color: #4a6a4a;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-style: italic;
+}
+
+
+
+/* No Results */
+.app-no-results {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: #666;
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-style: italic;
+}
+
+/* Custom scrollbar for gritty theme */
+.app-table-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.app-table-body::-webkit-scrollbar-track {
+  background: #111;
+  border-left: 1px solid #333;
+}
+
+.app-table-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #333 0%, #444 100%);
+  border-radius: 2px;
+}
+
+.app-table-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #444 0%, #555 100%);
+} 

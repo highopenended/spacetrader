@@ -1,0 +1,10 @@
+/* ScrAppStore_Details styling - to be implemented */
+
+.scr-app-store-details {
+  height: 100%;
+  border: 2px solid #44a;
+  padding: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 255, 0.05);
+} 

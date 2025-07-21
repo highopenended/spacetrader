@@ -87,9 +87,19 @@ export const useWindowManager = () => {
         y: WINDOW_DEFAULTS.POSITION.y + (windows.length * WINDOW_DEFAULTS.POSITION_OFFSET) 
       };
       
-      // Use last known size or default
+      // Use last known size or appropriate default for app type
       const lastSize = lastWindowSizes[appType];
-      const defaultSize = WINDOW_DEFAULTS.SIZE;
+      const getDefaultSizeForApp = (appType: string) => {
+        switch (appType) {
+          case 'scrAppStore':
+            return { width: 600, height: 400 };
+          case 'purgeZone':
+            return { width: 300, height: 200 };
+          default:
+            return WINDOW_DEFAULTS.SIZE;
+        }
+      };
+      const defaultSize = getDefaultSizeForApp(appType);
       
       const newWindow: WindowData = {
         id: `window-${appType}-${Date.now()}`,
