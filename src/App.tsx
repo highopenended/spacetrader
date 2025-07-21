@@ -1,7 +1,7 @@
 import React from 'react';
 import TerminalScreen from './components/terminalScreen/TerminalScreen';
 import AdminToolbar from './components/adminToolbar/AdminToolbar';
-import ScrAppWindow from './components/scr-apps/ScrAppWindow';
+import ScrAppWindow from './components/scr-apps/scrAppWindow/ScrAppWindow';
 import AgeAppWindow from './components/scr-apps/ageApp/window/AgeAppWindow';
 import JobTitleAppWindow from './components/scr-apps/jobTitleApp/window/JobTitleAppWindow';
 import PurgeZoneAppWindow from './components/scr-apps/purgeZoneApp/window/PurgeZoneAppWindow';
@@ -80,7 +80,21 @@ function App() {
   const customCollisionDetection = (args: any) => {
     const collisions = rectIntersection(args);
     
-    // Prioritize special drop zones over sortable list items
+    // PREVENTION: Block PurgeZone window from detecting itself as a valid drop target
+    // This prevents visual feedback (red effects, "PURGE RISK") from showing during self-targeting
+    if (args.active?.data?.current?.type === 'window-purge-node' && 
+        args.active?.data?.current?.appType === 'purgeZone') {
+      // Remove purge-zone-window from collisions for PurgeZone window drag
+      const filteredCollisions = collisions.filter(c => c.id !== 'purge-zone-window');
+      
+      // Still allow terminal dock detection for PurgeZone window
+      const terminalDock = filteredCollisions.find(c => c.id === 'terminal-dock-zone');
+      if (terminalDock) return [terminalDock];
+      
+      return filteredCollisions;
+    }
+    
+    // Standard collision priority for all other drags
     const purgeZone = collisions.find(c => c.id === 'purge-zone-window');
     const terminalDock = collisions.find(c => c.id === 'terminal-dock-zone');
     
@@ -178,6 +192,13 @@ function App() {
       // PURGE NODE DRAG SYSTEM: Handle window deletion via purge node
       if (active.data?.current?.type === 'window-purge-node') {
         const { appType, deletable, windowTitle } = active.data.current;
+        
+        // PREVENTION: PurgeZone window cannot purge itself
+        // This maintains the intended behavior while still allowing PurgeZone to be deletable from other sources
+        if (appType === 'purgeZone' && over.id === 'purge-zone-window') {
+          return; // Silently ignore self-targeting
+        }
+        
         if (deletable) {
           setPendingDelete({ appId: appType, prevOrder: appOrder });
           return;

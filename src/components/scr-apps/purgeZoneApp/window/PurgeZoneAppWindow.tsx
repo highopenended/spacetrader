@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDroppable, UniqueIdentifier } from '@dnd-kit/core';
-import ScrAppWindow, { BaseWindowProps } from '../../ScrAppWindow';
+import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
 import './PurgeZoneAppWindow.css';
 
 interface PurgeZoneAppWindowProps extends BaseWindowProps {

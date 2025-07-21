@@ -40,13 +40,13 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import './ScrAppWindow.css';
-import { WINDOW_DEFAULTS } from '../../constants/windowConstants';
-import { APP_REGISTRY } from '../../constants/scrAppListConstants';
-import { useGameState_AppList } from '../../hooks/useGameState_AppList';
-import { useDragHandler } from '../../hooks/useDragHandler';
+import { WINDOW_DEFAULTS } from '../../../constants/windowConstants';
+import { APP_REGISTRY } from '../../../constants/scrAppListConstants';
+import { useGameState_AppList } from '../../../hooks/useGameState_AppList';
+import { useDragHandler } from '../../../hooks/useDragHandler';
 import { useDraggable } from '@dnd-kit/core';
-import { clampPositionToBounds } from '../../utils/viewportConstraints';
-import { useDropZoneEffects } from '../../hooks/useDropZoneEffects';
+import { clampPositionToBounds } from '../../../utils/viewportConstraints';
+import { useDropZoneEffects } from '../../../hooks/useDropZoneEffects';
 
 // Base interface for all window management props
 export interface BaseWindowProps {

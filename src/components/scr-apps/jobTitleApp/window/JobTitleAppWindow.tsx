@@ -1,5 +1,5 @@
 import React from 'react';
-import ScrAppWindow, { BaseWindowProps } from '../../ScrAppWindow';
+import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
 import { GamePhase } from '../../../../types/gameState';
 import { GAME_PHASES } from '../../../../constants/gameConstants';
 
