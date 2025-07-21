@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import './TerminalScreen.css';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
@@ -48,12 +48,65 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   openAppTypes = new Set(),
   overId
 }) => {
+  // Resize state
+  const [height, setHeight] = useState<number>(window.innerHeight); // Start at full viewport height
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeStartY, setResizeStartY] = useState(0);
+  const [resizeStartHeight, setResizeStartHeight] = useState(0);
+
   // WINDOW DOCKING SYSTEM: Make terminal droppable for window docking
   const { setNodeRef } = useDroppable({
     id: 'terminal-dock-zone',
   });
 
   const isDockActive = overId === 'terminal-dock-zone';
+
+  // Resize handlers
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    setResizeStartY(e.clientY);
+    setResizeStartHeight(height);
+  }, [height]);
+
+  const handleResizeMove = useCallback((e: MouseEvent) => {
+    if (!isResizing) return;
+    
+    const deltaY = e.clientY - resizeStartY;
+    let newHeight = resizeStartHeight + deltaY; // Changed from - to + to make dragging down increase height
+    
+    // Constrain to viewport bounds
+    const minHeight = 200; // Minimum terminal height
+    const maxHeight = window.innerHeight; // Full viewport height
+    newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+    
+    // Snap to full height when close to bottom
+    const snapThreshold = 20;
+    const distanceFromBottom = window.innerHeight - (e.clientY + 8); // 8px for handle height
+    
+    if (distanceFromBottom < snapThreshold) {
+      newHeight = maxHeight;
+    }
+    
+    setHeight(newHeight);
+  }, [isResizing, resizeStartY, resizeStartHeight]);
+
+  const handleResizeEnd = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  // Set up resize event listeners
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleResizeEnd);
+      return () => {
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleResizeEnd);
+      };
+    }
+  }, [isResizing, handleResizeMove, handleResizeEnd]);
+
   // Render an app based on its configuration
   const renderApp = (appConfig: any) => {
     if (!appConfig) return null;
@@ -69,7 +122,10 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   };
 
   return (
-    <div className="terminal-screen">
+    <div 
+      className="terminal-screen"
+      style={{ height: `${height}px` }}
+    >
         <div className="terminal-header">
           <div className="terminal-title">SCRAPCOM TERMINAL</div>
           <div className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>
@@ -105,6 +161,7 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
             </SortableContext>
           </div>
         
+        <div className="terminal-resize-handle" onMouseDown={handleResizeStart}></div>
         <div className="terminal-scanlines"></div>
       </div>
   );

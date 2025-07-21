@@ -18,6 +18,8 @@
   user-select: none;
   -webkit-user-select: none;
   -ms-user-select: none;
+  display: flex;
+  flex-direction: column;
 }
 
 .terminal-header {
@@ -28,6 +30,7 @@
   justify-content: space-between;
   align-items: center;
   position: relative;
+  flex-shrink: 0;
 }
 
 .terminal-title {
@@ -100,6 +103,50 @@
   display: flex;
   flex-direction: column;
   transition: all 0.2s ease;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Custom scrollbar styling for 80s sci-fi theme */
+.terminal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.terminal-content::-webkit-scrollbar-track {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  border-left: 1px solid #333;
+}
+
+.terminal-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #333 0%, #222 100%);
+  border: 1px solid #555;
+  border-radius: 2px;
+  box-shadow: 
+    inset 0 0 2px rgba(255, 255, 255, 0.1),
+    0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.terminal-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #444 0%, #333 100%);
+  border-color: #666;
+  box-shadow: 
+    inset 0 0 3px rgba(255, 255, 255, 0.2),
+    0 0 4px rgba(0, 0, 0, 0.6);
+}
+
+.terminal-content::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(135deg, #555 0%, #444 100%);
+  border-color: #777;
+  box-shadow: 
+    inset 0 0 4px rgba(255, 255, 255, 0.3),
+    0 0 6px rgba(0, 0, 0, 0.7);
+}
+
+/* Firefox scrollbar styling */
+.terminal-content {
+  scrollbar-width: thin;
+  scrollbar-color: #333 #0a0a0a;
 }
 
 .terminal-content.dock-active {
@@ -128,6 +175,38 @@
   pointer-events: none;
   z-index: 5;
   animation: scanlines-flicker 3s linear infinite;
+}
+
+.terminal-resize-handle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(135deg, #222 0%, #111 100%);
+  border-top: 1px solid #444;
+  cursor: ns-resize;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.terminal-resize-handle::before {
+  content: '';
+  width: 20px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #666 20%, #666 80%, transparent 100%);
+  border-radius: 1px;
+}
+
+.terminal-resize-handle:hover {
+  background: linear-gradient(135deg, #333 0%, #222 100%);
+  border-top-color: #666;
+}
+
+.terminal-resize-handle:hover::before {
+  background: linear-gradient(90deg, transparent 0%, #888 20%, #888 80%, transparent 100%);
 }
 
 @keyframes scanlines-flicker {

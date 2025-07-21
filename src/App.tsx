@@ -94,13 +94,19 @@ function App() {
       return filteredCollisions;
     }
     
-    // Standard collision priority for all other drags
-    const purgeZone = collisions.find(c => c.id === 'purge-zone-window');
-    const terminalDock = collisions.find(c => c.id === 'terminal-dock-zone');
+    // WINDOW PURGE NODE DRAG SYSTEM: Apply priority only for window deletion drags
+    if (args.active?.data?.current?.type === 'window-purge-node') {
+      const purgeZone = collisions.find(c => c.id === 'purge-zone-window');
+      const terminalDock = collisions.find(c => c.id === 'terminal-dock-zone');
+      
+      if (purgeZone) return [purgeZone];
+      if (terminalDock) return [terminalDock];
+      
+      return collisions;
+    }
     
-    if (purgeZone) return [purgeZone];
-    if (terminalDock) return [terminalDock];
-    
+    // APP LIST DRAG SYSTEM: Use normal sortable behavior for app reordering
+    // Don't apply any priority - let @dnd-kit handle normal sortable collisions
     return collisions;
   };
 
