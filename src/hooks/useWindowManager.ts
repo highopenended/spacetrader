@@ -3,19 +3,85 @@
  * 
  * Custom hook that manages window state, positions, and sizes.
  * Provides functions to open, close, and update windows.
+ * Automatically repositions windows when viewport resizes.
  * 
  * Used by: App.tsx and potentially other components that need window management
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WindowData } from '../types/gameState';
 import { WINDOW_DEFAULTS } from '../constants/windowConstants';
+import { clampPositionToBounds, getViewportBounds } from '../utils/viewportConstraints';
 
 export const useWindowManager = () => {
   const [windows, setWindows] = useState<WindowData[]>([]);
   const [lastWindowPositions, setLastWindowPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [lastWindowSizes, setLastWindowSizes] = useState<Record<string, { width: number; height: number }>>({});
   const [nextZIndex, setNextZIndex] = useState(1000); // Start at 1000, increment for each new window
+
+  // Monitor viewport changes (resize, zoom) and reposition windows
+  useEffect(() => {
+    const handleViewportChange = () => {
+      setWindows(prevWindows => 
+        prevWindows.map(window => {
+          // Constrain each window to new viewport bounds
+          const constrainedPosition = clampPositionToBounds(
+            window.position, 
+            window.size, 
+            20 // Default footer height - could be made dynamic
+          );
+          
+          // Only update if position actually changed
+          if (constrainedPosition.x !== window.position.x || constrainedPosition.y !== window.position.y) {
+            // Update the last known position too
+            setLastWindowPositions(prev => ({
+              ...prev,
+              [window.appType]: constrainedPosition
+            }));
+            
+            return {
+              ...window,
+              position: constrainedPosition
+            };
+          }
+          
+          return window;
+        })
+      );
+    };
+
+    // Method 1: Traditional window resize
+    window.addEventListener('resize', handleViewportChange);
+    
+    // Method 2: ResizeObserver on document element (catches zoom changes)
+    let resizeObserver: ResizeObserver | null = null;
+    if (window.ResizeObserver) {
+      resizeObserver = new ResizeObserver(handleViewportChange);
+      resizeObserver.observe(document.documentElement);
+    }
+    
+    // Method 3: Visual viewport (when available)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+    }
+    
+    // Method 4: Orientation changes (mobile)
+    window.addEventListener('orientationchange', handleViewportChange);
+
+    return () => {
+      window.removeEventListener('resize', handleViewportChange);
+      
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+      
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+      }
+      
+      window.removeEventListener('orientationchange', handleViewportChange);
+    };
+  }, []);
 
   const updateWindowPosition = (appType: string, position: { x: number; y: number }) => {
     setLastWindowPositions(prev => ({

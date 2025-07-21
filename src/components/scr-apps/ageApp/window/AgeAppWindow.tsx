@@ -103,16 +103,16 @@ const AgeAppWindow: React.FC<AgeAppWindowProps> = ({
   };
 
   const content = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+    <div className="window-column-layout window-content-padded">
+      <div className="window-row-layout">
         <div className="detail-label">{getAgeLabel()}</div>
         <div className="detail-value">{getAgeValue()}</div>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+      <div className="window-row-layout">
         <div className="detail-label">{getBirthLabel()}</div>
         <div className="detail-value">{getBirthValue()}</div>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+      <div className="window-row-layout">
         <div className="detail-label">{getDeathLabel()}</div>
         <div className="detail-value">{getDeathValue()}</div>
       </div>

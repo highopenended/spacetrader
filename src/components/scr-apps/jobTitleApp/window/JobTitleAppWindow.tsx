@@ -14,8 +14,8 @@ const JobTitleAppWindow: React.FC<JobTitleAppWindowProps> = ({
   const jobTitle = GAME_PHASES[gamePhase].title;
 
   const content = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+    <div className="window-column-layout window-content-padded">
+      <div className="window-row-layout">
         <div className="detail-label">Job Title</div>
         <div className="detail-value">{jobTitle}</div>
       </div>

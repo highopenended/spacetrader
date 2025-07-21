@@ -252,14 +252,13 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
       return (
       <div 
         ref={combinedWindowRef}
-        className="scr-app-window"
+        className={`scr-app-window${isDragging ? ' window-dragging' : ''}${isResizing ? ' window-resizing' : ''}`}
       style={{ 
         left: currentPosition.x, 
         top: currentPosition.y,
         width: currentSize.width,
         height: currentSize.height,
         zIndex: zIndex,
-        userSelect: (isDragging || isResizing) ? 'none' : 'auto',
         // CLEAN: All drop zone effects handled by hook
         ...dropZoneEffects.windowStyles
       }}
@@ -293,20 +292,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
       
       {/* DEBUG: Drop Zone Detection Status - Show when over special zones */}
       {dropZoneEffects.debugText && (
-        <div style={{ 
-          background: dropZoneEffects.isOverPurgeZone ? 
-            'linear-gradient(90deg, #330000 0%, #110000 50%, #330000 100%)' :
-            'linear-gradient(90deg, #003300 0%, #001100 50%, #003300 100%)', 
-          color: dropZoneEffects.isOverPurgeZone ? '#ff0000' : '#4a4', 
-          padding: '2px', 
-          fontSize: '10px', 
-          textAlign: 'center',
-          textShadow: dropZoneEffects.isOverPurgeZone ? 
-            '0 0 2px #ff0000, 0 0 6px #ff0000, 0 0 12px #ff0000' :
-            '0 0 2px #4a4, 0 0 6px #4a4, 0 0 12px #4a4',
-          animation: 'text-flicker 0.18s infinite',
-          border: dropZoneEffects.isOverPurgeZone ? '1px solid #ff0000' : '1px solid #4a4'
-        }}>
+        <div className={`window-debug-overlay${dropZoneEffects.isOverTerminalDock ? ' terminal-dock' : ''}`}>
           {dropZoneEffects.debugText}
         </div>
       )}

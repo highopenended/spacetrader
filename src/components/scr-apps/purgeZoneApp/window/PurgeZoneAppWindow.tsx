@@ -18,7 +18,7 @@ const PurgeZoneAppWindow: React.FC<PurgeZoneAppWindowProps> = ({
   const isActive = overId === 'purge-zone-window';
 
   const content = (
-    <div className="purge-zone-content">
+    <div className="purge-zone-content window-column-layout">
       <div
         ref={setNodeRef}
         className={`purge-zone-drop-area${isActive ? ' active' : ''}`}

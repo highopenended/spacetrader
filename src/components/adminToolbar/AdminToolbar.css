@@ -108,18 +108,19 @@
   gap: 8px;
 }
 
-.button-group {
+.credit-button-row {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
-  gap: 0px;
+  gap: 2px;
+  align-items: center;
 }
 
-.button-group span {
+.credit-button-row span {
   color: #999;
   font-size: 11px;
   min-width: 60px;
   text-align: left;
+  margin-right: 4px;
 }
 
 .phase-buttons {

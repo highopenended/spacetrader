@@ -156,7 +156,7 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
           <div className="admin-section">
             <h4>Credits</h4>
             <div className="credit-buttons">
-              <div className="button-group">
+              <div className="credit-button-row">
                 <span>Add:</span>
                 {creditAmounts.map(amount => (
                   <button key={`add-${amount}`} onClick={() => updateCredits(amount)}>
@@ -164,7 +164,7 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
                   </button>
                 ))}
               </div>
-              <div className="button-group">
+              <div className="credit-button-row">
                 <span>Remove:</span>
                 {creditAmounts.map(amount => (
                   <button key={`remove-${amount}`} onClick={() => updateCredits(-amount)}>

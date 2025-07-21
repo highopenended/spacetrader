@@ -1,18 +1,11 @@
 /* Purge Zone App Window CSS */
 
 .purge-zone-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
   height: 100%;
   width: 95%;
 }
 
 .purge-zone-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--spacing-md);
   flex-shrink: 0;
 }
 

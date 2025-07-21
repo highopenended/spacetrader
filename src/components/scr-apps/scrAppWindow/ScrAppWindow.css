@@ -73,6 +73,52 @@
   overflow: auto;
 }
 
+/* Common layout patterns to reduce inline styles */
+.window-column-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.window-row-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.window-content-padded {
+  padding: var(--spacing-sm);
+}
+
+/* Window state utility classes */
+.window-dragging {
+  user-select: none;
+}
+
+.window-resizing {
+  user-select: none;
+}
+
+/* Debug overlay styles */
+.window-debug-overlay {
+  background: linear-gradient(90deg, #330000 0%, #110000 50%, #330000 100%);
+  color: #ff0000;
+  padding: 2px;
+  font-size: 10px;
+  text-align: center;
+  text-shadow: 0 0 2px #ff0000, 0 0 6px #ff0000, 0 0 12px #ff0000;
+  animation: text-flicker 0.18s infinite;
+  border: 1px solid #ff0000;
+}
+
+.window-debug-overlay.terminal-dock {
+  background: linear-gradient(90deg, #003300 0%, #001100 50%, #003300 100%);
+  color: #4a4;
+  text-shadow: 0 0 2px #4a4, 0 0 6px #4a4, 0 0 12px #4a4;
+  border: 1px solid #4a4;
+}
+
 /* Collapsible Footer - positioned outside window */
 .window-footer {
   position: absolute;
