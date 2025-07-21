@@ -152,7 +152,7 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
                   <SortableItem
                     key={appConfig.id}
                     id={appConfig.id}
-                    onAppClick={() => onAppClick?.(appConfig.id, appConfig.title)}
+                    onAppClick={() => onAppClick?.(appConfig.id, appConfig.name)}
                   >
                     {renderApp(appConfig)}
                   </SortableItem>

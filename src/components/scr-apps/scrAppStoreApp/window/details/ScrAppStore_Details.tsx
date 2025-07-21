@@ -20,7 +20,7 @@ const ScrAppStore_Details: React.FC<ScrAppStore_DetailsProps> = ({
   // Get selected app details
   const selectedApp = selectedAppId ? APP_REGISTRY[selectedAppId] : null;
   const isPurchased = selectedAppId ? installedApps.some(app => app.id === selectedAppId) : false;
-  const purchasePrice = selectedApp?.tiers?.[0]?.flatUpgradeCost || selectedApp?.cost || 0;
+  const purchasePrice = selectedApp?.tiers?.[0]?.flatUpgradeCost || 0;
   const canAfford = credits >= purchasePrice;
 
   const handlePurchase = () => {
@@ -47,7 +47,6 @@ const ScrAppStore_Details: React.FC<ScrAppStore_DetailsProps> = ({
       {/* Header Section */}
       <div className="details-header">
         <div className="app-title">{selectedApp.name}</div>
-        <div className="app-category">{selectedApp.category.toUpperCase()}</div>
       </div>
 
       {/* Information Section (Scrollable) */}

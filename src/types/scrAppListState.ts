@@ -18,14 +18,11 @@ export interface AppTier {
 export interface AppDefinition {
   id: string;
   name: string;
-  title: string;
   component: React.ComponentType<any>;
-  category: 'core' | 'utility' | 'trading' | 'navigation' | 'security' | 'entertainment';
-  cost: number;
   deletable: boolean;
   description: string;
   unlockRequirements?: string[]; // Future: requirements to unlock this app
-  tiers: AppTier[]; // NEW: Array of upgrade tiers with costs
+  tiers: AppTier[]; // Array of upgrade tiers with costs
 }
 
 export interface InstalledApp {
@@ -46,7 +43,7 @@ export interface AppListState {
   dragState: DragState;
 }
 
-export type AppType = 'credits' | 'jobTitle' | 'age' | 'date' | 'purgeZone' | 'scrAppStore';
+export type AppType = 'credits' | 'jobTitle' | 'age' | 'date' | 'purgeZone' | 'scrAppStore' | 'scanner' | 'navMap';
 
 export interface AppOrderUpdateData {
   appId: string;

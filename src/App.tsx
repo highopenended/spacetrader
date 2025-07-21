@@ -448,7 +448,7 @@ function App() {
         {windows.map(renderWindow)}
         <PurgeConfirmPopup
           open={!!pendingDelete.appId}
-          appName={pendingDelete.appId ? (apps.find((a: any) => a.id === pendingDelete.appId)?.title || pendingDelete.appId) : ''}
+          appName={pendingDelete.appId ? (apps.find((a: any) => a.id === pendingDelete.appId)?.name || pendingDelete.appId) : ''}
           onConfirm={handleConfirmPurge}
           onCancel={handleCancelPurge}
         />
