@@ -49,6 +49,7 @@ const ScrAppStoreAppWindow: React.FC<ScrAppStoreAppWindowProps> = ({
             credits={credits}
             installApp={installApp}
             onAppInstalled={() => setSelectedAppId(null)}
+            installedApps={installedApps}
           />
         </div>
       </div>

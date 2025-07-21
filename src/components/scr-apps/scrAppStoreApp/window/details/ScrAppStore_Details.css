@@ -1,10 +1,177 @@
-/* ScrAppStore_Details styling - to be implemented */
+/* SCR-App Store Details - Gritty 80s Dystopian Sci-Fi */
 
 .scr-app-store-details {
   height: 100%;
-  border: 2px solid #44a;
-  padding: var(--spacing-sm);
   display: flex;
   flex-direction: column;
-  background: rgba(0, 0, 255, 0.05);
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  border: 1px solid #333;
+  font-family: 'Courier New', monospace;
+}
+
+/* No Selection State */
+.no-selection-message {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-style: italic;
+}
+
+/* Header Section */
+.details-header {
+  padding: var(--spacing-sm);
+  border-bottom: 1px solid #333;
+  background: linear-gradient(135deg, #111 0%, #222 100%);
+  flex-shrink: 0;
+}
+
+.app-title {
+  color: #fff;
+  font-size: var(--font-size-large);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: var(--spacing-xs);
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+.app-category {
+  color: #aaa;
+  font-size: var(--font-size-xsmall);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Information Section (Scrollable) */
+.details-info {
+  flex: 1;
+  padding: var(--spacing-sm);
+  overflow-y: auto;
+  background: #0a0a0a;
+}
+
+.info-section {
+  margin-bottom: var(--spacing-md);
+}
+
+.info-section:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  color: #888;
+  font-size: var(--font-size-xsmall);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--spacing-xs);
+}
+
+.info-value {
+  color: #ccc;
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  padding-left: var(--spacing-sm);
+  border-left: 2px solid #333;
+}
+
+/* Purchase Section */
+.details-purchase {
+  padding: var(--spacing-sm);
+  border-top: 1px solid #333;
+  background: linear-gradient(135deg, #111 0%, #222 100%);
+  flex-shrink: 0;
+}
+
+.purchase-status {
+  color: #4a4;
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+  padding: var(--spacing-sm);
+  background: linear-gradient(135deg, #1a2a1a 0%, #2a3a2a 100%);
+  border: 1px solid #4a4;
+  border-radius: 2px;
+  font-style: italic;
+}
+
+.purchase-info {
+  margin-bottom: var(--spacing-sm);
+}
+
+.current-credits {
+  color: #aaa;
+  font-size: var(--font-size-xsmall);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--spacing-xs);
+}
+
+.insufficient-credits {
+  color: #a44;
+  font-size: var(--font-size-xsmall);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-style: italic;
+}
+
+.purchase-button {
+  width: 100%;
+  padding: var(--spacing-sm);
+  background: linear-gradient(135deg, #1a1a2a 0%, #2a2a3a 100%);
+  border: 2px solid #44a;
+  color: #44a;
+  font-family: 'Courier New', monospace;
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 2px;
+}
+
+.purchase-button:hover:not(.disabled) {
+  background: linear-gradient(135deg, #2a2a3a 0%, #3a3a4a 100%);
+  border-color: #66c;
+  color: #66c;
+  text-shadow: 0 0 2px rgba(102, 102, 204, 0.5);
+}
+
+.purchase-button.disabled {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border-color: #333;
+  color: #555;
+  cursor: not-allowed;
+  text-shadow: none;
+}
+
+/* Custom scrollbar for info section */
+.details-info::-webkit-scrollbar {
+  width: 6px;
+}
+
+.details-info::-webkit-scrollbar-track {
+  background: #111;
+  border-left: 1px solid #333;
+}
+
+.details-info::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #333 0%, #444 100%);
+  border-radius: 2px;
+}
+
+.details-info::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #444 0%, #555 100%);
 } 
