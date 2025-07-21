@@ -17,7 +17,8 @@ const DateApp: React.FC<DateAppProps> = ({ gameTime, gamePhase }) => {
 
   return (
     <ScrApp>
-      <div className="game-time-tracker">
+      <div className="game-time-tracker">        
+      <div className="app-label">Date Tracker</div>
         {isEarlyPhase ? (
           <div className="time-line">
             <span className="time-segment">GRIND-{getGrindName(grind)}</span>

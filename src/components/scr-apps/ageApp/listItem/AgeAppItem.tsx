@@ -12,7 +12,7 @@ const AgeApp: React.FC<AgeAppProps> = ({ gameTime }) => {
   return (
     <ScrApp>
       <div>
-        <div className="app-label">Age</div>
+        <div className="app-label">Age Tracker</div>
         <div className="app-value age-years">{age} Years</div>
       </div>
     </ScrApp>

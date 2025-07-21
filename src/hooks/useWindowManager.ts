@@ -19,9 +19,9 @@ export const useWindowManager = () => {
   const [lastWindowSizes, setLastWindowSizes] = useState<Record<string, { width: number; height: number }>>({});
   const [nextZIndex, setNextZIndex] = useState(1000); // Start at 1000, increment for each new window
 
-  // Monitor viewport changes (resize, zoom) and reposition windows
+  // Monitor viewport changes and reposition windows
   useEffect(() => {
-    const handleViewportChange = () => {
+    const handleViewportResize = () => {
       setWindows(prevWindows => 
         prevWindows.map(window => {
           // Constrain each window to new viewport bounds
@@ -50,37 +50,8 @@ export const useWindowManager = () => {
       );
     };
 
-    // Method 1: Traditional window resize
-    window.addEventListener('resize', handleViewportChange);
-    
-    // Method 2: ResizeObserver on document element (catches zoom changes)
-    let resizeObserver: ResizeObserver | null = null;
-    if (window.ResizeObserver) {
-      resizeObserver = new ResizeObserver(handleViewportChange);
-      resizeObserver.observe(document.documentElement);
-    }
-    
-    // Method 3: Visual viewport (when available)
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleViewportChange);
-    }
-    
-    // Method 4: Orientation changes (mobile)
-    window.addEventListener('orientationchange', handleViewportChange);
-
-    return () => {
-      window.removeEventListener('resize', handleViewportChange);
-      
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
-      
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleViewportChange);
-      }
-      
-      window.removeEventListener('orientationchange', handleViewportChange);
-    };
+    window.addEventListener('resize', handleViewportResize);
+    return () => window.removeEventListener('resize', handleViewportResize);
   }, []);
 
   const updateWindowPosition = (appType: string, position: { x: number; y: number }) => {
