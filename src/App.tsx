@@ -107,7 +107,9 @@ function App() {
     
     // APP LIST DRAG SYSTEM: Use normal sortable behavior for app reordering
     // Don't apply any priority - let @dnd-kit handle normal sortable collisions
-    return collisions;
+    // Filter out terminal-dock-zone so app list drags never trigger docking behavior
+    const filteredCollisions = collisions.filter(c => c.id !== 'terminal-dock-zone');
+    return filteredCollisions;
   };
 
   /**
@@ -228,6 +230,9 @@ function App() {
         setOverId(null); // Reset overId to hide dock message
         return;
       }
+      // APP LIST DRAG SYSTEM: If app list drag hits terminal-dock-zone, ignore it
+      // This prevents app reordering from being treated as window docking
+      return;
     }
     
     // STANDARD DRAG SYSTEM: Delegate to app list handler for reordering
