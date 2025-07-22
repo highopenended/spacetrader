@@ -52,6 +52,10 @@ export const getGrindName = (grind: number): string => {
   return grind.toString();
 };
 
+export const getJobTitle = (gamePhase: GamePhase): string => {
+  return GAME_PHASES[gamePhase].title;
+};
+
 export const getNextGamePhase = (currentPhase: GamePhase): GamePhase | null => {
   const currentId = GAME_PHASES[currentPhase].id;
   const nextPhase = Object.entries(GAME_PHASES).find(

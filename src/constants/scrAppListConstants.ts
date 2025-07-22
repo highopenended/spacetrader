@@ -110,9 +110,9 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
 export const DEFAULT_INSTALLED_APPS: AppType[] = [
   'credits',
   'jobTitle', 
-  'age',
-  'date',
-  'purgeZone',
+  // 'age',
+  // 'date',
+  // 'purgeZone',
   'scrAppStore'
 ];
 
