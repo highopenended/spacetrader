@@ -8,9 +8,6 @@ import HideWindowsToggle from './HideWindowsToggle';
 import { GamePhase, GameTime } from '../../types/gameState';
 import { getAppProps } from '../../utils/appPropsBuilder';
 
-// Placeholder for purge confirmation popup
-// import PurgeConfirmPopup from '../ui/PurgeConfirmPopup';
-
 interface TerminalScreenProps {
   credits: number;
   gameTime: GameTime;
@@ -19,12 +16,6 @@ interface TerminalScreenProps {
   onAppClick?: (appType: string, title: string, content?: React.ReactNode) => void;
   apps: any[];
   appOrder: string[];
-  dragState: any;
-  handleDragStart: (event: any) => void;
-  handleDragOver: (event: any) => void;
-  handleDragEnd: (event: any) => void;
-  installApp: (appId: string, position?: number) => void;
-  uninstallApp: (appId: string) => void;
   pendingDeleteAppId?: string | null;
   openAppTypes?: Set<string>;
   overId?: any; // For drag-over detection (window docking)
@@ -40,12 +31,6 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   onAppClick,
   apps,
   appOrder,
-  dragState,
-  handleDragStart,
-  handleDragOver,
-  handleDragEnd,
-  installApp,
-  uninstallApp,
   pendingDeleteAppId = null,
   openAppTypes = new Set(),
   overId,

@@ -14,7 +14,6 @@ import { useGameState_AppList } from './hooks/useGameState_AppList';
 import { WindowData } from './types/gameState';
 import PurgeConfirmPopup from './components/ui/PurgeConfirmPopup';
 
-import { APP_REGISTRY } from './constants/scrAppListConstants';
 import { DndContext, DragOverlay, useSensor, PointerSensor, rectIntersection, UniqueIdentifier } from '@dnd-kit/core';
 import { getAppProps } from './utils/appPropsBuilder';
 
@@ -52,7 +51,6 @@ function App() {
     const monthlyCost = calculateMonthlyCosts();
     if (monthlyCost > 0) {
       updateCredits(-monthlyCost);
-      console.log(`Monthly app costs deducted: ${monthlyCost} credits`);
     }
   }, [calculateMonthlyCosts, updateCredits]);
 
@@ -423,12 +421,6 @@ function App() {
           onAppClick={openOrCloseWindow}
           apps={apps}
           appOrder={appOrder}
-          dragState={dragState}
-          handleDragStart={handleDragStart}
-          handleDragOver={handleDragOver}
-          handleDragEnd={handleUnifiedDragEnd}
-          installApp={installApp}
-          uninstallApp={uninstallApp}
           pendingDeleteAppId={pendingDelete.appId}
           openAppTypes={new Set(windows.map(w => w.appType))}
           overId={overId}
