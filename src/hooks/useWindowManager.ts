@@ -18,6 +18,7 @@ export const useWindowManager = () => {
   const [lastWindowPositions, setLastWindowPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [lastWindowSizes, setLastWindowSizes] = useState<Record<string, { width: number; height: number }>>({});
   const [nextZIndex, setNextZIndex] = useState(1000); // Start at 1000, increment for each new window
+  const [windowsHidden, setWindowsHidden] = useState(false);
 
   // Monitor viewport changes and reposition windows
   useEffect(() => {
@@ -69,6 +70,11 @@ export const useWindowManager = () => {
   };
 
   const openOrCloseWindow = (appType: string, title: string, content?: React.ReactNode) => {
+    // Auto-show windows if they're hidden and we're opening a new one
+    if (windowsHidden) {
+      setWindowsHidden(false);
+    }
+    
     const defaultContent = React.createElement('div', {}, 'No Data Available');
     const windowContent = content || defaultContent;
     
@@ -136,13 +142,17 @@ export const useWindowManager = () => {
     setNextZIndex(prev => prev + 1);
   };
 
+  const toggleWindowVisibility = () => setWindowsHidden(prev => !prev);
+
   return {
     windows,
+    windowsHidden,
     updateWindowPosition,
     updateWindowSize,
     openOrCloseWindow,
     closeWindow,
     closeWindowsByAppType,
     bringToFront,
+    toggleWindowVisibility,
   };
 }; 

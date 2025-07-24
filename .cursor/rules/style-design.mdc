@@ -3,4 +3,4 @@ description:
 globs: 
 alwaysApply: true
 ---
-This is a simple incremental game with a minimalistic design. There should be mostly blacks, whites, and greys unless I specifically indicate otherwise.
+This is a simple incremental game with a minimalistic design. There should be mostly blacks, whites, and greys along with some terminal greens unless I specifically indicate otherwise. The theme is gritty 80s analog scifi dystopia.

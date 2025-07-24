@@ -3,9 +3,9 @@ import './TerminalScreen.css';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import SortableItem from '../scr-apps/SortableItem';
+import HideWindowsToggle from './HideWindowsToggle';
 
 import { GamePhase, GameTime } from '../../types/gameState';
-import { createPortal } from 'react-dom';
 import { getAppProps } from '../../utils/appPropsBuilder';
 
 // Placeholder for purge confirmation popup
@@ -28,6 +28,8 @@ interface TerminalScreenProps {
   pendingDeleteAppId?: string | null;
   openAppTypes?: Set<string>;
   overId?: any; // For drag-over detection (window docking)
+  windowsHidden?: boolean;
+  onToggleWindowVisibility?: () => void;
 }
 
 const TerminalScreen: React.FC<TerminalScreenProps> = ({ 
@@ -46,7 +48,9 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   uninstallApp,
   pendingDeleteAppId = null,
   openAppTypes = new Set(),
-  overId
+  overId,
+  windowsHidden = false,
+  onToggleWindowVisibility
 }) => {
   // Resize state
   const [height, setHeight] = useState<number>(window.innerHeight); // Start at full viewport height
@@ -133,6 +137,11 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
             <div className="status-text">{isOnline ? 'ONLINE' : 'OFFLINE'}</div>
           </div>
         </div>
+        
+        <HideWindowsToggle 
+          windowsHidden={windowsHidden}
+          onToggle={onToggleWindowVisibility || (() => {})}
+        />
         
         <div 
           ref={setNodeRef}

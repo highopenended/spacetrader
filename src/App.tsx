@@ -23,12 +23,14 @@ function App() {
   const { gamePhase, setGamePhase, advanceGamePhase, resetGamePhase } = useGameState_Phases();
   const {
     windows,
+    windowsHidden,
     updateWindowPosition,
     updateWindowSize,
     openOrCloseWindow,
     closeWindow,
     closeWindowsByAppType,
     bringToFront,
+    toggleWindowVisibility,
   } = useWindowManager();
   const {
     apps,
@@ -430,6 +432,8 @@ function App() {
           pendingDeleteAppId={pendingDelete.appId}
           openAppTypes={new Set(windows.map(w => w.appType))}
           overId={overId}
+          windowsHidden={windowsHidden}
+          onToggleWindowVisibility={toggleWindowVisibility}
         />
         <AdminToolbar 
           credits={credits}
@@ -445,7 +449,7 @@ function App() {
           resumeTime={resumeTime}
           resetGame={resetGame}
         />
-        {windows.map(renderWindow)}
+        {!windowsHidden && windows.map(renderWindow)}
         <PurgeConfirmPopup
           open={!!pendingDelete.appId}
           appName={pendingDelete.appId ? (apps.find((a: any) => a.id === pendingDelete.appId)?.name || pendingDelete.appId) : ''}
