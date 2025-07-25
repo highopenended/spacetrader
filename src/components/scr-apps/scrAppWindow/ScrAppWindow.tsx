@@ -4,7 +4,7 @@
  * This component implements a sophisticated dual drag system that enables both window positioning
  * and deletion functionality through a single drag interaction from the user's perspective.
  * 
- * SYSTEM 1: WINDOW POSITIONING DRAG (useDragHandler - Custom)
+ * SYSTEM 1: WINDOW POSITIONING DRAG (useDragHandler_Windows - Custom)
  * - Purpose: Moves windows around the screen for positioning
  * - Implementation: Custom hook with mouse events
  * - Visual feedback: Window follows mouse cursor during drag
@@ -20,7 +20,7 @@
  * 
  * INTEGRATION APPROACH:
  * 1. Both systems activate simultaneously on window header drag
- * 2. useDragHandler handles the visual window movement
+ * 2. useDragHandler_Windows handles the visual window movement
  * 3. @dnd-kit handles the deletion collision detection
  * 4. User sees unified experience: drag window → position OR delete
  * 5. Tiny red indicator appears during drag to show deletion is possible
@@ -42,8 +42,8 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import './ScrAppWindow.css';
 import { WINDOW_DEFAULTS } from '../../../constants/windowConstants';
 import { APP_REGISTRY } from '../../../constants/scrAppListConstants';
-import { useGameState_AppList } from '../../../hooks/useGameState_AppList';
-import { useDragHandler } from '../../../hooks/useDragHandler';
+import { useGameState } from '../../../hooks/useGameState';
+import { useDragHandler_Windows } from '../../../hooks/useDragHandler';
 import { useDraggable } from '@dnd-kit/core';
 import { clampPositionToBounds } from '../../../utils/viewportConstraints';
 import { useDropZoneEffects } from '../../../hooks/useDropZoneEffects';
@@ -96,7 +96,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
 
   // Use shared drag handler for window dragging with viewport constraints
   const footerHeight = isFooterExpanded ? 140 : 20;
-  const { elementRef: windowRef, position: currentPosition, isDragging, handleMouseDown: dragMouseDown, setPosition } = useDragHandler({
+  const { elementRef: windowRef, position: currentPosition, isDragging, handleMouseDown: dragMouseDown, setPosition } = useDragHandler_Windows({
     initialPosition: position,
     onPositionChange,
     onBringToFront, // Bring window to front when drag starts
@@ -106,13 +106,13 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   });
 
   // Get tier data for this app
-  const { getAppTierData, changeAppTier } = useGameState_AppList();
+  const { getAppTierData, changeAppTier } = useGameState();
   const tierData = getAppTierData(appType);
   const appRegistry = APP_REGISTRY[appType];
 
   // PURGE NODE DRAG SYSTEM: @dnd-kit draggable for deletion detection only
   // This creates an invisible drag node that follows the mouse cursor for purge zone deletion
-  // Works alongside the custom window positioning drag system (useDragHandler)
+  // Works alongside the custom window positioning drag system (useDragHandler_Windows)
   const { 
     attributes: purgeNodeDragAttributes, 
     listeners: purgeNodeDragListeners, 
@@ -243,7 +243,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   const dropZoneEffects = useDropZoneEffects(overId, draggedAppType || null, appType);
 
   // PURGE NODE DRAG SYSTEM: Combine refs for both drag systems
-  // The window needs refs for both positioning drag (useDragHandler) and purge drag (@dnd-kit)
+  // The window needs refs for both positioning drag (useDragHandler_Windows) and purge drag (@dnd-kit)
   const combinedWindowRef = useCallback((node: HTMLDivElement | null) => {
     windowRef.current = node;
     setPurgeNodeDragRef(node);

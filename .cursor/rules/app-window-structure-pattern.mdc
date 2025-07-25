@@ -24,10 +24,10 @@ All app windows implement a sophisticated dual drag system that enables both win
 
 ### System 1: Window Positioning Drag (Custom Implementation)
 - **Purpose**: Moves windows around the screen for positioning
-- **Implementation**: Custom `useDragHandler` hook with mouse events  
+- **Implementation**: Custom `useDragHandler_Windows` hook with mouse events  
 - **Visual feedback**: Window follows mouse cursor during drag
 - **Constraints**: Viewport bounds, footer-aware positioning
-- **State management**: Uses `isDragging` from useDragHandler
+- **State management**: Uses `isDragging` from useDragHandler_Windows
 - **Drop behavior**: Updates window position when dropped anywhere except PurgeZone
 
 ### System 2: Purge Node Drag (@dnd-kit Implementation)  
@@ -40,7 +40,7 @@ All app windows implement a sophisticated dual drag system that enables both win
 
 ### Integration Approach
 1. **Dual activation**: Both systems activate simultaneously on window header drag
-2. **Parallel operation**: useDragHandler handles visual movement, @dnd-kit handles deletion detection
+2. **Parallel operation**: useDragHandler_Windows handles visual movement, @dnd-kit handles deletion detection
 3. **Unified experience**: User sees single drag action with appropriate visual feedback
 4. **Smart delegation**: Drop handling routes to appropriate system based on drop target
 
@@ -90,9 +90,9 @@ const {
 // Apply both drag systems to window header
 <div 
   className="window-header"
-  onMouseDown={dragMouseDown}           // System 1: Positioning
-  {...purgeNodeDragAttributes}         // System 2: Deletion
-  {...purgeNodeDragListeners}          // System 2: Deletion
+  onMouseDown={dragMouseDown}           // System 1: Positioning (useDragHandler_Windows)
+  {...purgeNodeDragAttributes}         // System 2: Deletion (@dnd-kit)
+  {...purgeNodeDragListeners}          // System 2: Deletion (@dnd-kit)
 >
 ```
 

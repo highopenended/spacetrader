@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import './AdminToolbar.css';
 import { GamePhase, GameTime } from '../../types/gameState';
 import { advanceGameTime } from '../../utils/gameStateUtils';
-import { useDragHandler } from '../../hooks/useDragHandler';
+import { useDragHandler_Windows } from '../../hooks/useDragHandler';
 import { clampPositionToBounds } from '../../utils/viewportConstraints';
 
 interface AdminToolbarProps {
@@ -41,7 +41,7 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
     return (event.target as HTMLElement).tagName !== 'BUTTON';
   }, []);
   
-  const { elementRef: toolbarRef, position, isDragging, handleMouseDown, setPosition } = useDragHandler({
+  const { elementRef: toolbarRef, position, isDragging, handleMouseDown, setPosition } = useDragHandler_Windows({
     initialPosition: { x: 20, y: 20 },
     dragConstraint,
     constrainToViewport: true

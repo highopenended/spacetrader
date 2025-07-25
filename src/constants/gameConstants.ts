@@ -14,10 +14,11 @@
  * - INITIAL_CREDITS: Starting credits amount (0)
  * - INITIAL_GAME_PHASE: Starting phase ('lineRat')
  * - INITIAL_GAME_TIME: Starting time values (AR-242, LC-08, etc.)
+ * - INITIAL_GAME_STATE: Complete initial game state for unified hook
  * - GAME_PHASES: Configuration for all game phases with titles and descriptions
  * 
  * Used by:
- * - All game state hooks for initial values and reset functionality
+ * - Unified game state hook (useGameState) for initial values and reset functionality
  * - Game state utilities that need phase configuration
  * - Any component that needs to display phase information
  * 
@@ -25,6 +26,7 @@
  */
 
 import { GameTime, GamePhase } from '../types/gameState';
+import { DEFAULT_INSTALLED_APPS } from './scrAppListConstants';
 
 // Initial game state constants
 export const INITIAL_CREDITS = 0;
@@ -36,6 +38,26 @@ export const INITIAL_GAME_TIME: GameTime = {
   grind: 1,
   tithe: 2,
   age: 6
+};
+
+// Complete initial game state (for unified hook)
+export const INITIAL_GAME_STATE = {
+  credits: INITIAL_CREDITS,
+  gamePhase: INITIAL_GAME_PHASE,
+  gameTime: INITIAL_GAME_TIME,
+  isPaused: false,
+  lastUpdate: Date.now(),
+  installedApps: DEFAULT_INSTALLED_APPS.map((appId, index) => ({
+    id: appId,
+    order: index + 1,
+    purchased: true,
+    installedAt: Date.now(),
+    currentTier: 1
+  })),
+  dragState: {
+    isDragging: false,
+    draggedAppId: null
+  }
 };
 
 // Game phase configuration data

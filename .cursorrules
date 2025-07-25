@@ -151,11 +151,11 @@ const AppNameAppWindow: React.FC<AppNameAppWindowProps> = ({
 - Manages window state integration
 
 ### Hooks
-- `useGameState_AppList` - App ordering and drag state
+- `useGameState` - Unified game state management (credits, time, phases, apps)
 - `useWindowManager` - Window positions and sizes
-- `useDragHandler` - Shared drag functionality with viewport constraints
+- `useDragHandler_Windows` - Window positioning and resizing with viewport constraints
+- `useDragHandler_Apps` - App list drag-and-drop for reordering and deletion
 - `useViewportBounds` - Viewport constraint management
-- Game state hooks for data (credits, time, phases)
 
 ## Best Practices
 

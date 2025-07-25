@@ -6,11 +6,9 @@ import AgeAppWindow from './components/scr-apps/ageApp/window/AgeAppWindow';
 import JobTitleAppWindow from './components/scr-apps/jobTitleApp/window/JobTitleAppWindow';
 import PurgeZoneAppWindow from './components/scr-apps/purgeZoneApp/window/PurgeZoneAppWindow';
 import ScrAppStoreAppWindow from './components/scr-apps/scrAppStoreApp/window/ScrAppStoreAppWindow';
-import { useGameState_Credits } from './hooks/useGameState_Credits';
-import { useGameState_Phases } from './hooks/useGameState_Phases';
-import { useGameState_Time } from './hooks/useGameState_Time';
+import { useGameState } from './hooks/useGameState';
 import { useWindowManager } from './hooks/useWindowManager';
-import { useGameState_AppList } from './hooks/useGameState_AppList';
+import { useDragHandler_Apps } from './hooks/useAppDragHandler';
 import { WindowData } from './types/gameState';
 import PurgeConfirmPopup from './components/ui/PurgeConfirmPopup';
 
@@ -18,8 +16,44 @@ import { DndContext, DragOverlay, useSensor, PointerSensor, rectIntersection, Un
 import { getAppProps } from './utils/appPropsBuilder';
 
 function App() {
-  const { credits, updateCredits, setCredits, resetCredits } = useGameState_Credits();
-  const { gamePhase, setGamePhase, advanceGamePhase, resetGamePhase } = useGameState_Phases();
+  const {
+    // Core state
+    credits,
+    gamePhase,
+    gameTime,
+    isPaused,
+    apps,
+    appOrder,
+    dragState,
+    installedApps,
+    
+    // Actions
+    updateCredits,
+    setCredits,
+    setGamePhase,
+    advanceGamePhase,
+    setGameTime,
+    pauseTime,
+    resumeTime,
+    installApp,
+    uninstallApp,
+    reorderApps,
+    updateDragState,
+    calculateMonthlyCosts,
+    getAvailableApps,
+    resetToDefaults,
+    resetGame
+  } = useGameState();
+
+  // Set up app drag handler
+  const { handleDragStart, handleDragOver, handleDragEnd } = useDragHandler_Apps({
+    installedApps,
+    dragState,
+    onDragStateChange: updateDragState,
+    onAppsReorder: reorderApps,
+    onAppUninstall: uninstallApp
+  });
+
   const {
     windows,
     windowsHidden,
@@ -31,30 +65,6 @@ function App() {
     bringToFront,
     toggleWindowVisibility,
   } = useWindowManager();
-  const {
-    apps,
-    appOrder,
-    dragState,
-    handleDragStart,
-    handleDragOver,
-    handleDragEnd,
-    resetToDefaults,
-    installApp,
-    uninstallApp,
-    calculateMonthlyCosts,
-    getAvailableApps,
-    installedApps
-  } = useGameState_AppList();
-
-  // Monthly cost deduction handler
-  const handleMonthlyCostDeduction = React.useCallback(() => {
-    const monthlyCost = calculateMonthlyCosts();
-    if (monthlyCost > 0) {
-      updateCredits(-monthlyCost);
-    }
-  }, [calculateMonthlyCosts, updateCredits]);
-
-  const { gameTime, setGameTime, isPaused, pauseTime, resumeTime, resetGameTime } = useGameState_Time(handleMonthlyCostDeduction);
 
   const [pendingDelete, setPendingDelete] = React.useState<{
     appId: string | null;
@@ -238,7 +248,7 @@ function App() {
       return;
     }
     
-    // STANDARD DRAG SYSTEM: Delegate to app list handler for reordering
+    // STANDARD DRAG SYSTEM: Delegate to unified game state handler for reordering
     // Only call for non-purge-node drags to avoid interfering with window positioning
     if (active.data?.current?.type !== 'window-purge-node') {
       handleDragEnd(event);
@@ -287,12 +297,7 @@ function App() {
     }
   };
 
-  const resetGame = () => {
-    resetCredits();
-    resetGamePhase();
-    resetGameTime();
-    resetToDefaults();
-  };
+  // resetGame is now provided by useGameState hook
 
   const renderWindow = (window: WindowData) => {
     if (window.appType === 'purgeZone') {

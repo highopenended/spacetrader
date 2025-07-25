@@ -1,0 +1,324 @@
+/**
+ * Unified Game State Hook
+ * 
+ * Single source of truth for all game state management.
+ * Combines credits, time, phases, and app list into one cohesive state.
+ * Handles cross-cutting concerns like monthly cost deductions automatically.
+ */
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+
+import { GameTime, GamePhase } from '../types/gameState';
+import { advanceGameTime, getNextGamePhase } from '../utils/gameStateUtils';
+import { INITIAL_GAME_STATE } from '../constants/gameConstants';
+import { APP_REGISTRY } from '../constants/scrAppListConstants';
+import { AppDefinition, InstalledApp, DragState, AppType } from '../types/scrAppListState';
+
+interface GameState {
+  // Core game data
+  credits: number;
+  gamePhase: GamePhase;
+  gameTime: GameTime;
+  isPaused: boolean;
+  lastUpdate: number;
+  
+  // App management
+  installedApps: InstalledApp[];
+  dragState: DragState;
+}
+
+const initialGameState: GameState = {
+  credits: INITIAL_GAME_STATE.credits,
+  gamePhase: INITIAL_GAME_STATE.gamePhase,
+  gameTime: INITIAL_GAME_STATE.gameTime,
+  isPaused: INITIAL_GAME_STATE.isPaused,
+  lastUpdate: INITIAL_GAME_STATE.lastUpdate,
+  installedApps: INITIAL_GAME_STATE.installedApps,
+  dragState: INITIAL_GAME_STATE.dragState
+};
+
+export const useGameState = () => {
+  const [gameState, setGameState] = useState<GameState>(initialGameState);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ===== CREDITS MANAGEMENT =====
+  const updateCredits = useCallback((amount: number) => {
+    setGameState(prev => ({ ...prev, credits: prev.credits + amount }));
+  }, []);
+
+  const setCredits = useCallback((amount: number) => {
+    setGameState(prev => ({ ...prev, credits: amount }));
+  }, []);
+
+  const resetCredits = useCallback(() => {
+    setGameState(prev => ({ ...prev, credits: INITIAL_GAME_STATE.credits }));
+  }, []);
+
+  // ===== PHASE MANAGEMENT =====
+  const setGamePhase = useCallback((phase: GamePhase) => {
+    setGameState(prev => ({ ...prev, gamePhase: phase }));
+  }, []);
+
+  const advanceGamePhase = useCallback(() => {
+    setGameState(prev => {
+      const nextPhase = getNextGamePhase(prev.gamePhase);
+      return nextPhase ? { ...prev, gamePhase: nextPhase } : prev;
+    });
+  }, []);
+
+  const resetGamePhase = useCallback(() => {
+    setGameState(prev => ({ ...prev, gamePhase: INITIAL_GAME_STATE.gamePhase }));
+  }, []);
+
+  // ===== TIME MANAGEMENT =====
+  const advanceTime = useCallback(() => {
+    setGameState(prev => {
+      const newTime = { ...prev.gameTime };
+      newTime.grind++; // Increment grind first
+      
+      const advancedTime = advanceGameTime(newTime);
+      
+      // Check if ledger cycle advanced (new month) - handle monthly costs
+      let newCredits = prev.credits;
+      if (advancedTime.ledgerCycle !== prev.gameTime.ledgerCycle) {
+        const monthlyCost = prev.installedApps.reduce((total, app) => {
+          const appDefinition = APP_REGISTRY[app.id];
+          if (appDefinition && appDefinition.tiers) {
+            const tierData = appDefinition.tiers.find(tier => tier.tier === app.currentTier);
+            return total + (tierData?.monthlyCost || 0);
+          }
+          return total;
+        }, 0);
+        newCredits -= monthlyCost;
+      }
+      
+      return {
+        ...prev,
+        gameTime: advancedTime,
+        credits: newCredits,
+        lastUpdate: Date.now()
+      };
+    });
+  }, []);
+
+  const pauseTime = useCallback(() => {
+    setGameState(prev => ({ ...prev, isPaused: true }));
+  }, []);
+
+  const resumeTime = useCallback(() => {
+    setGameState(prev => ({ ...prev, isPaused: false }));
+  }, []);
+
+  const setGameTime = useCallback((newTime: GameTime) => {
+    setGameState(prev => ({
+      ...prev,
+      gameTime: newTime,
+      lastUpdate: Date.now()
+    }));
+  }, []);
+
+  const resetGameTime = useCallback(() => {
+    setGameState(prev => ({
+      ...prev,
+      gameTime: INITIAL_GAME_STATE.gameTime,
+      isPaused: false,
+      lastUpdate: Date.now()
+    }));
+  }, []);
+
+  // ===== APP MANAGEMENT =====
+
+  const installApp = useCallback((appId: string, position?: number) => {
+    setGameState(prev => {
+      if (prev.installedApps.some(app => app.id === appId)) return prev; // Already installed
+      if (!APP_REGISTRY[appId]) return prev; // App doesn't exist
+
+      const newApp: InstalledApp = {
+        id: appId,
+        order: position ?? prev.installedApps.length + 1,
+        purchased: true,
+        installedAt: Date.now(),
+        currentTier: 1
+      };
+
+      if (position !== undefined) {
+        // Insert at specific position and reorder
+        const newList = [...prev.installedApps, newApp].sort((a, b) => a.order - b.order);
+        return {
+          ...prev,
+          installedApps: newList.map((app, index) => ({
+            ...app,
+            order: index + 1
+          }))
+        };
+      } else {
+        return {
+          ...prev,
+          installedApps: [...prev.installedApps, newApp]
+        };
+      }
+    });
+  }, []);
+
+  const uninstallApp = useCallback((appId: string) => {
+    setGameState(prev => {
+      const appDefinition = APP_REGISTRY[appId];
+      if (!appDefinition || !appDefinition.deletable) return prev;
+      
+      const filtered = prev.installedApps.filter(app => app.id !== appId);
+      return {
+        ...prev,
+        installedApps: filtered.map((app, index) => ({
+          ...app,
+          order: index + 1
+        }))
+      };
+    });
+  }, []);
+
+  const resetToDefaults = useCallback(() => {
+    setGameState(prev => ({
+      ...prev,
+      installedApps: INITIAL_GAME_STATE.installedApps
+    }));
+  }, []);
+
+  const changeAppTier = useCallback((appId: string, newTier: number) => {
+    setGameState(prev => ({
+      ...prev,
+      installedApps: prev.installedApps.map(app => 
+        app.id === appId 
+          ? { ...app, currentTier: newTier }
+          : app
+      )
+    }));
+  }, []);
+
+  // ===== COMPUTED VALUES =====
+  const appOrder = gameState.installedApps
+    .sort((a, b) => a.order - b.order)
+    .map(app => app.id);
+
+  const apps: (AppDefinition & InstalledApp)[] = gameState.installedApps
+    .sort((a, b) => a.order - b.order)
+    .map(installedApp => ({
+      ...APP_REGISTRY[installedApp.id],
+      ...installedApp
+    }));
+
+  const getAvailableApps = useCallback((): AppDefinition[] => {
+    const installedIds = gameState.installedApps.map(app => app.id);
+    return Object.values(APP_REGISTRY).filter(
+      app => !installedIds.includes(app.id)
+    );
+  }, [gameState.installedApps]);
+
+  const calculateMonthlyCosts = useCallback((): number => {
+    return gameState.installedApps.reduce((total, app) => {
+      const appDefinition = APP_REGISTRY[app.id];
+      if (appDefinition && appDefinition.tiers) {
+        const tierData = appDefinition.tiers.find(tier => tier.tier === app.currentTier);
+        return total + (tierData?.monthlyCost || 0);
+      }
+      return total;
+    }, 0);
+  }, [gameState.installedApps]);
+
+  const getAppTierData = useCallback((appId: string) => {
+    const appDefinition = APP_REGISTRY[appId];
+    const installedApp = gameState.installedApps.find(app => app.id === appId);
+    return {
+      tiers: appDefinition?.tiers || [],
+      currentTier: installedApp?.currentTier || 1
+    };
+  }, [gameState.installedApps]);
+
+  const reorderApps = useCallback((newApps: InstalledApp[]) => {
+    setGameState(prev => ({
+      ...prev,
+      installedApps: newApps
+    }));
+  }, []);
+
+  const updateDragState = useCallback((dragState: DragState) => {
+    setGameState(prev => ({
+      ...prev,
+      dragState
+    }));
+  }, []);
+
+  // ===== TIME INTERVAL MANAGEMENT =====
+  useEffect(() => {
+    if (!gameState.isPaused) {
+      intervalRef.current = setInterval(advanceTime, 1000);
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [gameState.isPaused, advanceTime]);
+
+  // ===== RESET FUNCTION =====
+  const resetGame = useCallback(() => {
+    setGameState(initialGameState);
+  }, []);
+
+  return {
+    // State
+    gameState,
+    
+    // Credits
+    credits: gameState.credits,
+    updateCredits,
+    setCredits,
+    
+    // Phases
+    gamePhase: gameState.gamePhase,
+    setGamePhase,
+    advanceGamePhase,
+    
+    // Time
+    gameTime: gameState.gameTime,
+    isPaused: gameState.isPaused,
+    pauseTime,
+    resumeTime,
+    setGameTime,
+    
+    // Apps
+    apps,
+    appOrder,
+    installedApps: gameState.installedApps,
+    dragState: gameState.dragState,
+    installApp,
+    uninstallApp,
+    reorderApps,
+    updateDragState,
+    resetToDefaults,
+    getAvailableApps,
+    changeAppTier,
+    calculateMonthlyCosts,
+    getAppTierData,
+    
+    // Global
+    resetGame
+  };
+};
+
+// Helper function for monthly cost calculation
+const calculateMonthlyCosts = (installedApps: InstalledApp[]): number => {
+  return installedApps.reduce((total, app) => {
+    const appDefinition = APP_REGISTRY[app.id];
+    if (appDefinition && appDefinition.tiers) {
+      const tierData = appDefinition.tiers.find(tier => tier.tier === app.currentTier);
+      return total + (tierData?.monthlyCost || 0);
+    }
+    return total;
+  }, 0);
+}; 

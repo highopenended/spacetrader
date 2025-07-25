@@ -1,9 +1,9 @@
 /**
- * Drag Handler Hook
+ * Window Drag Handler Hook
  * 
- * Reusable hook for handling drag functionality across components.
- * Consolidates drag logic from ScrAppWindow and AdminToolbar.
- * Supports optional viewport boundary constraints.
+ * Handles window positioning and resizing functionality.
+ * Used by ScrAppWindow and AdminToolbar for window management.
+ * Supports viewport boundary constraints and footer-aware positioning.
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
@@ -19,7 +19,7 @@ interface DragHandlerOptions {
   footerHeight?: number;
 }
 
-export const useDragHandler = (options: DragHandlerOptions = {}) => {
+export const useDragHandler_Windows = (options: DragHandlerOptions = {}) => {
   const {
     initialPosition = { x: 0, y: 0 },
     onPositionChange,

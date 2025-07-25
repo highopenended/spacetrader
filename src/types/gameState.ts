@@ -12,7 +12,7 @@
  * - WindowData: Structure for window management system
  * 
  * Used by:
- * - All game state hooks (useGameState_Time, useGameState_Phases, useGameState_Credits)
+ * - Unified game state hook (useGameState)
  * - All components that display game state
  * - Utility functions that manipulate game state
  * - Constants file for type safety
