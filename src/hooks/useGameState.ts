@@ -200,16 +200,7 @@ export const useGameState = () => {
     );
   }, [gameState.installedApps]);
 
-  const calculateMonthlyCosts = useCallback((): number => {
-    return gameState.installedApps.reduce((total, app) => {
-      const appDefinition = APP_REGISTRY[app.id];
-      if (appDefinition && appDefinition.tiers) {
-        const tierData = appDefinition.tiers.find(tier => tier.tier === app.currentTier);
-        return total + (tierData?.monthlyCost || 0);
-      }
-      return total;
-    }, 0);
-  }, [gameState.installedApps]);
+
 
   const getAppTierData = useCallback((appId: string) => {
     const appDefinition = APP_REGISTRY[appId];
@@ -281,22 +272,9 @@ export const useGameState = () => {
     resetToDefaults,
     getAvailableApps,
     changeAppTier,
-    calculateMonthlyCosts,
     getAppTierData,
     
     // Global
     resetGame
   };
-};
-
-// Helper function for monthly cost calculation
-const calculateMonthlyCosts = (installedApps: InstalledApp[]): number => {
-  return installedApps.reduce((total, app) => {
-    const appDefinition = APP_REGISTRY[app.id];
-    if (appDefinition && appDefinition.tiers) {
-      const tierData = appDefinition.tiers.find(tier => tier.tier === app.currentTier);
-      return total + (tierData?.monthlyCost || 0);
-    }
-    return total;
-  }, 0);
 }; 

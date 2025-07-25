@@ -37,7 +37,6 @@ function App() {
     installApp,
     uninstallApp,
     reorderApps,
-    calculateMonthlyCosts,
     getAvailableApps,
     resetToDefaults,
     resetGame
