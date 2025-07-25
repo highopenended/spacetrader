@@ -8,7 +8,7 @@ import PurgeZoneAppWindow from './components/scr-apps/purgeZoneApp/window/PurgeZ
 import ScrAppStoreAppWindow from './components/scr-apps/scrAppStoreApp/window/ScrAppStoreAppWindow';
 import { useGameState } from './hooks/useGameState';
 import { useWindowManager } from './hooks/useWindowManager';
-import { useDragHandler_Apps } from './hooks/useAppDragHandler';
+import { useDragHandler_Apps } from './hooks/useDragHandler_Apps';
 import { WindowData } from './types/gameState';
 import PurgeConfirmPopup from './components/ui/PurgeConfirmPopup';
 
@@ -24,7 +24,6 @@ function App() {
     isPaused,
     apps,
     appOrder,
-    dragState,
     installedApps,
     
     // Actions
@@ -38,7 +37,6 @@ function App() {
     installApp,
     uninstallApp,
     reorderApps,
-    updateDragState,
     calculateMonthlyCosts,
     getAvailableApps,
     resetToDefaults,
@@ -46,10 +44,8 @@ function App() {
   } = useGameState();
 
   // Set up app drag handler
-  const { handleDragStart, handleDragOver, handleDragEnd } = useDragHandler_Apps({
+  const { dragState, handleDragStart, handleDragOver, handleDragEnd } = useDragHandler_Apps({
     installedApps,
-    dragState,
-    onDragStateChange: updateDragState,
     onAppsReorder: reorderApps,
     onAppUninstall: uninstallApp
   });

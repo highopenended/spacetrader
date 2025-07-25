@@ -6,33 +6,33 @@
  * Separates UI interaction logic from game state logic.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 import { APP_REGISTRY } from '../constants/scrAppListConstants';
 import { InstalledApp, DragState } from '../types/scrAppListState';
 
-interface UseAppDragHandlerProps {
+interface UseDragHandler_AppsProps {
   installedApps: InstalledApp[];
-  dragState: DragState;
-  onDragStateChange: (dragState: DragState) => void;
   onAppsReorder: (apps: InstalledApp[]) => void;
   onAppUninstall: (appId: string) => void;
 }
 
 export const useDragHandler_Apps = ({
   installedApps,
-  dragState,
-  onDragStateChange,
   onAppsReorder,
   onAppUninstall
-}: UseAppDragHandlerProps) => {
+}: UseDragHandler_AppsProps) => {
+  const [dragState, setDragState] = useState<DragState>({
+    isDragging: false,
+    draggedAppId: null
+  });
   
   const handleDragStart = useCallback((event: any) => {
-    onDragStateChange({
+    setDragState({
       isDragging: true,
       draggedAppId: event.active.id
     });
-  }, [onDragStateChange]);
+  }, []);
 
   const handleDragOver = useCallback((event: any) => {
     // Only track purge zone window for deletion effects
@@ -43,7 +43,7 @@ export const useDragHandler_Apps = ({
     const { active, over } = event;
     
     // Reset drag state
-    onDragStateChange({
+    setDragState({
       isDragging: false,
       draggedAppId: null
     });
@@ -75,9 +75,10 @@ export const useDragHandler_Apps = ({
       }));
       onAppsReorder(reorderedWithNewOrder);
     }
-  }, [installedApps, onDragStateChange, onAppUninstall, onAppsReorder]);
+  }, [installedApps, onAppUninstall, onAppsReorder]);
 
   return {
+    dragState,
     handleDragStart,
     handleDragOver,
     handleDragEnd

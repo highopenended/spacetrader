@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import './AdminToolbar.css';
 import { GamePhase, GameTime } from '../../types/gameState';
 import { advanceGameTime } from '../../utils/gameStateUtils';
-import { useDragHandler_Windows } from '../../hooks/useDragHandler';
+import { useDragHandler_Windows } from '../../hooks/useDragHandler_Windows';
 import { clampPositionToBounds } from '../../utils/viewportConstraints';
 
 interface AdminToolbarProps {

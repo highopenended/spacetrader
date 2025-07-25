@@ -12,7 +12,7 @@ import { GameTime, GamePhase } from '../types/gameState';
 import { advanceGameTime, getNextGamePhase } from '../utils/gameStateUtils';
 import { INITIAL_GAME_STATE } from '../constants/gameConstants';
 import { APP_REGISTRY } from '../constants/scrAppListConstants';
-import { AppDefinition, InstalledApp, DragState, AppType } from '../types/scrAppListState';
+import { AppDefinition, InstalledApp } from '../types/scrAppListState';
 
 interface GameState {
   // Core game data
@@ -24,7 +24,6 @@ interface GameState {
   
   // App management
   installedApps: InstalledApp[];
-  dragState: DragState;
 }
 
 const initialGameState: GameState = {
@@ -33,8 +32,7 @@ const initialGameState: GameState = {
   gameTime: INITIAL_GAME_STATE.gameTime,
   isPaused: INITIAL_GAME_STATE.isPaused,
   lastUpdate: INITIAL_GAME_STATE.lastUpdate,
-  installedApps: INITIAL_GAME_STATE.installedApps,
-  dragState: INITIAL_GAME_STATE.dragState
+  installedApps: INITIAL_GAME_STATE.installedApps
 };
 
 export const useGameState = () => {
@@ -50,9 +48,7 @@ export const useGameState = () => {
     setGameState(prev => ({ ...prev, credits: amount }));
   }, []);
 
-  const resetCredits = useCallback(() => {
-    setGameState(prev => ({ ...prev, credits: INITIAL_GAME_STATE.credits }));
-  }, []);
+
 
   // ===== PHASE MANAGEMENT =====
   const setGamePhase = useCallback((phase: GamePhase) => {
@@ -66,9 +62,7 @@ export const useGameState = () => {
     });
   }, []);
 
-  const resetGamePhase = useCallback(() => {
-    setGameState(prev => ({ ...prev, gamePhase: INITIAL_GAME_STATE.gamePhase }));
-  }, []);
+
 
   // ===== TIME MANAGEMENT =====
   const advanceTime = useCallback(() => {
@@ -117,14 +111,7 @@ export const useGameState = () => {
     }));
   }, []);
 
-  const resetGameTime = useCallback(() => {
-    setGameState(prev => ({
-      ...prev,
-      gameTime: INITIAL_GAME_STATE.gameTime,
-      isPaused: false,
-      lastUpdate: Date.now()
-    }));
-  }, []);
+
 
   // ===== APP MANAGEMENT =====
 
@@ -240,13 +227,6 @@ export const useGameState = () => {
     }));
   }, []);
 
-  const updateDragState = useCallback((dragState: DragState) => {
-    setGameState(prev => ({
-      ...prev,
-      dragState
-    }));
-  }, []);
-
   // ===== TIME INTERVAL MANAGEMENT =====
   useEffect(() => {
     if (!gameState.isPaused) {
@@ -295,11 +275,9 @@ export const useGameState = () => {
     apps,
     appOrder,
     installedApps: gameState.installedApps,
-    dragState: gameState.dragState,
     installApp,
     uninstallApp,
     reorderApps,
-    updateDragState,
     resetToDefaults,
     getAvailableApps,
     changeAppTier,
