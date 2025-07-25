@@ -22,6 +22,7 @@
  */
 
 import React from 'react';
+import { ScrapObject } from './scrapTypes';
 
 export interface GameTime {
   annumReckoning: number;  // Year
@@ -44,12 +45,32 @@ export type GamePhase =
   | 'cathedraDominus'
   | 'cathedraUltima';
 
+export interface PlayerState {
+  // Protection from various hazards
+  isProtectedFromSharp: boolean;
+  isProtectedFromRadiation: boolean;
+  isProtectedFromCorrosive: boolean;
+  isProtectedFromExplosive: boolean;
+  isProtectedFromQuantum: boolean;
+  
+  // Additional player properties can be added here
+  // health?: number;
+  // experience?: number;
+  // equipment?: Equipment[];
+}
+
 export interface GameState {
   gamePhase: GamePhase;
   credits: number;
   currentTime: GameTime;
   isPaused: boolean;
   lastUpdate: number;      // Timestamp of last update
+  
+  // Player state
+  playerState: PlayerState;
+  
+  // Scrap system
+  scrapObjects: ScrapObject[];  // Active scrap objects on screen
 }
 
 export interface WindowData {

@@ -25,7 +25,7 @@
  * Dependencies: gameState.ts (for type imports only)
  */
 
-import { GameTime, GamePhase } from '../types/gameState';
+import { GameTime, GamePhase, PlayerState } from '../types/gameState';
 import { DEFAULT_INSTALLED_APPS } from './scrAppListConstants';
 
 // Initial game state constants
@@ -38,6 +38,14 @@ export const INITIAL_GAME_TIME: GameTime = {
   grind: 1,
   tithe: 2,
   age: 6
+};
+
+export const INITIAL_PLAYER_STATE: PlayerState = {
+  isProtectedFromSharp: false,
+  isProtectedFromRadiation: false,
+  isProtectedFromCorrosive: false,
+  isProtectedFromExplosive: false,
+  isProtectedFromQuantum: false
 };
 
 // Complete initial game state (for unified hook)
@@ -54,10 +62,8 @@ export const INITIAL_GAME_STATE = {
     installedAt: Date.now(),
     currentTier: 1
   })),
-  dragState: {
-    isDragging: false,
-    draggedAppId: null
-  }
+  playerState: INITIAL_PLAYER_STATE,
+  scrapObjects: [] // Start with no scrap objects
 };
 
 // Game phase configuration data
