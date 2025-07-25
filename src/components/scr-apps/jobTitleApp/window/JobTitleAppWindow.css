@@ -1,0 +1,32 @@
+.work-button {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  border: 1px solid #444;
+  color: #c6c6c6;
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-small);
+  text-shadow: 0 0 2px #333832;
+  transition: all 0.2s ease-in-out;
+}
+
+.work-button:hover:not(:disabled) {
+  border-color: #666;
+  background: linear-gradient(135deg, #222 0%, #333 100%);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.work-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.work-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #333 0%, #444 100%);
+}
+
+.work-button.working {
+  color: #00ff00;
+  text-shadow: 0 0 4px #00ff00;
+} 

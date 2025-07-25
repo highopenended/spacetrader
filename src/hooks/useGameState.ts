@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-import { GameTime, GamePhase } from '../types/gameState';
+import { GameTime, GamePhase, GameMode } from '../types/gameState';
 import { advanceGameTime, getNextGamePhase } from '../utils/gameStateUtils';
 import { INITIAL_GAME_STATE } from '../constants/gameConstants';
 import { APP_REGISTRY } from '../constants/scrAppListConstants';
@@ -24,6 +24,9 @@ interface GameState {
   
   // App management
   installedApps: InstalledApp[];
+  
+  // Work mode state
+  gameMode: GameMode;
 }
 
 const initialGameState: GameState = {
@@ -32,12 +35,14 @@ const initialGameState: GameState = {
   gameTime: INITIAL_GAME_STATE.gameTime,
   isPaused: INITIAL_GAME_STATE.isPaused,
   lastUpdate: INITIAL_GAME_STATE.lastUpdate,
-  installedApps: INITIAL_GAME_STATE.installedApps
+  installedApps: INITIAL_GAME_STATE.installedApps,
+  gameMode: INITIAL_GAME_STATE.gameMode
 };
 
 export const useGameState = () => {
   const [gameState, setGameState] = useState<GameState>(initialGameState);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const workSessionRef = useRef<NodeJS.Timeout | null>(null);
 
   // ===== CREDITS MANAGEMENT =====
   const updateCredits = useCallback((amount: number) => {
@@ -48,7 +53,16 @@ export const useGameState = () => {
     setGameState(prev => ({ ...prev, credits: amount }));
   }, []);
 
-
+  // ===== WORK MODE MANAGEMENT =====
+  const beginWorkSession = useCallback(() => {
+    setGameState(prev => ({ ...prev, gameMode: 'workMode' }));
+    
+    // 5 second timer for testing
+    workSessionRef.current = setTimeout(() => {
+      setGameState(prev => ({ ...prev, gameMode: 'freeMode' }));
+      workSessionRef.current = null;
+    }, 5000);
+  }, []);
 
   // ===== PHASE MANAGEMENT =====
   const setGamePhase = useCallback((phase: GamePhase) => {
@@ -61,8 +75,6 @@ export const useGameState = () => {
       return nextPhase ? { ...prev, gamePhase: nextPhase } : prev;
     });
   }, []);
-
-
 
   // ===== TIME MANAGEMENT =====
   const advanceTime = useCallback(() => {
@@ -110,8 +122,6 @@ export const useGameState = () => {
       lastUpdate: Date.now()
     }));
   }, []);
-
-
 
   // ===== APP MANAGEMENT =====
 
@@ -200,8 +210,6 @@ export const useGameState = () => {
     );
   }, [gameState.installedApps]);
 
-
-
   const getAppTierData = useCallback((appId: string) => {
     const appDefinition = APP_REGISTRY[appId];
     const installedApp = gameState.installedApps.find(app => app.id === appId);
@@ -236,6 +244,15 @@ export const useGameState = () => {
     };
   }, [gameState.isPaused, advanceTime]);
 
+  // ===== CLEANUP =====
+  useEffect(() => {
+    return () => {
+      if (workSessionRef.current) {
+        clearTimeout(workSessionRef.current);
+      }
+    };
+  }, []);
+
   // ===== RESET FUNCTION =====
   const resetGame = useCallback(() => {
     setGameState(initialGameState);
@@ -261,6 +278,10 @@ export const useGameState = () => {
     pauseTime,
     resumeTime,
     setGameTime,
+    
+    // Work Mode
+    gameMode: gameState.gameMode,
+    beginWorkSession,
     
     // Apps
     apps,

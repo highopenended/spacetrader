@@ -25,12 +25,13 @@
  * Dependencies: gameState.ts (for type imports only)
  */
 
-import { GameTime, GamePhase, PlayerState } from '../types/gameState';
+import { GameTime, GamePhase, GameMode, PlayerState } from '../types/gameState';
 import { DEFAULT_INSTALLED_APPS } from './scrAppListConstants';
 
 // Initial game state constants
 export const INITIAL_CREDITS = 0;
 export const INITIAL_GAME_PHASE: GamePhase = 'lineRat';
+export const INITIAL_GAME_MODE: GameMode = 'freeMode';
 
 export const INITIAL_GAME_TIME: GameTime = {
   annumReckoning: 242,
@@ -63,7 +64,8 @@ export const INITIAL_GAME_STATE = {
     currentTier: 1
   })),
   playerState: INITIAL_PLAYER_STATE,
-  scrapObjects: [] // Start with no scrap objects
+  scrapObjects: [], // Start with no scrap objects
+  gameMode: INITIAL_GAME_MODE
 };
 
 // Game phase configuration data

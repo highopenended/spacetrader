@@ -6,6 +6,7 @@ import AgeAppWindow from './components/scr-apps/ageApp/window/AgeAppWindow';
 import JobTitleAppWindow from './components/scr-apps/jobTitleApp/window/JobTitleAppWindow';
 import PurgeZoneAppWindow from './components/scr-apps/purgeZoneApp/window/PurgeZoneAppWindow';
 import ScrAppStoreAppWindow from './components/scr-apps/scrAppStoreApp/window/ScrAppStoreAppWindow';
+import WorkScreen from './components/workMode/WorkScreen';
 import { useGameState } from './hooks/useGameState';
 import { useWindowManager } from './hooks/useWindowManager';
 import { useDragHandler_Apps } from './hooks/useDragHandler_Apps';
@@ -25,6 +26,7 @@ function App() {
     apps,
     appOrder,
     installedApps,
+    gameMode,
     
     // Actions
     updateCredits,
@@ -39,7 +41,8 @@ function App() {
     reorderApps,
     getAvailableApps,
     resetToDefaults,
-    resetGame
+    resetGame,
+    beginWorkSession
   } = useGameState();
 
   // Set up app drag handler
@@ -339,6 +342,8 @@ function App() {
         <JobTitleAppWindow
           key={window.id}
           gamePhase={gamePhase}
+          gameMode={gameMode}
+          onBeginWorkSession={beginWorkSession}
           windowId={window.id}
           appType={window.appType}
           position={window.position}
@@ -448,6 +453,8 @@ function App() {
           onConfirm={handleConfirmPurge}
           onCancel={handleCancelPurge}
         />
+
+        {gameMode === 'workMode' && <WorkScreen />}
 
         <DragOverlay 
           zIndex={2000}

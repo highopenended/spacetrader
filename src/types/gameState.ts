@@ -45,6 +45,8 @@ export type GamePhase =
   | 'cathedraDominus'
   | 'cathedraUltima';
 
+export type GameMode = 'freeMode' | 'workMode';
+
 export interface PlayerState {
   // Protection from various hazards
   isProtectedFromSharp: boolean;
