@@ -18,7 +18,7 @@ export const ASSEMBLY_LINE_CONFIG = {
     trackHeight: '0.4vh' // Height of the actual track line (converted from 4px)
   },
   behavior: {
-    speed: 150, // Pixels per second for frame-rate independent movement
+    speed: 15, // Viewport width units per second (15vw/s) for zoom-independent movement
     spawnRate: 1000 // Milliseconds between scrap spawns
   },
   visuals: {
@@ -30,7 +30,7 @@ export const ASSEMBLY_LINE_CONFIG = {
  * Active scrap object with position and state
  */
 export interface ActiveScrapObject extends ScrapObject {
-  x: number;           // Current X position (pixels from left)
+  x: number;           // Current X position (vw units from left)
   y: number;           // Current Y position (pixels from bottom)
   isCollected: boolean; // Whether scrap has been collected
   isOffScreen: boolean; // Whether scrap has moved off screen
@@ -68,13 +68,13 @@ export const getAssemblyLineConfig = () => {
 };
 
 /**
- * Calculate frame-rate independent movement distance
+ * Calculate frame-rate independent movement distance in vw units
  * @param deltaTime - Time elapsed since last frame (milliseconds)
- * @param speedPxPerSecond - Movement speed in pixels per second
- * @returns Distance to move in pixels
+ * @param speedVwPerSecond - Movement speed in viewport width units per second
+ * @returns Distance to move in vw units
  */
-export const calculateMovementDistance = (deltaTime: number, speedPxPerSecond: number): number => {
-  return (deltaTime / 1000) * speedPxPerSecond;
+export const calculateMovementDistance = (deltaTime: number, speedVwPerSecond: number): number => {
+  return (deltaTime / 1000) * speedVwPerSecond;
 };
 
 /**
@@ -188,11 +188,8 @@ export const updateScrapPositions = (
     ASSEMBLY_LINE_CONFIG.behavior.speed
   );
   
-  // Convert pixel movement to vw units for relative positioning
-  const movementVw = (movementDistance / window.innerWidth) * 100;
-  
   const updatedScrap = spawnState.activeScrap.map(scrap => {
-    const newX = scrap.x - movementVw;
+    const newX = scrap.x - movementDistance;
     const isOffScreen = newX < -10; // Mark as off-screen when it goes off the left (-10vw)
     
     return {
