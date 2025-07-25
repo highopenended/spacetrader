@@ -3,7 +3,8 @@ import './TerminalScreen.css';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import SortableItem from '../scr-apps/SortableItem';
-import HideWindowsToggle from './HideWindowsToggle';
+import DockWindowsButton from './DockWindowsButton';
+import TerminalToggle from './TerminalToggle';
 
 import { GamePhase, GameTime } from '../../types/gameState';
 import { getAppProps } from '../../utils/appPropsBuilder';
@@ -19,8 +20,7 @@ interface TerminalScreenProps {
   pendingDeleteAppId?: string | null;
   openAppTypes?: Set<string>;
   overId?: any; // For drag-over detection (window docking)
-  windowsHidden?: boolean;
-  onToggleWindowVisibility?: () => void;
+  onDockWindows?: () => void;
 }
 
 const TerminalScreen: React.FC<TerminalScreenProps> = ({ 
@@ -34,8 +34,7 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   pendingDeleteAppId = null,
   openAppTypes = new Set(),
   overId,
-  windowsHidden = false,
-  onToggleWindowVisibility
+  onDockWindows
 }) => {
   // Resize state
   const [height, setHeight] = useState<number>(window.innerHeight); // Start at full viewport height
@@ -140,8 +139,6 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
     >
         <div 
           className={`terminal-header ${isMinimized ? 'minimized' : ''}`}
-          onClick={handleClick}
-          style={{ cursor: 'pointer' }}
         >
           <div className="terminal-title">
             SCRAPCOM TERMINAL
@@ -153,10 +150,17 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
           </div>
         </div>
         
-        <HideWindowsToggle 
-          windowsHidden={windowsHidden}
-          onToggle={onToggleWindowVisibility || (() => {})}
-        />
+        <div className="terminal-controls">
+          <DockWindowsButton 
+            onDockWindows={onDockWindows || (() => {})}
+            hasOpenWindows={openAppTypes.size > 0}
+            openWindowCount={openAppTypes.size}
+          />
+          <TerminalToggle 
+            isMinimized={isMinimized}
+            onToggle={handleClick}
+          />
+        </div>
         
         <div 
           ref={setNodeRef}

@@ -54,14 +54,13 @@ function App() {
 
   const {
     windows,
-    windowsHidden,
     updateWindowPosition,
     updateWindowSize,
     openOrCloseWindow,
     closeWindow,
     closeWindowsByAppType,
     bringToFront,
-    toggleWindowVisibility,
+    dockAllWindows,
   } = useWindowManager();
 
   const [pendingDelete, setPendingDelete] = React.useState<{
@@ -429,8 +428,7 @@ function App() {
           pendingDeleteAppId={pendingDelete.appId}
           openAppTypes={new Set(windows.map(w => w.appType))}
           overId={overId}
-          windowsHidden={windowsHidden}
-          onToggleWindowVisibility={toggleWindowVisibility}
+          onDockWindows={dockAllWindows}
         />
         <AdminToolbar 
           credits={credits}
@@ -446,7 +444,7 @@ function App() {
           resumeTime={resumeTime}
           resetGame={resetGame}
         />
-        {!windowsHidden && windows.map(renderWindow)}
+        {windows.map(renderWindow)}
         <PurgeConfirmPopup
           open={!!pendingDelete.appId}
           appName={pendingDelete.appId ? (apps.find((a: any) => a.id === pendingDelete.appId)?.name || pendingDelete.appId) : ''}
