@@ -13,9 +13,9 @@ import { MutatorRegistry, MutatorId } from '../constants/mutatorRegistry';
 // Assembly Line Configuration - Shared between assembly line and scrap objects
 export const ASSEMBLY_LINE_CONFIG = {
   layout: {
-    bottom: 200, // Distance from bottom of screen (px)
-    height: 60,  // Height of assembly line area (px)
-    trackHeight: 4 // Height of the actual track line (px)
+    bottom: '20vh', // Distance from bottom of screen (converted from 200px)
+    height: '6vh',  // Height of assembly line area (converted from 60px)
+    trackHeight: '0.4vh' // Height of the actual track line (converted from 4px)
   },
   behavior: {
     speed: 150, // Pixels per second for frame-rate independent movement
@@ -27,6 +27,34 @@ export const ASSEMBLY_LINE_CONFIG = {
 } as const;
 
 /**
+ * Active scrap object with position and state
+ */
+export interface ActiveScrapObject extends ScrapObject {
+  x: number;           // Current X position (pixels from left)
+  y: number;           // Current Y position (pixels from bottom)
+  isCollected: boolean; // Whether scrap has been collected
+  isOffScreen: boolean; // Whether scrap has moved off screen
+}
+
+/**
+ * Scrap spawn state management
+ */
+export interface ScrapSpawnState {
+  lastSpawnTime: number;
+  activeScrap: ActiveScrapObject[];
+  spawnEnabled: boolean;
+}
+
+/**
+ * Initialize scrap spawn state
+ */
+export const initializeScrapSpawnState = (): ScrapSpawnState => ({
+  lastSpawnTime: 0,
+  activeScrap: [],
+  spawnEnabled: true
+});
+
+/**
  * Get current assembly line configuration (updates width on window resize)
  */
 export const getAssemblyLineConfig = () => {
@@ -34,7 +62,7 @@ export const getAssemblyLineConfig = () => {
     ...ASSEMBLY_LINE_CONFIG,
     layout: {
       ...ASSEMBLY_LINE_CONFIG.layout,
-      width: window.innerWidth // Full screen width
+      width: '100vw' // Full screen width
     }
   };
 };
@@ -108,6 +136,149 @@ export const createRandomScrapObject = (options: {
     mutators,
     createdAt: Date.now()
   };
+};
+
+/**
+ * Spawn a new scrap object on the assembly line
+ * @param currentTime - Current timestamp
+ * @param spawnState - Current spawn state
+ * @returns Updated spawn state with new scrap if spawned
+ */
+export const spawnScrapIfReady = (
+  currentTime: number, 
+  spawnState: ScrapSpawnState
+): ScrapSpawnState => {
+  if (!spawnState.spawnEnabled) return spawnState;
+  
+  const timeSinceLastSpawn = currentTime - spawnState.lastSpawnTime;
+  const spawnInterval = ASSEMBLY_LINE_CONFIG.behavior.spawnRate;
+  
+  if (timeSinceLastSpawn >= spawnInterval) {
+    const newScrap = createRandomScrapObject();
+    const activeScrap: ActiveScrapObject = {
+      ...newScrap,
+      x: 110, // Start off-screen to the right (110vw)
+      y: 0, // Will be positioned relative to assembly line
+      isCollected: false,
+      isOffScreen: false
+    };
+    
+    return {
+      ...spawnState,
+      lastSpawnTime: currentTime,
+      activeScrap: [...spawnState.activeScrap, activeScrap]
+    };
+  }
+  
+  return spawnState;
+};
+
+/**
+ * Update positions of all active scrap objects
+ * @param deltaTime - Time elapsed since last frame
+ * @param spawnState - Current spawn state
+ * @returns Updated spawn state with new positions
+ */
+export const updateScrapPositions = (
+  deltaTime: number, 
+  spawnState: ScrapSpawnState
+): ScrapSpawnState => {
+  const movementDistance = calculateMovementDistance(
+    deltaTime, 
+    ASSEMBLY_LINE_CONFIG.behavior.speed
+  );
+  
+  // Convert pixel movement to vw units for relative positioning
+  const movementVw = (movementDistance / window.innerWidth) * 100;
+  
+  const updatedScrap = spawnState.activeScrap.map(scrap => {
+    const newX = scrap.x - movementVw;
+    const isOffScreen = newX < -10; // Mark as off-screen when it goes off the left (-10vw)
+    
+    return {
+      ...scrap,
+      x: newX,
+      isOffScreen
+    };
+  });
+  
+  // Remove off-screen scrap
+  const activeScrap = updatedScrap.filter(scrap => !scrap.isOffScreen);
+  
+  return {
+    ...spawnState,
+    activeScrap
+  };
+};
+
+/**
+ * Collect a scrap object (mark as collected)
+ * @param scrapId - ID of scrap to collect
+ * @param spawnState - Current spawn state
+ * @returns Updated spawn state with collected scrap
+ */
+export const collectScrap = (
+  scrapId: string, 
+  spawnState: ScrapSpawnState
+): { spawnState: ScrapSpawnState; collectedScrap?: ActiveScrapObject } => {
+  const scrapIndex = spawnState.activeScrap.findIndex(scrap => scrap.id === scrapId);
+  
+  if (scrapIndex === -1) {
+    return { spawnState };
+  }
+  
+  const scrap = spawnState.activeScrap[scrapIndex];
+  const updatedScrap = { ...scrap, isCollected: true };
+  
+  const newActiveScrap = [...spawnState.activeScrap];
+  newActiveScrap[scrapIndex] = updatedScrap;
+  
+  return {
+    spawnState: {
+      ...spawnState,
+      activeScrap: newActiveScrap
+    },
+    collectedScrap: updatedScrap
+  };
+};
+
+/**
+ * Remove collected scrap from active list
+ * @param spawnState - Current spawn state
+ * @returns Updated spawn state with collected scrap removed
+ */
+export const cleanupCollectedScrap = (spawnState: ScrapSpawnState): ScrapSpawnState => {
+  const activeScrap = spawnState.activeScrap.filter(scrap => !scrap.isCollected);
+  
+  return {
+    ...spawnState,
+    activeScrap
+  };
+};
+
+/**
+ * Get scrap objects that are within collection range of a point
+ * @param x - X coordinate to check
+ * @param y - Y coordinate to check
+ * @param range - Collection range in pixels
+ * @param spawnState - Current spawn state
+ * @returns Array of scrap objects within range
+ */
+export const getScrapInRange = (
+  x: number, 
+  y: number, 
+  range: number, 
+  spawnState: ScrapSpawnState
+): ActiveScrapObject[] => {
+  return spawnState.activeScrap.filter(scrap => {
+    if (scrap.isCollected) return false;
+    
+    const distance = Math.sqrt(
+      Math.pow(scrap.x - x, 2) + Math.pow(scrap.y - y, 2)
+    );
+    
+    return distance <= range;
+  });
 };
 
 /**

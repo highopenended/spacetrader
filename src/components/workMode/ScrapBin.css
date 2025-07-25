@@ -1,11 +1,12 @@
 .scrap-bin {
   position: fixed;
-  bottom: 120px;
+  bottom: 4vh; /* Moved down below assembly line (was 12vh) */
   left: 50%;
   transform: translateX(-50%);
-  width: 80px;
-  height: 80px;
+  width: 8vw; /* Converted from 80px */
+  height: 8vw; /* Converted from 80px - using vw to maintain square aspect ratio */
   z-index: 101;
+  user-select: none;
 }
 
 .scrap-bin-container {
@@ -25,12 +26,12 @@
 }
 
 .scrap-bin-icon {
-  font-size: 24px;
-  margin-bottom: 4px;
+  font-size: 2.4vw; /* Converted from 24px */
+  margin-bottom: 0.4vw; /* Converted from 4px */
 }
 
 .scrap-bin-label {
-  font-size: 8px;
+  font-size: 0.8vw; /* Converted from 8px */
   color: #c6c6c6;
   text-shadow: 0 0 2px #333832;
   font-family: var(--font-family-primary);

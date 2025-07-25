@@ -1,10 +1,18 @@
 import React from 'react';
+import { ActiveScrapObject, getScrapAppearance } from '../../utils/scrapUtils';
 import './ScrapItem.css';
 
-const ScrapItem: React.FC = () => {
+interface ScrapItemProps {
+  scrap: ActiveScrapObject;
+  style?: React.CSSProperties;
+}
+
+const ScrapItem: React.FC<ScrapItemProps> = ({ scrap, style }) => {
+  const appearance = getScrapAppearance(scrap);
+  
   return (
-    <div className="scrap-item">
-      <div className="scrap-content">🔩</div>
+    <div className="scrap-item" style={style}>
+      <div className="scrap-content">{appearance}</div>
     </div>
   );
 };
