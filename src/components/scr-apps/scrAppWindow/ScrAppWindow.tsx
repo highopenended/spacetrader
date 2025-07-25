@@ -92,17 +92,18 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   const [currentSize, setCurrentSize] = useState(size);
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
-  const [isFooterExpanded, setIsFooterExpanded] = useState(false);
+  const [showUpgradeInfo, setShowUpgradeInfo] = useState(false);
+  const [savedSize, setSavedSize] = useState(size); // Save original size when switching to upgrade info
+  const [upgradeInfoSize, setUpgradeInfoSize] = useState({ width: 300, height: 200 }); // Default upgrade info size
 
   // Use shared drag handler for window dragging with viewport constraints
-  const footerHeight = isFooterExpanded ? 140 : 20;
   const { elementRef: windowRef, position: currentPosition, isDragging, handleMouseDown: dragMouseDown, setPosition } = useDragHandler_Windows({
     initialPosition: position,
     onPositionChange,
     onBringToFront, // Bring window to front when drag starts
     constrainToViewport: true,
     elementSize: currentSize,
-    footerHeight
+    footerHeight: 0 // No footer anymore
   });
 
   // Get tier data for this app
@@ -128,8 +129,6 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
       windowTitle: title
     }
   });
-
-
 
   const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering drag
@@ -170,9 +169,32 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     onClose();
   }, [onClose]);
 
-  const handleFooterToggle = useCallback(() => {
-    setIsFooterExpanded(prev => !prev);
-  }, []);
+  const handleUpgradeInfoToggle = useCallback(() => {
+    if (!showUpgradeInfo) {
+      // Switching to upgrade info - save current size and resize if needed
+      setSavedSize(currentSize);
+      
+      // Only expand if current size is smaller than upgrade info size
+      const needsExpansion = currentSize.width < upgradeInfoSize.width || currentSize.height < upgradeInfoSize.height;
+      
+      if (needsExpansion) {
+        const newSize = {
+          width: Math.max(currentSize.width, upgradeInfoSize.width),
+          height: Math.max(currentSize.height, upgradeInfoSize.height)
+        };
+        setCurrentSize(newSize);
+        onSizeChange?.(newSize);
+        onWidthChange?.(newSize.width);
+      }
+    } else {
+      // Switching back to normal content - restore saved size
+      setCurrentSize(savedSize);
+      onSizeChange?.(savedSize);
+      onWidthChange?.(savedSize.width);
+    }
+    
+    setShowUpgradeInfo(prev => !prev);
+  }, [showUpgradeInfo, currentSize, savedSize, upgradeInfoSize, onSizeChange, onWidthChange]);
 
   const handleUpgrade = useCallback(() => {
     const nextTier = tierData.currentTier + 1;
@@ -215,20 +237,12 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     }
   }, [currentSize.width, isResizing, onWidthChange]);
 
-  // Check position when footer expands/collapses
+  // Update saved size when window is manually resized
   useEffect(() => {
-    const constrainedPosition = clampPositionToBounds(currentPosition, currentSize, footerHeight);
-    
-    // Only update if position needs to change
-    if (constrainedPosition.x !== currentPosition.x || constrainedPosition.y !== currentPosition.y) {
-      setPosition(constrainedPosition);
-      
-      // Report the position change
-      onPositionChange?.(constrainedPosition);
+    if (!showUpgradeInfo) {
+      setSavedSize(currentSize);
     }
-  }, [isFooterExpanded, currentSize.width, currentSize.height]); // Re-check when footer or size changes
-
-  // Footer doesn't affect window height anymore - it protrudes outside
+  }, [currentSize, showUpgradeInfo]);
 
   const currentTier = tierData.currentTier;
   const nextTier = currentTier + 1;
@@ -249,10 +263,55 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     setPurgeNodeDragRef(node);
   }, [setPurgeNodeDragRef]);
 
-      return (
-      <div 
-        ref={combinedWindowRef}
-        className={`scr-app-window${isDragging ? ' window-dragging' : ''}${isResizing ? ' window-resizing' : ''}`}
+  // Render upgrade info content
+  const renderUpgradeInfo = () => (
+    <div className="window-content-padded">
+      <div className="window-column-layout">
+        <div className="tier-info-line">
+          App Tier: {currentTier}
+        </div>
+        <div className="monthly-info">
+          Monthly: ₵{currentTierData?.monthlyCost || 0}/cycle
+        </div>
+        <div className="tier-description">
+          {canUpgrade ? nextTierData.information : currentTierData?.information || 'No information available'}
+        </div>
+        <div className="footer-buttons">
+          <div className="button-group">
+            <div className="button-cost-text">
+              ₵{currentTierData?.flatDowngradeCost || 0}
+            </div>
+            <button 
+              className="downgrade-button" 
+              onClick={handleDowngrade}
+              disabled={!canDowngrade}
+              style={dropZoneEffects.buttonStyles}
+            >
+              Downgrade
+            </button>
+          </div>
+          <div className="button-group">
+            <div className="button-cost-text">
+              ₵{nextTierData?.flatUpgradeCost || 0}
+            </div>
+            <button 
+              className="upgrade-button" 
+              onClick={handleUpgrade}
+              disabled={!canUpgrade}
+              style={dropZoneEffects.buttonStyles}
+            >
+              Upgrade
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div 
+      ref={combinedWindowRef}
+      className={`scr-app-window${isDragging ? ' window-dragging' : ''}${isResizing ? ' window-resizing' : ''}`}
       style={{ 
         left: currentPosition.x, 
         top: currentPosition.y,
@@ -271,19 +330,34 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
       <div 
         className="window-header"
         onMouseDown={dragMouseDown}
-        onDoubleClick={handleDoubleClick}
         {...purgeNodeDragAttributes}
         {...purgeNodeDragListeners}
         style={dropZoneEffects.headerStyles}
       >
-        <div className="window-title">{title}</div>
+        <div 
+          className="window-title"
+          onDoubleClick={handleDoubleClick}
+        >
+          {title}
+        </div>
+        <button 
+          className="window-upgrade-info-button"
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent triggering drag
+            handleUpgradeInfoToggle();
+          }}
+          title={showUpgradeInfo ? "Show App Content" : "Show Upgrade Info"}
+          style={dropZoneEffects.buttonStyles}
+        >
+          {showUpgradeInfo ? "◀" : "▶"}
+        </button>
         <button 
           className="window-minimize-button"
           onClick={(e) => {
             e.stopPropagation(); // Prevent triggering drag
             onClose();
           }}
-          title="Minimize (or double-click header)"
+          title="Minimize (or double-click title)"
           style={dropZoneEffects.buttonStyles}
         >
           −
@@ -297,12 +371,12 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
         </div>
       )}
       
-      {/* Section 2: App Content */}
+      {/* Section 2: App Content or Upgrade Info */}
       <div 
         className="window-content"
         style={dropZoneEffects.contentStyles}
       >
-        {children}
+        {showUpgradeInfo ? renderUpgradeInfo() : children}
       </div>
       
       {/* DOCK OVERLAY: Show dock message when held over terminal */}
@@ -313,68 +387,6 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
           </div>
         </div>
       )}
-      
-      {/* Section 3: Collapsible Footer - positioned outside window */}
-      <div 
-        className={`window-footer ${isFooterExpanded ? 'expanded' : 'collapsed'}`}
-        style={dropZoneEffects.footerStyles}
-      >
-        <div 
-          className="footer-toggle" 
-          onClick={handleFooterToggle}
-          style={dropZoneEffects.buttonStyles}
-        >
-          {isFooterExpanded ? '▲ HIDE' : '▼ DATA'}
-        </div>
-        
-        {isFooterExpanded && (
-          <div 
-            className="footer-content"
-            style={dropZoneEffects.footerContentStyles}
-          >
-            <div className="tier-info-line">
-              App Tier: {currentTier}
-            </div>
-            <div className="monthly-info">
-              Monthly: ₵{currentTierData?.monthlyCost || 0}/cycle
-            </div>
-            <div 
-              className="tier-description"
-              style={dropZoneEffects.tierDescriptionStyles}
-            >
-              {canUpgrade ? nextTierData.information : currentTierData?.information || 'No information available'}
-            </div>
-            <div className="footer-buttons">
-              <div className="button-group">
-                <div className="button-cost-text">
-                  ₵{currentTierData?.flatDowngradeCost || 0}
-                </div>
-                <button 
-                  className="downgrade-button" 
-                  onClick={handleDowngrade}
-                  disabled={!canDowngrade}
-                  style={dropZoneEffects.buttonStyles}
-                >
-                  Downgrade
-                </button>
-              </div>
-              <div className="button-group">
-                <div className="button-cost-text">
-                  ₵{nextTierData?.flatUpgradeCost || 0}
-                </div>
-                <button 
-                  className="upgrade-button" 
-                  onClick={handleUpgrade}
-                  disabled={!canUpgrade}
-                  style={dropZoneEffects.buttonStyles}
-                >
-                  Upgrade
-              </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
       
       <div 
         className="resize-handle"

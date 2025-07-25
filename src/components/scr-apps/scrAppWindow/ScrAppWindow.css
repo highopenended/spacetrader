@@ -38,6 +38,33 @@
   flex: 1;
 }
 
+.window-upgrade-info-button {
+  background: linear-gradient(135deg, #2a2a2a 0%, #3d3d3d 100%);
+  border: 1px solid #555;
+  color: #aaa;
+  font-family: 'Courier New', monospace;
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 2px;
+  padding: 2px 6px;
+  min-width: 20px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  margin-right: var(--spacing-xs);
+}
+
+.window-upgrade-info-button:hover {
+  background: linear-gradient(135deg, #3a3a3a 0%, #4d4d4d 100%);
+  border-color: #777;
+  color: #4a4;
+  text-shadow: 0 0 2px rgba(102, 170, 102, 0.3);
+}
+
 .window-minimize-button {
   background: linear-gradient(135deg, #2a2a2a 0%, #3d3d3d 100%);
   border: 1px solid #555;
@@ -49,7 +76,6 @@
   transition: all 0.2s ease;
   border-radius: 2px;
   padding: 2px 6px;
-  margin-left: var(--spacing-xs);
   min-width: 20px;
   height: 16px;
   display: flex;
@@ -119,60 +145,7 @@
   border: 1px solid #4a4;
 }
 
-/* Collapsible Footer - positioned outside window */
-.window-footer {
-  position: absolute;
-  bottom: -20px;
-  left: 0;
-  width: 100%;
-  min-width: 200px;
-  background: linear-gradient(135deg, #2a2a2a 0%, #3d3d3d 100%);
-  border: 2px solid #444;
-  border-top: none;
-  border-radius: 0 0 8px 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  z-index: 1001;
-}
-
-.window-footer.collapsed {
-  height: 20px;
-}
-
-.window-footer.expanded {
-  height: 140px;
-  bottom: -140px;
-}
-
-.footer-toggle {
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #aaa;
-  font-size: var(--font-size-xsmall);
-  font-family: 'Courier New', monospace;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: all 0.2s ease;
-  user-select: none;
-}
-
-.footer-toggle:hover {
-  background: linear-gradient(135deg, #3a3a3a 0%, #4d4d4d 100%);
-  color: #4a4;
-  text-shadow: 0 0 2px rgba(102, 170, 102, 0.3);
-}
-
-.footer-content {
-  padding: var(--spacing-sm);
-  height: 120px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
+/* Upgrade info content styles (moved from footer) */
 .tier-info-line {
   font-size: var(--font-size-xsmall);
   font-weight: bold;
@@ -284,8 +257,6 @@
   cursor: not-allowed;
   text-shadow: none;
 }
-
-
 
 .resize-handle {
   position: absolute;
