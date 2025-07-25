@@ -10,6 +10,45 @@ import { ScrapMutator } from '../types/mutatorTypes';
 import { ScrapRegistry, ScrapTypeId } from '../constants/scrapRegistry';
 import { MutatorRegistry, MutatorId } from '../constants/mutatorRegistry';
 
+// Assembly Line Configuration - Shared between assembly line and scrap objects
+export const ASSEMBLY_LINE_CONFIG = {
+  layout: {
+    bottom: 200, // Distance from bottom of screen (px)
+    height: 60,  // Height of assembly line area (px)
+    trackHeight: 4 // Height of the actual track line (px)
+  },
+  behavior: {
+    speed: 150, // Pixels per second for frame-rate independent movement
+    spawnRate: 1000 // Milliseconds between scrap spawns
+  },
+  visuals: {
+    zIndex: 100 // Assembly line z-index
+  }
+} as const;
+
+/**
+ * Get current assembly line configuration (updates width on window resize)
+ */
+export const getAssemblyLineConfig = () => {
+  return {
+    ...ASSEMBLY_LINE_CONFIG,
+    layout: {
+      ...ASSEMBLY_LINE_CONFIG.layout,
+      width: window.innerWidth // Full screen width
+    }
+  };
+};
+
+/**
+ * Calculate frame-rate independent movement distance
+ * @param deltaTime - Time elapsed since last frame (milliseconds)
+ * @param speedPxPerSecond - Movement speed in pixels per second
+ * @returns Distance to move in pixels
+ */
+export const calculateMovementDistance = (deltaTime: number, speedPxPerSecond: number): number => {
+  return (deltaTime / 1000) * speedPxPerSecond;
+};
+
 /**
  * Generate a unique ID for scrap objects
  */
