@@ -31,6 +31,23 @@
   align-items: center;
   position: relative;
   flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.terminal-header:hover {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+}
+
+.terminal-header.minimized {
+  background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+  border-bottom-color: #666;
+}
+
+.minimize-indicator {
+  color: #666;
+  font-size: 8px;
+  font-weight: normal;
+  margin-left: 4px;
 }
 
 .terminal-title {
@@ -106,6 +123,7 @@
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 /* Custom scrollbar styling for 80s sci-fi theme */

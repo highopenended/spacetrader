@@ -42,6 +42,8 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStartY, setResizeStartY] = useState(0);
   const [resizeStartHeight, setResizeStartHeight] = useState(0);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [previousHeight, setPreviousHeight] = useState<number>(window.innerHeight);
 
   // WINDOW DOCKING SYSTEM: Make terminal droppable for window docking
   const { setNodeRef } = useDroppable({
@@ -65,7 +67,7 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
     let newHeight = resizeStartHeight + deltaY; // Changed from - to + to make dragging down increase height
     
     // Constrain to viewport bounds
-    const minHeight = 200; // Minimum terminal height
+    const minHeight = 60; // Minimum terminal height (header only)
     const maxHeight = window.innerHeight; // Full viewport height
     newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
     
@@ -78,6 +80,13 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
     }
     
     setHeight(newHeight);
+    
+    // Update minimized state based on height
+    if (newHeight <= 60) {
+      setIsMinimized(true);
+    } else {
+      setIsMinimized(false);
+    }
   }, [isResizing, resizeStartY, resizeStartHeight]);
 
   const handleResizeEnd = useCallback(() => {
@@ -95,6 +104,20 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
       };
     }
   }, [isResizing, handleResizeMove, handleResizeEnd]);
+
+  // Single-click handler for minimize/restore
+  const handleClick = useCallback(() => {
+    if (isMinimized) {
+      // Restore to previous height
+      setHeight(previousHeight);
+      setIsMinimized(false);
+    } else {
+      // Minimize to header height only
+      setPreviousHeight(height);
+      setHeight(60); // Header height + padding
+      setIsMinimized(true);
+    }
+  }, [isMinimized, previousHeight, height]);
 
   // Render an app based on its configuration
   const renderApp = (appConfig: any) => {
@@ -115,8 +138,15 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
       className="terminal-screen"
       style={{ height: `${height}px` }}
     >
-        <div className="terminal-header">
-          <div className="terminal-title">SCRAPCOM TERMINAL</div>
+        <div 
+          className={`terminal-header ${isMinimized ? 'minimized' : ''}`}
+          onClick={handleClick}
+          style={{ cursor: 'pointer' }}
+        >
+          <div className="terminal-title">
+            SCRAPCOM TERMINAL
+            {isMinimized && <span className="minimize-indicator"> [MIN]</span>}
+          </div>
           <div className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>
             <div className="status-light"></div>
             <div className="status-text">{isOnline ? 'ONLINE' : 'OFFLINE'}</div>

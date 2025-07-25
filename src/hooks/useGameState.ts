@@ -61,7 +61,7 @@ export const useGameState = () => {
     workSessionRef.current = setTimeout(() => {
       setGameState(prev => ({ ...prev, gameMode: 'freeMode' }));
       workSessionRef.current = null;
-    }, 10000);
+    }, 30000);
   }, []);
 
   // ===== PHASE MANAGEMENT =====
