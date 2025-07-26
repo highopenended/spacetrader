@@ -11,6 +11,7 @@ import AgeApp from '../components/scr-apps/ageApp/listItem/AgeAppItem';
 import DateApp from '../components/scr-apps/dateApp/listItem/DateAppItem';
 import ScrAppStore from '../components/scr-apps/scrAppStoreApp/listItem/ScrAppStoreItem';
 import PurgeZoneApp from '../components/scr-apps/purgeZoneApp/listItem/PurgeZoneAppItem';
+import ChronoTrackApp from '../components/scr-apps/chronoTrackApp/listItem/ChronoTrackAppItem';
 import { AppDefinition, AppType, AppTier } from '../types/scrAppListState';
 
 // Standard tier costs for basic utility apps
@@ -74,6 +75,14 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     description: 'Purge zone management interface',
     tiers: STANDARD_TIERS
   },
+  chronoTrack: {
+    id: 'chronoTrack',
+    name: 'ChronoTrack',
+    component: ChronoTrackApp,
+    deletable: true,
+    description: 'Unified time and age tracking interface',
+    tiers: STANDARD_TIERS
+  },
 
   // Future apps (not implemented yet)
   scanner: {
@@ -113,6 +122,7 @@ export const DEFAULT_INSTALLED_APPS: AppType[] = [
   // 'age',
   // 'date',
   // 'purgeZone',
+  'chronoTrack',
   'scrAppStore'
 ];
 

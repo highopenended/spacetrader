@@ -35,6 +35,8 @@ export const getAppProps = (appId: string, gameState: AppPropsBuilderOptions) =>
       return { hasNewApps: true }; // TODO: Make this dynamic when implementing app store
     case 'purgeZone':
       return {}; // Purge zone doesn't need any props
+    case 'chronoTrack':
+      return {}; // Barebones version doesn't need props yet
     default:
       return {};
   }

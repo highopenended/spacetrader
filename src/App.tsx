@@ -6,6 +6,7 @@ import AgeAppWindow from './components/scr-apps/ageApp/window/AgeAppWindow';
 import JobTitleAppWindow from './components/scr-apps/jobTitleApp/window/JobTitleAppWindow';
 import PurgeZoneAppWindow from './components/scr-apps/purgeZoneApp/window/PurgeZoneAppWindow';
 import ScrAppStoreAppWindow from './components/scr-apps/scrAppStoreApp/window/ScrAppStoreAppWindow';
+import ChronoTrackAppWindow from './components/scr-apps/chronoTrackApp/window/ChronoTrackAppWindow';
 import WorkScreen from './components/workMode/WorkScreen';
 import { useGameState } from './hooks/useGameState';
 import { useWindowManager } from './hooks/useWindowManager';
@@ -367,6 +368,25 @@ function App() {
           getAvailableApps={getAvailableApps}
           installedApps={installedApps}
           installApp={installApp}
+          windowId={window.id}
+          appType={window.appType}
+          position={window.position}
+          size={window.size}
+          zIndex={window.zIndex}
+          overId={overId}
+          draggedAppType={purgeNodeDragState.draggedAppType}
+          onClose={() => closeWindow(window.id)}
+          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
+          onSizeChange={(size) => updateWindowSize(window.appType, size)}
+          onBringToFront={() => bringToFront(window.id)}
+          updateCredits={updateCredits}
+        />
+      );
+    }
+    if (window.appType === 'chronoTrack') {
+      return (
+        <ChronoTrackAppWindow
+          key={window.id}
           windowId={window.id}
           appType={window.appType}
           position={window.position}
