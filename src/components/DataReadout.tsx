@@ -14,21 +14,16 @@ const DataReadout: React.FC = () => {
   const isChronoTrackInstalled = installedApps.some(app => app.id === 'chronoTrack');
   const isJobTitleInstalled = installedApps.some(app => app.id === 'jobTitle');
 
-  // Build readout lines in order
-  const lines: string[] = [];
-  if (toggleStates.dateReadoutEnabled && isChronoTrackInstalled) {
-    lines.push(`AR-${getAnnumReckoningName(annumReckoning)}|LC-${getLedgerCycleName(ledgerCycle)}|G-${getGrindName(grind)}`);
-  }
-  if (toggleStates.jobTitleReadoutEnabled && isJobTitleInstalled) {
-    lines.push('Job: ' + getJobTitle(gamePhase));
-  }
-
   return (
     <div className="data-readout">
       <div className="data-readout-content">
-        {lines.map((line, idx) => (
-          <div key={idx}>{line}</div>
-        ))}
+        {/* JobTitle line */}
+        {toggleStates.jobTitleReadoutEnabled && isJobTitleInstalled && (
+          <div>
+            {`Job: ${getJobTitle(gamePhase)}`}
+          </div>
+        )}
+        {/* Work button */}
         {toggleStates.workButtonReadoutEnabled && (
           <button
             className={`work-button ${gameMode === 'workMode' ? 'working' : ''}`}
@@ -37,6 +32,12 @@ const DataReadout: React.FC = () => {
           >
             {gameMode === 'workMode' ? 'WORKING...' : 'WORK?'}
           </button>
+        )}
+        {/* ChronoTrack date line */}
+        {toggleStates.dateReadoutEnabled && isChronoTrackInstalled && (
+          <div>
+            {`AR-${getAnnumReckoningName(annumReckoning)}|LC-${getLedgerCycleName(ledgerCycle)}|G-${getGrindName(grind)}`}
+          </div>
         )}
       </div>
     </div>

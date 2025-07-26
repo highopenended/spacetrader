@@ -7,6 +7,7 @@ interface ToggleStates {
   dateReadoutEnabled: boolean;
   jobTitleReadoutEnabled: boolean;
   workButtonReadoutEnabled: boolean;
+  creditsReadoutEnabled: boolean;
   // Future toggles can be added here
 }
 
@@ -39,6 +40,7 @@ export const ToggleProvider: React.FC<ToggleProviderProps> = ({
     dateReadoutEnabled: false,
     jobTitleReadoutEnabled: false,
     workButtonReadoutEnabled: true,
+    creditsReadoutEnabled: false,
   });
 
   const setToggleState = (key: keyof ToggleStates, value: boolean) => {
@@ -50,6 +52,7 @@ export const ToggleProvider: React.FC<ToggleProviderProps> = ({
       dateReadoutEnabled: false,
       jobTitleReadoutEnabled: false,
       workButtonReadoutEnabled: true,
+      creditsReadoutEnabled: false,
     };
 
     apps.forEach(app => {
