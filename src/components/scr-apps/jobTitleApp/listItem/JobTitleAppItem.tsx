@@ -13,7 +13,6 @@ const JobTitleApp: React.FC<JobTitleAppProps> = ({ gamePhase }) => {
     <ScrApp>
       <div>
         <div className="app-label">Job Title</div>
-        <div className="app-value">{getJobTitle(gamePhase)}</div>
       </div>
     </ScrApp>
   );

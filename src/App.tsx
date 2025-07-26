@@ -344,8 +344,6 @@ function App() {
         <JobTitleAppWindow
           key={window.id}
           gamePhase={gamePhase}
-          gameMode={gameMode}
-          onBeginWorkSession={beginWorkSession}
           windowId={window.id}
           appType={window.appType}
           position={window.position}
@@ -429,7 +427,11 @@ function App() {
   };
 
   return (
-    <ToggleProvider installedApps={installedApps}>
+    <ToggleProvider 
+      installedApps={installedApps}
+      gameMode={gameMode}
+      onBeginWorkSession={beginWorkSession}
+    >
       <DndContext
         collisionDetection={customCollisionDetection}
         onDragStart={handleUnifiedDragStart}

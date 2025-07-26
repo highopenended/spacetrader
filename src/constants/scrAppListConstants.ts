@@ -49,7 +49,10 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     component: JobTitleApp,
     deletable: true,
     description: 'View your current career progression',
-    tiers: STANDARD_TIERS
+    tiers: STANDARD_TIERS,
+    defaultToggles: {
+      jobTitleReadoutEnabled: true
+    }
   },
   age: {
     id: 'age',

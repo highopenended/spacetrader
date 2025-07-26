@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { APP_REGISTRY } from '../constants/scrAppListConstants';
 import { InstalledApp } from '../types/scrAppListState';
+import { GameMode } from '../types/gameState';
 
 interface ToggleStates {
   dateReadoutEnabled: boolean;
+  jobTitleReadoutEnabled: boolean;
+  workButtonReadoutEnabled: boolean;
   // Future toggles can be added here
 }
 
@@ -11,6 +14,9 @@ interface ToggleContextType {
   toggleStates: ToggleStates;
   setToggleState: (key: keyof ToggleStates, value: boolean) => void;
   initializeFromApps: (installedApps: InstalledApp[]) => void;
+  // Work mode state and functions
+  gameMode: GameMode;
+  beginWorkSession: () => void;
 }
 
 const ToggleContext = createContext<ToggleContextType | undefined>(undefined);
@@ -18,11 +24,21 @@ const ToggleContext = createContext<ToggleContextType | undefined>(undefined);
 interface ToggleProviderProps {
   children: ReactNode;
   installedApps?: InstalledApp[];
+  // Work mode props from useGameState
+  gameMode: GameMode;
+  onBeginWorkSession: () => void;
 }
 
-export const ToggleProvider: React.FC<ToggleProviderProps> = ({ children, installedApps = [] }) => {
+export const ToggleProvider: React.FC<ToggleProviderProps> = ({ 
+  children, 
+  installedApps = [],
+  gameMode,
+  onBeginWorkSession
+}) => {
   const [toggleStates, setToggleStates] = useState<ToggleStates>({
     dateReadoutEnabled: false,
+    jobTitleReadoutEnabled: false,
+    workButtonReadoutEnabled: true,
   });
 
   const setToggleState = (key: keyof ToggleStates, value: boolean) => {
@@ -32,6 +48,8 @@ export const ToggleProvider: React.FC<ToggleProviderProps> = ({ children, instal
   const initializeFromApps = (apps: InstalledApp[]) => {
     const initialToggles: ToggleStates = {
       dateReadoutEnabled: false,
+      jobTitleReadoutEnabled: false,
+      workButtonReadoutEnabled: true,
     };
 
     apps.forEach(app => {
@@ -44,13 +62,19 @@ export const ToggleProvider: React.FC<ToggleProviderProps> = ({ children, instal
     setToggleStates(initialToggles);
   };
 
-  // Initialize toggles when installedApps changes
+  // Initialize toggles only once when component mounts
   useEffect(() => {
     initializeFromApps(installedApps);
-  }, [installedApps]);
+  }, []); // Empty dependency array - only run once
 
   return (
-    <ToggleContext.Provider value={{ toggleStates, setToggleState, initializeFromApps }}>
+    <ToggleContext.Provider value={{ 
+      toggleStates, 
+      setToggleState, 
+      initializeFromApps,
+      gameMode,
+      beginWorkSession: onBeginWorkSession
+    }}>
       {children}
     </ToggleContext.Provider>
   );
