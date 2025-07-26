@@ -7,17 +7,17 @@ import JobTitleAppWindow from './components/scr-apps/jobTitleApp/window/JobTitle
 import PurgeZoneAppWindow from './components/scr-apps/purgeZoneApp/window/PurgeZoneAppWindow';
 import ScrAppStoreAppWindow from './components/scr-apps/scrAppStoreApp/window/ScrAppStoreAppWindow';
 import ChronoTrackAppWindow from './components/scr-apps/chronoTrackApp/window/ChronoTrackAppWindow';
-import DataReadout from './components/DataReadout';
 import WorkScreen from './components/workMode/WorkScreen';
 import { useGameState } from './hooks/useGameState';
 import { useWindowManager } from './hooks/useWindowManager';
 import { useDragHandler_Apps } from './hooks/useDragHandler_Apps';
 import { WindowData } from './types/gameState';
 import PurgeConfirmPopup from './components/ui/PurgeConfirmPopup';
-import { ToggleProvider } from './contexts/ToggleContext';
 
 import { DndContext, DragOverlay, useSensor, PointerSensor, rectIntersection, UniqueIdentifier } from '@dnd-kit/core';
 import { getAppProps } from './utils/appPropsBuilder';
+import { ToggleProvider } from './contexts/ToggleContext';
+import DataReadout from './components/DataReadout';
 
 function App() {
   const {
@@ -429,7 +429,7 @@ function App() {
   };
 
   return (
-    <ToggleProvider>
+    <ToggleProvider installedApps={installedApps}>
       <DndContext
         collisionDetection={customCollisionDetection}
         onDragStart={handleUnifiedDragStart}
@@ -441,8 +441,8 @@ function App() {
           }),
         ]}
       >
-        <div className="App">
-          <DataReadout gameTime={gameTime} />
+                <div className="App">
+          <DataReadout />
           <TerminalScreen 
             credits={credits}
             gameTime={gameTime}
@@ -456,29 +456,29 @@ function App() {
             overId={overId}
             onDockWindows={dockAllWindows}
           />
-          <AdminToolbar 
-            credits={credits}
-            gamePhase={gamePhase}
-            gameTime={gameTime}
-            updateCredits={updateCredits}
-            setCredits={setCredits}
-            setGamePhase={setGamePhase}
-            setGameTime={setGameTime}
-            advanceGamePhase={advanceGamePhase}
-            isPaused={isPaused}
-            pauseTime={pauseTime}
-            resumeTime={resumeTime}
-            resetGame={resetGame}
-          />
-          {windows.map(renderWindow)}
-          <PurgeConfirmPopup
-            open={!!pendingDelete.appId}
-            appName={pendingDelete.appId ? (apps.find((a: any) => a.id === pendingDelete.appId)?.name || pendingDelete.appId) : ''}
-            onConfirm={handleConfirmPurge}
-            onCancel={handleCancelPurge}
-          />
+        <AdminToolbar 
+          credits={credits}
+          gamePhase={gamePhase}
+          gameTime={gameTime}
+          updateCredits={updateCredits}
+          setCredits={setCredits}
+          setGamePhase={setGamePhase}
+          setGameTime={setGameTime}
+          advanceGamePhase={advanceGamePhase}
+          isPaused={isPaused}
+          pauseTime={pauseTime}
+          resumeTime={resumeTime}
+          resetGame={resetGame}
+        />
+        {windows.map(renderWindow)}
+        <PurgeConfirmPopup
+          open={!!pendingDelete.appId}
+          appName={pendingDelete.appId ? (apps.find((a: any) => a.id === pendingDelete.appId)?.name || pendingDelete.appId) : ''}
+          onConfirm={handleConfirmPurge}
+          onCancel={handleCancelPurge}
+        />
 
-          {gameMode === 'workMode' && <WorkScreen />}
+        {gameMode === 'workMode' && <WorkScreen />}
 
         <DragOverlay 
           zIndex={2000}
@@ -530,7 +530,7 @@ function App() {
           ) : null}
         </DragOverlay>
       </div>
-    </DndContext>
+      </DndContext>
     </ToggleProvider>
   );
 }

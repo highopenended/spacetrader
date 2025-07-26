@@ -1,19 +1,20 @@
 import React from 'react';
 import { useToggleContext } from '../contexts/ToggleContext';
-import { GameTime } from '../types/gameState';
+import { useGameState } from '../hooks/useGameState';
 import { getAnnumReckoningName, getLedgerCycleName, getGrindName } from '../utils/gameStateUtils';
 import './DataReadout.css';
 
-interface DataReadoutProps {
-  gameTime: GameTime;
-}
-
-const DataReadout: React.FC<DataReadoutProps> = ({ gameTime }) => {
+const DataReadout: React.FC = () => {
   const { toggleStates } = useToggleContext();
+  const { gameTime, installedApps } = useGameState();
   const { annumReckoning, ledgerCycle, grind } = gameTime;
 
-  // Only render if there's something to show
-  if (!toggleStates.dateReadoutEnabled) {
+  // Check if ChronoTrack is installed AND toggle is enabled
+  const isChronoTrackInstalled = installedApps.some(app => app.id === 'chronoTrack');
+  const shouldShowDateReadout = toggleStates.dateReadoutEnabled && isChronoTrackInstalled;
+
+  // Only render if both conditions are met
+  if (!shouldShowDateReadout) {
     return null;
   }
 
@@ -21,7 +22,9 @@ const DataReadout: React.FC<DataReadoutProps> = ({ gameTime }) => {
 
   return (
     <div className="data-readout">
-      <div className="data-readout-text">{dateString}</div>
+      <div className="data-readout-content">
+        {dateString}
+      </div>
     </div>
   );
 };

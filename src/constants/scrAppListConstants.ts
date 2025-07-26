@@ -81,7 +81,10 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     component: ChronoTrackApp,
     deletable: true,
     description: 'Unified time and age tracking interface',
-    tiers: STANDARD_TIERS
+    tiers: STANDARD_TIERS,
+    defaultToggles: {
+      dateReadoutEnabled: true
+    }
   },
 
   // Future apps (not implemented yet)

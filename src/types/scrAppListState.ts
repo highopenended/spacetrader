@@ -23,6 +23,7 @@ export interface AppDefinition {
   description: string;
   unlockRequirements?: string[]; // Future: requirements to unlock this app
   tiers: AppTier[]; // Array of upgrade tiers with costs
+  defaultToggles?: Record<string, boolean>; // Default toggle states when app is installed
 }
 
 export interface InstalledApp {

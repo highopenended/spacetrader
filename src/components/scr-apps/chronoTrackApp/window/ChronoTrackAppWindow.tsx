@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
 import ToggleSection from '../../scrAppWindow/ToggleSection';
-import { useToggleContext } from '../../../../contexts/ToggleContext';
 import { GameTime, GamePhase } from '../../../../types/gameState';
-import { getTitheName, getLedgerCycleName, getAnnumReckoningName, getGrindName } from '../../../../utils/gameStateUtils';
+import { getLedgerCycleName, getAnnumReckoningName, getGrindName } from '../../../../utils/gameStateUtils';
+import { useToggleContext } from '../../../../contexts/ToggleContext';
 
 interface ChronoTrackAppWindowProps extends BaseWindowProps {
   gameTime: GameTime;
@@ -15,21 +15,24 @@ const ChronoTrackAppWindow: React.FC<ChronoTrackAppWindowProps> = ({
   gamePhase,
   ...windowProps
 }) => {
-  const { annumReckoning, ledgerCycle, grind, tithe, age, yearOfDeath } = gameTime;
+  const { annumReckoning, ledgerCycle, grind, age, yearOfDeath } = gameTime;
   const yearOfBirth = annumReckoning - age;
-  const { toggleStates, updateToggle } = useToggleContext();
+  const { toggleStates, setToggleState } = useToggleContext();
+  const [dateReadoutEnabled, setDateReadoutEnabled] = useState(toggleStates.dateReadoutEnabled);
 
   const toggleDateReadout = () => {
-    updateToggle('dateReadoutEnabled', !toggleStates.dateReadoutEnabled);
+    const newState = !dateReadoutEnabled;
+    setDateReadoutEnabled(newState);
+    setToggleState('dateReadoutEnabled', newState);
   };
 
   const toggleConfig = [
     {
       id: 'dateReadout',
       label: 'Date Readout',
-      enabled: toggleStates.dateReadoutEnabled,
+      enabled: dateReadoutEnabled,
       onToggle: toggleDateReadout,
-      title: toggleStates.dateReadoutEnabled ? 'Disable Date Readout' : 'Enable Date Readout'
+      title: dateReadoutEnabled ? 'Disable Date Readout' : 'Enable Date Readout'
     }
   ];
 
