@@ -7,12 +7,14 @@ import JobTitleAppWindow from './components/scr-apps/jobTitleApp/window/JobTitle
 import PurgeZoneAppWindow from './components/scr-apps/purgeZoneApp/window/PurgeZoneAppWindow';
 import ScrAppStoreAppWindow from './components/scr-apps/scrAppStoreApp/window/ScrAppStoreAppWindow';
 import ChronoTrackAppWindow from './components/scr-apps/chronoTrackApp/window/ChronoTrackAppWindow';
+import DataReadout from './components/DataReadout';
 import WorkScreen from './components/workMode/WorkScreen';
 import { useGameState } from './hooks/useGameState';
 import { useWindowManager } from './hooks/useWindowManager';
 import { useDragHandler_Apps } from './hooks/useDragHandler_Apps';
 import { WindowData } from './types/gameState';
 import PurgeConfirmPopup from './components/ui/PurgeConfirmPopup';
+import { ToggleProvider } from './contexts/ToggleContext';
 
 import { DndContext, DragOverlay, useSensor, PointerSensor, rectIntersection, UniqueIdentifier } from '@dnd-kit/core';
 import { getAppProps } from './utils/appPropsBuilder';
@@ -387,6 +389,8 @@ function App() {
       return (
         <ChronoTrackAppWindow
           key={window.id}
+          gameTime={gameTime}
+          gamePhase={gamePhase}
           windowId={window.id}
           appType={window.appType}
           position={window.position}
@@ -425,54 +429,56 @@ function App() {
   };
 
   return (
-    <DndContext
-      collisionDetection={customCollisionDetection}
-      onDragStart={handleUnifiedDragStart}
-      onDragOver={event => setOverId(event.over?.id ?? null)}
-      onDragEnd={handleUnifiedDragEnd}
-      sensors={[
-        useSensor(PointerSensor, {
-          activationConstraint: { distance: 10 },
-        }),
-      ]}
-    >
-      <div className="App">
-        <TerminalScreen 
-          credits={credits}
-          gameTime={gameTime}
-          gamePhase={gamePhase}
-          isOnline={!isPaused}
-          onAppClick={openOrCloseWindow}
-          apps={apps}
-          appOrder={appOrder}
-          pendingDeleteAppId={pendingDelete.appId}
-          openAppTypes={new Set(windows.map(w => w.appType))}
-          overId={overId}
-          onDockWindows={dockAllWindows}
-        />
-        <AdminToolbar 
-          credits={credits}
-          gamePhase={gamePhase}
-          gameTime={gameTime}
-          updateCredits={updateCredits}
-          setCredits={setCredits}
-          setGamePhase={setGamePhase}
-          setGameTime={setGameTime}
-          advanceGamePhase={advanceGamePhase}
-          isPaused={isPaused}
-          pauseTime={pauseTime}
-          resumeTime={resumeTime}
-          resetGame={resetGame}
-        />
-        {windows.map(renderWindow)}
-        <PurgeConfirmPopup
-          open={!!pendingDelete.appId}
-          appName={pendingDelete.appId ? (apps.find((a: any) => a.id === pendingDelete.appId)?.name || pendingDelete.appId) : ''}
-          onConfirm={handleConfirmPurge}
-          onCancel={handleCancelPurge}
-        />
+    <ToggleProvider>
+      <DndContext
+        collisionDetection={customCollisionDetection}
+        onDragStart={handleUnifiedDragStart}
+        onDragOver={event => setOverId(event.over?.id ?? null)}
+        onDragEnd={handleUnifiedDragEnd}
+        sensors={[
+          useSensor(PointerSensor, {
+            activationConstraint: { distance: 10 },
+          }),
+        ]}
+      >
+        <div className="App">
+          <DataReadout gameTime={gameTime} />
+          <TerminalScreen 
+            credits={credits}
+            gameTime={gameTime}
+            gamePhase={gamePhase}
+            isOnline={!isPaused}
+            onAppClick={openOrCloseWindow}
+            apps={apps}
+            appOrder={appOrder}
+            pendingDeleteAppId={pendingDelete.appId}
+            openAppTypes={new Set(windows.map(w => w.appType))}
+            overId={overId}
+            onDockWindows={dockAllWindows}
+          />
+          <AdminToolbar 
+            credits={credits}
+            gamePhase={gamePhase}
+            gameTime={gameTime}
+            updateCredits={updateCredits}
+            setCredits={setCredits}
+            setGamePhase={setGamePhase}
+            setGameTime={setGameTime}
+            advanceGamePhase={advanceGamePhase}
+            isPaused={isPaused}
+            pauseTime={pauseTime}
+            resumeTime={resumeTime}
+            resetGame={resetGame}
+          />
+          {windows.map(renderWindow)}
+          <PurgeConfirmPopup
+            open={!!pendingDelete.appId}
+            appName={pendingDelete.appId ? (apps.find((a: any) => a.id === pendingDelete.appId)?.name || pendingDelete.appId) : ''}
+            onConfirm={handleConfirmPurge}
+            onCancel={handleCancelPurge}
+          />
 
-        {gameMode === 'workMode' && <WorkScreen />}
+          {gameMode === 'workMode' && <WorkScreen />}
 
         <DragOverlay 
           zIndex={2000}
@@ -525,6 +531,7 @@ function App() {
         </DragOverlay>
       </div>
     </DndContext>
+    </ToggleProvider>
   );
 }
 

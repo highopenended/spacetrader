@@ -36,7 +36,7 @@ export const getAppProps = (appId: string, gameState: AppPropsBuilderOptions) =>
     case 'purgeZone':
       return {}; // Purge zone doesn't need any props
     case 'chronoTrack':
-      return {}; // Barebones version doesn't need props yet
+      return { gameTime, gamePhase }; // Tier 1 needs date and age info
     default:
       return {};
   }
