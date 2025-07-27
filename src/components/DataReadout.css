@@ -29,6 +29,18 @@
   gap: 8px;
 }
 
+/* Credits styling - make it more prominent */
+.data-readout-content > div:first-child {
+  font-size: var(--font-size-large);
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #555;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+
 .data-readout-content .work-button {
   margin-top: 4px;
   align-self: stretch;
