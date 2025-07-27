@@ -1,3 +1,30 @@
+/**
+ * ToggleContext
+ * 
+ * Manages toggle states for various UI elements and provides work mode functionality.
+ * Used by DataReadout and window components to control visibility of readout elements.
+ * 
+ * STATE FLOW ARCHITECTURE:
+ * 
+ * All game state flows through a single path to prevent synchronization issues:
+ * 
+ * 1. useGameState() → App.tsx → ToggleProvider → DataReadout
+ * 2. useGameState() → App.tsx → Window Components (via props)
+ * 
+ * This ensures DataReadout and all window components use the same source of truth.
+ * 
+ * IMPORTANT: DataReadout is wrapped inside ToggleProvider, so it must get game state
+ * through the context rather than calling useGameState() directly. This prevents
+ * the "two instances of state" problem where DataReadout and app components show
+ * different values for the same data.
+ * 
+ * CRITICAL PATTERN:
+ * - Window components: Get state via props from App.tsx renderWindow()
+ * - DataReadout: Get state via useToggleContext() (which gets it from App.tsx)
+ * - NEVER call useGameState() directly in DataReadout or window components
+ * - This ensures single source of truth and prevents state synchronization issues
+ */
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { APP_REGISTRY } from '../constants/scrAppListConstants';
 import { InstalledApp } from '../types/scrAppListState';
@@ -18,6 +45,10 @@ interface ToggleContextType {
   // Work mode state and functions
   gameMode: GameMode;
   beginWorkSession: () => void;
+  // Game state for DataReadout
+  credits: number;
+  gameTime: any;
+  gamePhase: any;
 }
 
 const ToggleContext = createContext<ToggleContextType | undefined>(undefined);
@@ -28,13 +59,20 @@ interface ToggleProviderProps {
   // Work mode props from useGameState
   gameMode: GameMode;
   onBeginWorkSession: () => void;
+  // Game state for DataReadout
+  credits: number;
+  gameTime: any;
+  gamePhase: any;
 }
 
 export const ToggleProvider: React.FC<ToggleProviderProps> = ({ 
   children, 
   installedApps = [],
   gameMode,
-  onBeginWorkSession
+  onBeginWorkSession,
+  credits,
+  gameTime,
+  gamePhase
 }) => {
   const [toggleStates, setToggleStates] = useState<ToggleStates>({
     dateReadoutEnabled: false,
@@ -76,7 +114,10 @@ export const ToggleProvider: React.FC<ToggleProviderProps> = ({
       setToggleState, 
       initializeFromApps,
       gameMode,
-      beginWorkSession: onBeginWorkSession
+      beginWorkSession: onBeginWorkSession,
+      credits,
+      gameTime,
+      gamePhase
     }}>
       {children}
     </ToggleContext.Provider>

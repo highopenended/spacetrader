@@ -31,7 +31,10 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     component: CreditsApp,
     deletable: false,
     description: 'Track your current credit balance',
-    tiers: STANDARD_TIERS
+    tiers: STANDARD_TIERS,
+    defaultToggles: {
+      creditsReadoutEnabled: true
+    }
   },
   scrAppStore: {
     id: 'scrAppStore',
