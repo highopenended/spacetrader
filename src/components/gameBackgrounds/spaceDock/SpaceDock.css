@@ -14,6 +14,7 @@
 .star {
   position: absolute;
   border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.8) 60%, rgba(255, 255, 255, 0.4) 100%);
 }
 
 /* Bright stars - rare, prominent */
