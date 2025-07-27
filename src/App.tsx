@@ -48,7 +48,8 @@ function App() {
     getAvailableApps,
     resetToDefaults,
     resetGame,
-    beginWorkSession
+    beginWorkSession,
+    setGameBackground
   } = useGameState();
 
   // Set up app drag handler
@@ -498,6 +499,7 @@ function App() {
           pauseTime={pauseTime}
           resumeTime={resumeTime}
           resetGame={resetGame}
+          setGameBackground={setGameBackground}
         />
         {windows.map(renderWindow)}
         <PurgeConfirmPopup

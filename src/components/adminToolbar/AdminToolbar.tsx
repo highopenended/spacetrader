@@ -4,6 +4,7 @@ import { GamePhase, GameTime } from '../../types/gameState';
 import { advanceGameTime } from '../../utils/gameStateUtils';
 import { useDragHandler_Windows } from '../../hooks/useDragHandler_Windows';
 import { clampPositionToBounds } from '../../utils/viewportConstraints';
+import { GameBackgroundRegistry } from '../../constants/gameBackgroundRegistry';
 
 interface AdminToolbarProps {
   credits: number;
@@ -18,6 +19,7 @@ interface AdminToolbarProps {
   pauseTime: () => void;
   resumeTime: () => void;
   resetGame: () => void;
+  setGameBackground: (backgroundId: string) => void;
 }
 
 const AdminToolbar: React.FC<AdminToolbarProps> = ({ 
@@ -32,7 +34,8 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
   isPaused,
   pauseTime,
   resumeTime,
-  resetGame
+  resetGame,
+  setGameBackground
 }) => {
   const [isMinimized, setIsMinimized] = useState(true);
   
@@ -119,6 +122,8 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
     'sectorCommodore', 'ledgerPatrician', 'cathedraMinor', 'cathedraDominus', 'cathedraUltima'
   ];
 
+  const backgroundOptions = ['default', ...Object.keys(GameBackgroundRegistry)];
+
   return (
     <div 
       ref={toolbarRef}
@@ -189,6 +194,20 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
               ))}
               <button onClick={advanceGamePhase}>Advance Phase</button>
             </div>
+          </div>
+
+          <div className="admin-section">
+            <h4>Background</h4>
+            <select 
+              onChange={(e) => setGameBackground(e.target.value)}
+              className="background-select"
+            >
+              {backgroundOptions.map(option => (
+                <option key={option} value={option}>
+                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="admin-section">

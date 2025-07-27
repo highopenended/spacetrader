@@ -6,13 +6,12 @@
  */
 
 import React from 'react';
+import SpaceDock from '../components/gameBackgrounds/spaceDock/SpaceDock';
 
 export type BackgroundComponent = React.FC;
 
 export const GameBackgroundRegistry: Record<string, BackgroundComponent> = {
-  // Placeholder for now - will be populated when background components are created
-  // spaceDock: SpaceDockBackground,
-  // nebulaStorm: NebulaStormBackground,
+  spaceDock: SpaceDock,
 } as const;
 
 export type BackgroundId = keyof typeof GameBackgroundRegistry; 
