@@ -27,6 +27,9 @@ interface GameState {
   
   // Work mode state
   gameMode: GameMode;
+  
+  // Background state
+  gameBackground: string;
 }
 
 const initialGameState: GameState = {
@@ -36,7 +39,8 @@ const initialGameState: GameState = {
   isPaused: INITIAL_GAME_STATE.isPaused,
   lastUpdate: INITIAL_GAME_STATE.lastUpdate,
   installedApps: INITIAL_GAME_STATE.installedApps,
-  gameMode: INITIAL_GAME_STATE.gameMode
+  gameMode: INITIAL_GAME_STATE.gameMode,
+  gameBackground: 'default'
 };
 
 export const useGameState = () => {
@@ -74,6 +78,11 @@ export const useGameState = () => {
       const nextPhase = getNextGamePhase(prev.gamePhase);
       return nextPhase ? { ...prev, gamePhase: nextPhase } : prev;
     });
+  }, []);
+
+  // ===== BACKGROUND MANAGEMENT =====
+  const setGameBackground = useCallback((backgroundId: string) => {
+    setGameState(prev => ({ ...prev, gameBackground: backgroundId }));
   }, []);
 
   // ===== TIME MANAGEMENT =====
@@ -282,6 +291,10 @@ export const useGameState = () => {
     // Work Mode
     gameMode: gameState.gameMode,
     beginWorkSession,
+    
+    // Background
+    gameBackground: gameState.gameBackground,
+    setGameBackground,
     
     // Apps
     apps,

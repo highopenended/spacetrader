@@ -55,13 +55,13 @@ const DataReadout: React.FC = () => {
             {gameMode === 'workMode' ? 'WORKING...' : 'WORK?'}
           </button>
         )}
-        
         {/* JobTitle line */}
         {toggleStates.jobTitleReadoutEnabled && isJobTitleInstalled && (
           <div>
             {`Job: ${getJobTitle(gamePhase)}`}
           </div>
         )}
+        
         {/* ChronoTrack date line */}
         {toggleStates.dateReadoutEnabled && isChronoTrackInstalled && (
           <div>

@@ -9,6 +9,7 @@ import PurgeZoneAppWindow from './components/scr-apps/purgeZoneApp/window/PurgeZ
 import ScrAppStoreAppWindow from './components/scr-apps/scrAppStoreApp/window/ScrAppStoreAppWindow';
 import ChronoTrackAppWindow from './components/scr-apps/chronoTrackApp/window/ChronoTrackAppWindow';
 import WorkScreen from './components/workMode/WorkScreen';
+import GameBackground from './components/gameBackgrounds/GameBackground';
 import { useGameState } from './hooks/useGameState';
 import { useWindowManager } from './hooks/useWindowManager';
 import { useDragHandler_Apps } from './hooks/useDragHandler_Apps';
@@ -31,6 +32,7 @@ function App() {
     appOrder,
     installedApps,
     gameMode,
+    gameBackground,
     
     // Actions
     updateCredits,
@@ -468,6 +470,7 @@ function App() {
         ]}
       >
                 <div className="App">
+          <GameBackground backgroundId={gameBackground} />
           <DataReadout />
           <TerminalScreen 
             credits={credits}
