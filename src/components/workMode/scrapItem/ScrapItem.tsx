@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ActiveScrapObject, getScrapAppearance } from '../../utils/scrapUtils';
+import { ActiveScrapObject, getScrapAppearance } from '../../../utils/scrapUtils';
 import './ScrapItem.css';
 
 interface ScrapItemProps {

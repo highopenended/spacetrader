@@ -7,11 +7,11 @@ import {
   cleanupCollectedScrap,
   ActiveScrapObject,
   ScrapSpawnState
-} from '../../utils/scrapUtils';
-import AssemblyLine from './AssemblyLine';
-import ScrapBin from './ScrapBin';
-import WorkTimer from './WorkTimer';
-import ScrapItem from './ScrapItem';
+} from '../../../utils/scrapUtils';
+import AssemblyLine from '../assemblyLine/AssemblyLine';
+import ScrapBin from '../scrapBin/ScrapBin';
+import WorkTimer from '../workTimer/WorkTimer';
+import ScrapItem from '../scrapItem/ScrapItem';
 import './WorkScreen.css';
 
 const WorkScreen: React.FC = () => {
