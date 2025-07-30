@@ -15,21 +15,33 @@ const SaveSection: React.FC<SaveSectionProps> = ({ onSaveToCache, onExportToFile
       </div>
       <div className="section-content">
         <div className="save-options">
-          <button className="save-button local-cache-save" onClick={onSaveToCache}>
-            <div className="button-icon">💾</div>
-            <div className="button-text">
-              <div className="button-label">Save to Local Cache</div>
-              <div className="button-description">Store in local cache - ₵{saveCost}</div>
+          <div className="save-option-row" onClick={onSaveToCache}>
+            <div className="cost-box">
+              <div className="cost-amount">₵{saveCost}</div>
+              <div className="cost-label">COST</div>
             </div>
-          </button>
+            <div className="save-button local-cache-save">
+              <div className="button-icon">💾</div>
+              <div className="button-text">
+                <div className="button-label">Save to Local Cache</div>
+                <div className="button-description">Store in local cache</div>
+              </div>
+            </div>
+          </div>
           
-          <button className="save-button file-save" onClick={onExportToFile}>
-            <div className="button-icon">📄</div>
-            <div className="button-text">
-              <div className="button-label">Save as .scrap</div>
-              <div className="button-description">Export to file - ₵{saveCost}</div>
+          <div className="save-option-row" onClick={onExportToFile}>
+            <div className="cost-box">
+              <div className="cost-amount">₵{saveCost}</div>
+              <div className="cost-label">COST</div>
             </div>
-          </button>
+            <div className="save-button file-save">
+              <div className="button-icon">📄</div>
+              <div className="button-text">
+                <div className="button-label">Save as .scrap</div>
+                <div className="button-description">Export to file</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

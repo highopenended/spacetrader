@@ -5,10 +5,9 @@ import LoadZone from './LoadZone';
 interface LoadSectionProps {
   onLoadFromCache: () => boolean;
   onFileLoad: (file: File) => Promise<boolean>;
-  loadCost: number;
 }
 
-const LoadSection: React.FC<LoadSectionProps> = ({ onLoadFromCache, onFileLoad, loadCost }) => {
+const LoadSection: React.FC<LoadSectionProps> = ({ onLoadFromCache, onFileLoad }) => {
   return (
     <div className="load-section">
       <div className="section-header">
@@ -16,13 +15,15 @@ const LoadSection: React.FC<LoadSectionProps> = ({ onLoadFromCache, onFileLoad, 
       </div>
       <div className="section-content">
         <div className="load-options">
-          <button className="load-button cache-load" onClick={onLoadFromCache}>
-            <div className="button-icon">📁</div>
-            <div className="button-text">
-              <div className="button-label">Load from Cache</div>
-              <div className="button-description">Load from local cache - ₵{loadCost}</div>
+          <div className="load-option-row" onClick={onLoadFromCache}>
+            <div className="load-button cache-load">
+              <div className="button-icon">📁</div>
+              <div className="button-text">
+                <div className="button-label">Load from Cache</div>
+                <div className="button-description">Load from local cache</div>
+              </div>
             </div>
-          </button>
+          </div>
         </div>
         <LoadZone onFileLoad={onFileLoad} />
       </div>

@@ -40,6 +40,41 @@
   gap: var(--spacing-sm);
 }
 
+.load-option-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.load-option-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 0 8px rgba(0, 255, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.load-option-row:hover .load-button {
+  border-color: #00ff00;
+  background: linear-gradient(135deg, #2a3a2a 0%, #3a4a3a 100%);
+  box-shadow: 
+    0 0 8px rgba(0, 255, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.load-option-row:active {
+  transform: translateY(0);
+}
+
+.load-option-row:active .load-button {
+  box-shadow: 
+    0 0 4px rgba(0, 255, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
 .load-button {
   display: flex;
   align-items: center;
@@ -49,27 +84,10 @@
   border-radius: 4px;
   background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
   color: #ccc;
-  cursor: pointer;
   transition: all 0.2s ease;
   font-family: 'Courier New', monospace;
   text-align: left;
   width: 100%;
-}
-
-.load-button:hover {
-  border-color: #00ff00;
-  background: linear-gradient(135deg, #2a3a2a 0%, #3a4a3a 100%);
-  box-shadow: 
-    0 0 8px rgba(0, 255, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
-}
-
-.load-button:active {
-  transform: translateY(0);
-  box-shadow: 
-    0 0 4px rgba(0, 255, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .load-button .button-icon {

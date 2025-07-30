@@ -41,9 +41,8 @@ export const useSaveLoad = () => {
     setGameBackground
   } = useGameState();
 
-  // Credit costs for save/load operations
+  // Credit costs for save operations only
   const SAVE_COST = 50;
-  const LOAD_COST = 25;
 
   // Save to local cache
   const saveToLocalCache = useCallback(() => {
@@ -78,11 +77,6 @@ export const useSaveLoad = () => {
 
   // Load from local cache
   const loadFromLocalCache = useCallback(() => {
-    if (credits < LOAD_COST) {
-      console.error('Insufficient credits for load operation');
-      return false;
-    }
-
     const loadedGameState = loadGameFromLocalStorage();
     if (!loadedGameState) {
       console.error('No save file found in local cache');
@@ -100,10 +94,9 @@ export const useSaveLoad = () => {
       resumeTime();
     }
 
-    updateCredits(-LOAD_COST);
-    console.log(`Game loaded from local cache. Cost: ${LOAD_COST} credits`);
+    console.log('Game loaded from local cache');
     return true;
-  }, [credits, setCredits, setGamePhase, setGameTime, pauseTime, resumeTime, updateCredits]);
+  }, [setCredits, setGamePhase, setGameTime, pauseTime, resumeTime]);
 
   // Export to file
   const exportToFile = useCallback(() => {
@@ -138,11 +131,6 @@ export const useSaveLoad = () => {
 
   // Import from file
   const importFromFile = useCallback(async (file: File) => {
-    if (credits < LOAD_COST) {
-      console.error('Insufficient credits for import operation');
-      return false;
-    }
-
     const loadedGameState = await importGameFromFile(file);
     if (!loadedGameState) {
       console.error('Failed to import game from file');
@@ -160,17 +148,15 @@ export const useSaveLoad = () => {
       resumeTime();
     }
 
-    updateCredits(-LOAD_COST);
-    console.log(`Game imported from file. Cost: ${LOAD_COST} credits`);
+    console.log('Game imported from file');
     return true;
-  }, [credits, setCredits, setGamePhase, setGameTime, pauseTime, resumeTime, updateCredits]);
+  }, [setCredits, setGamePhase, setGameTime, pauseTime, resumeTime]);
 
   return {
     saveToLocalCache,
     loadFromLocalCache,
     exportToFile,
     importFromFile,
-    SAVE_COST,
-    LOAD_COST
+    SAVE_COST
   };
 }; 

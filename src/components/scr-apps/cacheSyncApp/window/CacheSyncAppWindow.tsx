@@ -16,8 +16,7 @@ const CacheSyncAppWindow: React.FC<CacheSyncAppWindowProps> = ({
     loadFromLocalCache,
     exportToFile,
     importFromFile,
-    SAVE_COST,
-    LOAD_COST
+    SAVE_COST
   } = useSaveLoad();
 
   return (
@@ -35,7 +34,6 @@ const CacheSyncAppWindow: React.FC<CacheSyncAppWindowProps> = ({
         <LoadSection 
           onLoadFromCache={loadFromLocalCache}
           onFileLoad={importFromFile}
-          loadCost={LOAD_COST}
         />
       </div>
     </ScrAppWindow>
