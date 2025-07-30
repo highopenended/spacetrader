@@ -59,19 +59,6 @@ export const initializeScrapSpawnState = (): ScrapSpawnState => ({
 });
 
 /**
- * Get current assembly line configuration (updates width on window resize)
- */
-export const getAssemblyLineConfig = () => {
-  return {
-    ...ASSEMBLY_LINE_CONFIG,
-    layout: {
-      ...ASSEMBLY_LINE_CONFIG.layout,
-      width: '100vw' // Full screen width
-    }
-  };
-};
-
-/**
  * Calculate frame-rate independent movement distance in vw units
  * @param deltaTime - Time elapsed since last frame (milliseconds)
  * @param speedVwPerSecond - Movement speed in viewport width units per second

@@ -1,6 +1,5 @@
 import React, { useRef, useCallback, useEffect, useState, useMemo } from 'react';
 import { 
-  getAssemblyLineConfig, 
   initializeScrapSpawnState,
   spawnScrapIfReady,
   updateScrapPositions as updateScrapPositionsUtil,
@@ -15,7 +14,6 @@ import ScrapItem from '../scrapItem/ScrapItem';
 import './WorkScreen.css';
 
 const WorkScreen: React.FC = () => {
-  const config = getAssemblyLineConfig();
   
   // Timer management
   const lastFrameTimeRef = useRef<number>(performance.now());
