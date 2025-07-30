@@ -37,6 +37,8 @@ export const getAppProps = (appId: string, gameState: AppPropsBuilderOptions) =>
       return {}; // Purge zone doesn't need any props
     case 'chronoTrack':
       return { gameTime, gamePhase }; // Tier 1 needs date and age info
+    case 'cacheSync':
+      return {}; // Cache sync doesn't need any props for now
     default:
       return {};
   }

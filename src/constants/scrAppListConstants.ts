@@ -12,6 +12,7 @@ import DateApp from '../components/scr-apps/dateApp/listItem/DateAppItem';
 import ScrAppStore from '../components/scr-apps/scrAppStoreApp/listItem/ScrAppStoreItem';
 import PurgeZoneApp from '../components/scr-apps/purgeZoneApp/listItem/PurgeZoneAppItem';
 import ChronoTrackApp from '../components/scr-apps/chronoTrackApp/listItem/ChronoTrackAppItem';
+import CacheSyncApp from '../components/scr-apps/cacheSyncApp/listItem/CacheSyncAppItem';
 import { AppDefinition, AppType, AppTier } from '../types/scrAppListState';
 
 // Standard tier costs for basic utility apps
@@ -91,6 +92,14 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     defaultToggles: {
       dateReadoutEnabled: true
     }
+  },
+  cacheSync: {
+    id: 'cacheSync',
+    name: 'Cache Sync',
+    component: CacheSyncApp,
+    deletable: true,
+    description: 'Save and load game progress',
+    tiers: STANDARD_TIERS
   },
 
   // Future apps (not implemented yet)

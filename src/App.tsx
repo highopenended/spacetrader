@@ -8,6 +8,7 @@ import CreditsAppWindow from './components/scr-apps/creditsApp/window/CreditsApp
 import PurgeZoneAppWindow from './components/scr-apps/purgeZoneApp/window/PurgeZoneAppWindow';
 import ScrAppStoreAppWindow from './components/scr-apps/scrAppStoreApp/window/ScrAppStoreAppWindow';
 import ChronoTrackAppWindow from './components/scr-apps/chronoTrackApp/window/ChronoTrackAppWindow';
+import CacheSyncAppWindow from './components/scr-apps/cacheSyncApp/window/CacheSyncAppWindow';
 import WorkScreen from './components/workMode/workScreen/WorkScreen';
 import GameBackground from './components/gameBackgrounds/GameBackground';
 import { useGameState } from './hooks/useGameState';
@@ -413,6 +414,25 @@ function App() {
         <CreditsAppWindow
           key={window.id}
           credits={credits}
+          windowId={window.id}
+          appType={window.appType}
+          position={window.position}
+          size={window.size}
+          zIndex={window.zIndex}
+          overId={overId}
+          draggedAppType={purgeNodeDragState.draggedAppType}
+          onClose={() => closeWindow(window.id)}
+          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
+          onSizeChange={(size) => updateWindowSize(window.appType, size)}
+          onBringToFront={() => bringToFront(window.id)}
+          updateCredits={updateCredits}
+        />
+      );
+    }
+    if (window.appType === 'cacheSync') {
+      return (
+        <CacheSyncAppWindow
+          key={window.id}
           windowId={window.id}
           appType={window.appType}
           position={window.position}
