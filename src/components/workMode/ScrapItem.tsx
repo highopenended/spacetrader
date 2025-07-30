@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ActiveScrapObject, getScrapAppearance } from '../../utils/scrapUtils';
 import './ScrapItem.css';
 
@@ -8,7 +8,11 @@ interface ScrapItemProps {
 }
 
 const ScrapItem: React.FC<ScrapItemProps> = ({ scrap, style }) => {
-  const appearance = getScrapAppearance(scrap);
+  // Memoize appearance calculation to prevent recalculation on every render
+  const appearance = useMemo(() => getScrapAppearance(scrap), [
+    scrap.typeId,
+    scrap.mutators.join(',') // Convert array to string for comparison
+  ]);
   
   return (
     <div className="scrap-item" style={style}>
@@ -17,4 +21,4 @@ const ScrapItem: React.FC<ScrapItemProps> = ({ scrap, style }) => {
   );
 };
 
-export default ScrapItem; 
+export default React.memo(ScrapItem); 

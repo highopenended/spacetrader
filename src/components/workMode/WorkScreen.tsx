@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useEffect, useState } from 'react';
+import React, { useRef, useCallback, useEffect, useState, useMemo } from 'react';
 import { 
   getAssemblyLineConfig, 
   initializeScrapSpawnState,
@@ -74,6 +74,17 @@ const WorkScreen: React.FC = () => {
     };
   }, [gameLoop]);
 
+  // Memoize scrap items with stable style objects to prevent unnecessary re-renders
+  const scrapItems = useMemo(() => 
+    spawnState.activeScrap.map((scrap) => ({
+      ...scrap,
+      style: {
+        transform: `translateX(${scrap.x}vw) translateY(-50%)`
+      }
+    })), 
+    [spawnState.activeScrap]
+  );
+
   return (
     <div className="work-screen">
       <WorkTimer elapsedSeconds={elapsedSeconds} frameCount={frameCount} />
@@ -81,13 +92,11 @@ const WorkScreen: React.FC = () => {
       <ScrapBin />
       
       {/* Render active scrap objects */}
-      {spawnState.activeScrap.map((scrap) => (
+      {scrapItems.map((scrap) => (
         <ScrapItem
           key={scrap.id}
           scrap={scrap}
-          style={{
-            transform: `translateX(${scrap.x}vw) translateY(-50%)`
-          }}
+          style={scrap.style}
         />
       ))}
     </div>
