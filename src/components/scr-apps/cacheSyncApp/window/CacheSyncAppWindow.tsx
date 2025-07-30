@@ -2,6 +2,7 @@ import React from 'react';
 import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
 import SaveSection from './SaveSection';
 import LoadSection from './LoadSection';
+import { useSaveLoad } from '../../../../hooks/useSaveLoad';
 
 interface CacheSyncAppWindowProps extends BaseWindowProps {
   // Props will be determined based on what functionality this app needs
@@ -10,6 +11,15 @@ interface CacheSyncAppWindowProps extends BaseWindowProps {
 const CacheSyncAppWindow: React.FC<CacheSyncAppWindowProps> = ({
   ...windowProps
 }) => {
+  const {
+    saveToLocalCache,
+    loadFromLocalCache,
+    exportToFile,
+    importFromFile,
+    SAVE_COST,
+    LOAD_COST
+  } = useSaveLoad();
+
   return (
     <ScrAppWindow
       title="Cache Sync"
@@ -17,8 +27,16 @@ const CacheSyncAppWindow: React.FC<CacheSyncAppWindowProps> = ({
       minSize={{ width: 300, height: 200 }}
     >
       <div className="window-content-padded">
-        <SaveSection />
-        <LoadSection />
+        <SaveSection 
+          onSaveToCache={saveToLocalCache}
+          onExportToFile={exportToFile}
+          saveCost={SAVE_COST}
+        />
+        <LoadSection 
+          onLoadFromCache={loadFromLocalCache}
+          onFileLoad={importFromFile}
+          loadCost={LOAD_COST}
+        />
       </div>
     </ScrAppWindow>
   );

@@ -1,0 +1,62 @@
+/* LoadZone.css */
+.load-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+  border: 2px dashed #555;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 80px;
+  font-family: 'Courier New', monospace;
+}
+
+.load-zone:hover {
+  border-color: #00ff00;
+  background: linear-gradient(135deg, #1a2a1a 0%, #2a3a2a 100%);
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+}
+
+.load-zone.drag-over {
+  border-color: #00ff00;
+  background: linear-gradient(135deg, #2a3a2a 0%, #3a4a3a 100%);
+  box-shadow: 
+    0 0 12px rgba(0, 255, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: scale(1.02);
+}
+
+.load-zone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  text-align: center;
+}
+
+.load-zone-icon {
+  font-size: 2em;
+  opacity: 0.8;
+}
+
+.load-zone-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.load-zone-title {
+  font-weight: bold;
+  font-size: 0.9em;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.load-zone-subtitle {
+  font-size: 0.75em;
+  color: #888;
+  font-style: italic;
+} 
