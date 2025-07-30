@@ -10,6 +10,10 @@ import { ScrapMutator } from '../types/mutatorTypes';
 import { ScrapRegistry, ScrapTypeId } from '../constants/scrapRegistry';
 import { MutatorRegistry, MutatorId } from '../constants/mutatorRegistry';
 
+// Cached calculations for performance - computed once at module load
+const SCRAP_TYPE_TOTAL_WEIGHT = Object.values(ScrapRegistry).reduce((sum, scrap) => sum + scrap.weight, 0);
+const MUTATOR_ENTRIES = Object.entries(MutatorRegistry);
+
 // Assembly Line Configuration - Shared between assembly line and scrap objects
 export const ASSEMBLY_LINE_CONFIG = {
   layout: {
@@ -89,8 +93,7 @@ export const generateScrapId = (): string => {
  * Returns a random scrap type based on weight probabilities
  */
 export const getRandomScrapType = (): ScrapTypeId => {
-  const totalWeight = Object.values(ScrapRegistry).reduce((sum, scrap) => sum + scrap.weight, 0);
-  let random = Math.random() * totalWeight;
+  let random = Math.random() * SCRAP_TYPE_TOTAL_WEIGHT;
   
   for (const [typeId, scrapType] of Object.entries(ScrapRegistry)) {
     random -= scrapType.weight;
@@ -110,7 +113,7 @@ export const getRandomScrapType = (): ScrapTypeId => {
 export const generateRandomMutators = (maxMutators: number = 2): MutatorId[] => {
   const mutators: MutatorId[] = [];
   
-  for (const [mutatorId, mutator] of Object.entries(MutatorRegistry)) {
+  for (const [mutatorId, mutator] of MUTATOR_ENTRIES) {
     if (Math.random() < mutator.rarity && mutators.length < maxMutators) {
       mutators.push(mutatorId as MutatorId);
     }
