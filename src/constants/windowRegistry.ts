@@ -61,6 +61,7 @@ const buildCommonProps = (
   onPositionChange: (pos: { x: number; y: number }) => windowManager.updateWindowPosition(window.appType, pos),
   onSizeChange: (size: { width: number; height: number }) => windowManager.updateWindowSize(window.appType, size),
   onBringToFront: () => windowManager.bringToFront(window.id),
+  updateCredits: gameState.updateCredits,
 });
 
 // Window registry mapping app types to their configurations
@@ -68,24 +69,21 @@ export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
   purgeZone: {
     component: PurgeZoneAppWindow,
     getProps: (window, gameState, windowManager) => ({
-      ...buildCommonProps(window, gameState, windowManager),
-      updateCredits: gameState.updateCredits
+      ...buildCommonProps(window, gameState, windowManager)
     })
   },
   age: {
     component: AgeAppWindow,
     getProps: (window, gameState, windowManager) => ({
       ...buildCommonProps(window, gameState, windowManager),
-      gameTime: gameState.gameTime,
-      updateCredits: gameState.updateCredits
+      gameTime: gameState.gameTime
     })
   },
   jobTitle: {
     component: JobTitleAppWindow,
     getProps: (window, gameState, windowManager) => ({
       ...buildCommonProps(window, gameState, windowManager),
-      gamePhase: gameState.gamePhase,
-      updateCredits: gameState.updateCredits
+      gamePhase: gameState.gamePhase
     })
   },
   scrAppStore: {
@@ -96,8 +94,7 @@ export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
       gamePhase: gameState.gamePhase,
       getAvailableApps: gameState.getAvailableApps,
       installedApps: gameState.installedApps,
-      installApp: gameState.installApp,
-      updateCredits: gameState.updateCredits
+      installApp: gameState.installApp
     })
   },
   chronoTrack: {
@@ -105,24 +102,21 @@ export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
     getProps: (window, gameState, windowManager) => ({
       ...buildCommonProps(window, gameState, windowManager),
       gameTime: gameState.gameTime,
-      gamePhase: gameState.gamePhase,
-      updateCredits: gameState.updateCredits
+      gamePhase: gameState.gamePhase
     })
   },
   credits: {
     component: CreditsAppWindow,
     getProps: (window, gameState, windowManager) => ({
       ...buildCommonProps(window, gameState, windowManager),
-      credits: gameState.credits,
-      updateCredits: gameState.updateCredits
+      credits: gameState.credits
     })
   },
   cacheSync: {
     component: CacheSyncAppWindow,
     getProps: (window, gameState, windowManager) => ({
       ...buildCommonProps(window, gameState, windowManager),
-      credits: gameState.credits,
-      updateCredits: gameState.updateCredits
+      credits: gameState.credits
     })
   }
 };

@@ -235,6 +235,29 @@ export const useGameState = () => {
     }));
   }, []);
 
+  const installAppOrder = useCallback((order: string[]) => {
+    if (order.join(',') !== appOrder.join(',')) {
+      const newInstalled = order.map((id, idx) => {
+        const found = apps.find((app: any) => app.id === id);
+        if (found) {
+          return {
+            id: found.id,
+            order: idx + 1,
+            purchased: true,
+            installedAt: found.installedAt || Date.now(),
+          };
+        }
+        return null;
+      }).filter(Boolean);
+      if (newInstalled.length === order.length) {
+        resetToDefaults();
+        newInstalled.forEach((app: any, idx) => {
+          if (app) installApp(app.id, idx + 1);
+        });
+      }
+    }
+  }, [appOrder, apps, resetToDefaults, installApp]);
+
   // ===== TIME INTERVAL MANAGEMENT =====
   useEffect(() => {
     if (!gameState.isPaused) {
@@ -303,6 +326,7 @@ export const useGameState = () => {
     installApp,
     uninstallApp,
     reorderApps,
+    installAppOrder,
     resetToDefaults,
     getAvailableApps,
     changeAppTier,
