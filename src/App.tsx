@@ -29,7 +29,7 @@ function App() {
     installedApps,
     gameMode,
     gameBackground,
-    
+
     // Actions
     updateCredits,
     setCredits,
@@ -77,17 +77,17 @@ function App() {
     handleConfirmPurge,
     handleCancelPurge,
     setOverId
-  } = usePurgeZoneDrag();
+  } = usePurgeZoneDrag({
+    closeWindowsByAppType,
+    uninstallApp,
+    installAppOrder
+  });
 
 
 
   // Use custom collision detection hook
   const { customCollisionDetection } = useCustomCollisionDetection();
 
-
-
-
-  // resetGame is now provided by useGameState hook
 
   const renderWindowComponent = (window: WindowData) => {
     const gameState = {
@@ -101,128 +101,150 @@ function App() {
       installedApps,
       installApp
     };
-    
+
     const windowManager = {
       closeWindow,
       updateWindowPosition,
       updateWindowSize,
       bringToFront
     };
-    
+
     return renderWindow(window, gameState, windowManager);
   };
 
+  // Combined props object
+  const componentProps = {
+    toggleProvider: {
+      installedApps,
+      gameMode,
+      onBeginWorkSession: beginWorkSession,
+      credits,
+      gameTime,
+      gamePhase
+    },
+    dndContext: {
+      collisionDetection: customCollisionDetection,
+      onDragStart: (event: any) => handleUnifiedDragStart(event, handleDragStart),
+      onDragOver: (event: any) => setOverId(event.over?.id ?? null),
+      onDragEnd: (event: any) => handleUnifiedDragEnd(event, apps, appOrder, handleDragEnd),
+      sensors: [
+        useSensor(PointerSensor, {
+          activationConstraint: { distance: 10 },
+        }),
+      ]
+    },
+    terminalScreen: {
+      credits,
+      gameTime,
+      gamePhase,
+      isOnline: !isPaused,
+      onAppClick: openOrCloseWindow,
+      apps,
+      appOrder,
+      pendingDeleteAppId: pendingDelete.appId,
+      openAppTypes: new Set(windows.map(w => w.appType)),
+      overId,
+      onDockWindows: dockAllWindows
+    },
+    adminToolbar: {
+      credits,
+      gamePhase,
+      gameTime,
+      updateCredits,
+      setCredits,
+      setGamePhase,
+      setGameTime,
+      advanceGamePhase,
+      isPaused,
+      pauseTime,
+      resumeTime,
+      resetGame,
+      setGameBackground
+    },
+    purgeConfirm: {
+      open: !!pendingDelete.appId,
+      appName: pendingDelete.appId ? (apps.find((a: any) => a.id === pendingDelete.appId)?.name || pendingDelete.appId) : '',
+      onConfirm: handleConfirmPurge,
+      onCancel: handleCancelPurge
+    },
+
+    dragOverlay: {
+      zIndex: 2000,
+      dropAnimation: { duration: 0, easing: 'ease' },
+      style: {
+        // PURGE NODE DRAG SYSTEM: Position overlay at mouse cursor for purge indicator
+        ...(purgeNodeDragState.isPurgeNodeDragging && purgeNodeDragState.mousePosition && {
+          position: 'fixed' as const,
+          left: purgeNodeDragState.mousePosition.x - 6, // Center 12px indicator on cursor
+          top: purgeNodeDragState.mousePosition.y - 6,
+          transform: 'none', // Override @dnd-kit's transform
+          pointerEvents: 'none' as const
+        })
+      }
+    }
+  };
+
+  // DragOverlay content helper
+  const renderDragOverlayContent = () => {
+    // PURGE NODE DRAG SYSTEM: Tiny mouse-cursor-sized indicator for window deletion
+    if (purgeNodeDragState.isPurgeNodeDragging) {
+      return (
+        <div 
+          className="purge-node-drag-indicator"
+          style={{ 
+            width: '12px', 
+            height: '12px',
+            background: 'linear-gradient(135deg, #ff4444 0%, #aa2222 100%)',
+            border: '1px solid #ff6666',
+            borderRadius: '2px',
+            boxShadow: '0 0 8px rgba(255, 68, 68, 0.6)',
+            opacity: 0.9,
+            pointerEvents: 'none'
+          }}
+          title={`Deleting: ${purgeNodeDragState.draggedWindowTitle}`}
+        />
+      );
+    }
+    
+    // STANDARD DRAG SYSTEM: Full app preview for app list reordering
+    if (dragState.isDragging && dragState.draggedAppId) {
+      const appConfig = apps.find(app => app.id === dragState.draggedAppId);
+      if (!appConfig) return null;
+      
+      const AppComponent = appConfig.component;
+      const appProps = getAppProps(appConfig.id, { credits, gameTime, gamePhase });
+
+      return (
+        <div 
+          className={`sortable-item dragging`}
+          style={{ opacity: 0.8, position: 'relative' }}
+        >
+          <AppComponent {...appProps} />
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
   return (
-    <ToggleProvider 
-      installedApps={installedApps}
-      gameMode={gameMode}
-      onBeginWorkSession={beginWorkSession}
-      credits={credits}
-      gameTime={gameTime}
-      gamePhase={gamePhase}
-    >
-      <DndContext
-        collisionDetection={customCollisionDetection}
-        onDragStart={(event) => handleUnifiedDragStart(event, handleDragStart)}
-        onDragOver={event => setOverId(event.over?.id ?? null)}
-        onDragEnd={(event) => handleUnifiedDragEnd(event, apps, appOrder, handleDragEnd, closeWindowsByAppType, uninstallApp)}
-        sensors={[
-          useSensor(PointerSensor, {
-            activationConstraint: { distance: 10 },
-          }),
-        ]}
-      >
-                <div className="App">
+    <ToggleProvider {...componentProps.toggleProvider}>
+      <DndContext {...componentProps.dndContext}>
+
+        <div className="App">
           <GameBackground backgroundId={gameBackground} />
           <DataReadout />
-          <TerminalScreen 
-            credits={credits}
-            gameTime={gameTime}
-            gamePhase={gamePhase}
-            isOnline={!isPaused}
-            onAppClick={openOrCloseWindow}
-            apps={apps}
-            appOrder={appOrder}
-            pendingDeleteAppId={pendingDelete.appId}
-            openAppTypes={new Set(windows.map(w => w.appType))}
-            overId={overId}
-            onDockWindows={dockAllWindows}
-          />
-        <AdminToolbar 
-          credits={credits}
-          gamePhase={gamePhase}
-          gameTime={gameTime}
-          updateCredits={updateCredits}
-          setCredits={setCredits}
-          setGamePhase={setGamePhase}
-          setGameTime={setGameTime}
-          advanceGamePhase={advanceGamePhase}
-          isPaused={isPaused}
-          pauseTime={pauseTime}
-          resumeTime={resumeTime}
-          resetGame={resetGame}
-          setGameBackground={setGameBackground}
-        />
-        {windows.map(renderWindowComponent)}
-        <PurgeConfirmPopup
-          open={!!pendingDelete.appId}
-          appName={pendingDelete.appId ? (apps.find((a: any) => a.id === pendingDelete.appId)?.name || pendingDelete.appId) : ''}
-          onConfirm={() => handleConfirmPurge(closeWindowsByAppType, uninstallApp)}
-          onCancel={() => handleCancelPurge(installAppOrder)}
-        />
+          <TerminalScreen {...componentProps.terminalScreen} />
+          <AdminToolbar {...componentProps.adminToolbar} />
+          <PurgeConfirmPopup {...componentProps.purgeConfirm} />
+          {windows.map(renderWindowComponent)}
 
-        {gameMode === 'workMode' && <WorkScreen />}
-
-        <DragOverlay 
-          zIndex={2000}
-          dropAnimation={{ duration: 0, easing: 'ease' }}
-          style={{
-            // PURGE NODE DRAG SYSTEM: Position overlay at mouse cursor for purge indicator
-            ...(purgeNodeDragState.isPurgeNodeDragging && purgeNodeDragState.mousePosition && {
-              position: 'fixed',
-              left: purgeNodeDragState.mousePosition.x - 6, // Center 12px indicator on cursor
-              top: purgeNodeDragState.mousePosition.y - 6,
-              transform: 'none', // Override @dnd-kit's transform
-              pointerEvents: 'none'
-            })
-          }}
-        >
-          {/* PURGE NODE DRAG SYSTEM: Tiny mouse-cursor-sized indicator for window deletion */}
-          {purgeNodeDragState.isPurgeNodeDragging ? (
-            <div 
-              className="purge-node-drag-indicator"
-              style={{ 
-                width: '12px', 
-                height: '12px',
-                background: 'linear-gradient(135deg, #ff4444 0%, #aa2222 100%)',
-                border: '1px solid #ff6666',
-                borderRadius: '2px',
-                boxShadow: '0 0 8px rgba(255, 68, 68, 0.6)',
-                opacity: 0.9,
-                pointerEvents: 'none'
-              }}
-              title={`Deleting: ${purgeNodeDragState.draggedWindowTitle}`}
-            />
-          ) : 
-          /* STANDARD DRAG SYSTEM: Full app preview for app list reordering */
-          dragState.isDragging && dragState.draggedAppId ? (
-            <div 
-              className={`sortable-item dragging`}
-              style={{ opacity: 0.8, position: 'relative' }}
-            >
-              {/* Render the dragged app in overlay */}
-              {(() => {
-                const appConfig = apps.find(app => app.id === dragState.draggedAppId);
-                if (!appConfig) return null;
-                const AppComponent = appConfig.component;
-                const appProps = getAppProps(appConfig.id, { credits, gameTime, gamePhase });
-
-                return <AppComponent {...appProps} />;
-              })()}
-            </div>
-          ) : null}
-        </DragOverlay>
-      </div>
+          {gameMode === 'workMode' && <WorkScreen />}
+    
+          <DragOverlay {...componentProps.dragOverlay}>
+            {renderDragOverlayContent()}
+          </DragOverlay>
+        </div>
       </DndContext>
     </ToggleProvider>
   );

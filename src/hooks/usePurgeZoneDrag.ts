@@ -23,10 +23,17 @@ interface PendingDeleteState {
   prevOrder: string[];
 }
 
+// Interface for required functions
+interface PurgeZoneDragDependencies {
+  closeWindowsByAppType: (appType: string) => void;
+  uninstallApp: (appId: string) => void;
+  installAppOrder: (order: string[]) => void;
+}
+
 /**
  * Hook for managing purge zone drag functionality
  */
-export const usePurgeZoneDrag = () => {
+export const usePurgeZoneDrag = (dependencies: PurgeZoneDragDependencies) => {
   // PURGE NODE DRAG SYSTEM: Track purge node drag state separately from app list drag state
   const [purgeNodeDragState, setPurgeNodeDragState] = useState<PurgeNodeDragState>({
     isPurgeNodeDragging: false,
@@ -112,9 +119,7 @@ export const usePurgeZoneDrag = () => {
     event: any, 
     apps: any[], 
     appOrder: string[], 
-    handleDragEnd: (event: any) => void,
-    closeWindowsByAppType: (appType: string) => void,
-    uninstallApp: (appId: string) => void
+    handleDragEnd: (event: any) => void
   ) => {
     const { active, over } = event;
     
@@ -165,7 +170,7 @@ export const usePurgeZoneDrag = () => {
       // PURGE NODE DRAG SYSTEM: Handle window docking via purge node
       if (active.data?.current?.type === 'window-purge-node') {
         const { appType } = active.data.current;
-        closeWindowsByAppType(appType); // Same behavior as minimize button
+        dependencies.closeWindowsByAppType(appType); // Same behavior as minimize button
         setOverId(null); // Reset overId to hide dock message
         return;
       }
@@ -184,28 +189,25 @@ export const usePurgeZoneDrag = () => {
   /**
    * Handle confirmation of purge deletion
    */
-  const handleConfirmPurge = useCallback((
-    closeWindowsByAppType: (appType: string) => void,
-    uninstallApp: (appId: string) => void
-  ) => {
+  const handleConfirmPurge = useCallback(() => {
     if (pendingDelete.appId) {
-      closeWindowsByAppType(pendingDelete.appId);
-      uninstallApp(pendingDelete.appId);
+      dependencies.closeWindowsByAppType(pendingDelete.appId);
+      dependencies.uninstallApp(pendingDelete.appId);
     }
     setPendingDelete({ appId: null, prevOrder: [] });
     setOverId(null);
-  }, [pendingDelete]);
+  }, [pendingDelete, dependencies]);
 
   /**
    * Handle cancellation of purge deletion
    */
-  const handleCancelPurge = useCallback((installAppOrder: (order: string[]) => void) => {
+  const handleCancelPurge = useCallback(() => {
     if (pendingDelete.prevOrder.length) {
-      installAppOrder(pendingDelete.prevOrder);
+      dependencies.installAppOrder(pendingDelete.prevOrder);
     }
     setPendingDelete({ appId: null, prevOrder: [] });
     setOverId(null);
-  }, [pendingDelete]);
+  }, [pendingDelete, dependencies]);
 
   return {
     // State
