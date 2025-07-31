@@ -13,7 +13,7 @@ import PurgeConfirmPopup from './components/ui/PurgeConfirmPopup';
 import { renderWindow } from './constants/windowRegistry';
 
 import { DndContext, DragOverlay, useSensor, PointerSensor } from '@dnd-kit/core';
-import { getAppProps } from './utils/appPropsBuilder';
+import { getAppPropsMap } from './utils/appPropsBuilder';
 import { ToggleProvider } from './contexts/ToggleContext';
 import DataReadout from './components/DataReadout';
 
@@ -29,7 +29,7 @@ function App() {
     installedApps,
     gameMode,
     gameBackground,
-
+    
     // Actions
     updateCredits,
     setCredits,
@@ -112,6 +112,9 @@ function App() {
     return renderWindow(window, gameState, windowManager);
   };
 
+  // Build app props map for TerminalScreen
+  const appPropsMap = getAppPropsMap(apps, { credits, gameTime, gamePhase });
+
   // Combined props object
   const componentProps = {
     toggleProvider: {
@@ -144,7 +147,8 @@ function App() {
       pendingDeleteAppId: pendingDelete.appId,
       openAppTypes: new Set(windows.map(w => w.appType)),
       overId,
-      onDockWindows: dockAllWindows
+      onDockWindows: dockAllWindows,
+      appPropsMap
     },
     adminToolbar: {
       credits,
@@ -189,20 +193,20 @@ function App() {
     // PURGE NODE DRAG SYSTEM: Tiny mouse-cursor-sized indicator for window deletion
     if (purgeNodeDragState.isPurgeNodeDragging) {
       return (
-        <div 
-          className="purge-node-drag-indicator"
-          style={{ 
-            width: '12px', 
-            height: '12px',
-            background: 'linear-gradient(135deg, #ff4444 0%, #aa2222 100%)',
-            border: '1px solid #ff6666',
-            borderRadius: '2px',
-            boxShadow: '0 0 8px rgba(255, 68, 68, 0.6)',
-            opacity: 0.9,
-            pointerEvents: 'none'
-          }}
-          title={`Deleting: ${purgeNodeDragState.draggedWindowTitle}`}
-        />
+            <div 
+              className="purge-node-drag-indicator"
+              style={{ 
+                width: '12px', 
+                height: '12px',
+                background: 'linear-gradient(135deg, #ff4444 0%, #aa2222 100%)',
+                border: '1px solid #ff6666',
+                borderRadius: '2px',
+                boxShadow: '0 0 8px rgba(255, 68, 68, 0.6)',
+                opacity: 0.9,
+                pointerEvents: 'none'
+              }}
+              title={`Deleting: ${purgeNodeDragState.draggedWindowTitle}`}
+            />
       );
     }
     
@@ -212,13 +216,13 @@ function App() {
       if (!appConfig) return null;
       
       const AppComponent = appConfig.component;
-      const appProps = getAppProps(appConfig.id, { credits, gameTime, gamePhase });
+      const appProps = appPropsMap[appConfig.id];
 
       return (
-        <div 
-          className={`sortable-item dragging`}
-          style={{ opacity: 0.8, position: 'relative' }}
-        >
+            <div 
+              className={`sortable-item dragging`}
+              style={{ opacity: 0.8, position: 'relative' }}
+            >
           <AppComponent {...appProps} />
         </div>
       );
@@ -243,8 +247,8 @@ function App() {
     
           <DragOverlay {...componentProps.dragOverlay}>
             {renderDragOverlayContent()}
-          </DragOverlay>
-        </div>
+        </DragOverlay>
+      </div>
       </DndContext>
     </ToggleProvider>
   );

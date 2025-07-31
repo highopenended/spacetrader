@@ -42,4 +42,17 @@ export const getAppProps = (appId: string, gameState: AppPropsBuilderOptions) =>
     default:
       return {};
   }
+};
+
+/**
+ * Build props map for all apps
+ * @param apps - Array of app configurations
+ * @param gameState - Current game state values
+ * @returns Map of app IDs to their props objects
+ */
+export const getAppPropsMap = (apps: any[], gameState: AppPropsBuilderOptions) => {
+  return apps.reduce((map, app) => {
+    map[app.id] = getAppProps(app.id, gameState);
+    return map;
+  }, {} as Record<string, any>);
 }; 

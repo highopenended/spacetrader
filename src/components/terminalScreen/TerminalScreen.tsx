@@ -6,13 +6,10 @@ import SortableItem from '../scr-apps/SortableItem';
 import DockWindowsButton from './DockWindowsButton';
 import TerminalToggle from './TerminalToggle';
 
-import { GamePhase, GameTime } from '../../types/gameState';
-import { getAppProps } from '../../utils/appPropsBuilder';
-
 interface TerminalScreenProps {
   credits: number;
-  gameTime: GameTime;
-  gamePhase: GamePhase;
+  gameTime: any; // Simplified type since we're not importing GameTime
+  gamePhase: any; // Simplified type since we're not importing GamePhase
   isOnline?: boolean;
   onAppClick?: (appType: string, title: string, content?: React.ReactNode) => void;
   apps: any[];
@@ -21,6 +18,7 @@ interface TerminalScreenProps {
   openAppTypes?: Set<string>;
   overId?: any; // For drag-over detection (window docking)
   onDockWindows?: () => void;
+  appPropsMap: Record<string, any>; // Pre-built app props from App.tsx
 }
 
 const TerminalScreen: React.FC<TerminalScreenProps> = ({ 
@@ -34,7 +32,8 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   pendingDeleteAppId = null,
   openAppTypes = new Set(),
   overId,
-  onDockWindows
+  onDockWindows,
+  appPropsMap
 }) => {
   // Resize state
   const [height, setHeight] = useState<number>(window.innerHeight); // Start at full viewport height
@@ -123,7 +122,7 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
     if (!appConfig) return null;
     
     const AppComponent = appConfig.component;
-    const appProps = getAppProps(appConfig.id, { credits, gameTime, gamePhase });
+    const appProps = appPropsMap[appConfig.id]; // Use pre-built props from App.tsx
 
     return (
       <AppComponent 

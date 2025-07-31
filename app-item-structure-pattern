@@ -1,0 +1,243 @@
+**App Item Structure Pattern:**
+
+## Core Architecture
+- Apps appear in the TerminalScreen as compact list items
+- Apps are mutually exclusive with windows - when window opens, app disappears from terminal
+- Apps are wrapped with SortableItem for drag-and-drop functionality
+- Apps use ScrAppItem as the base wrapper component
+- **NEW**: App props are built in App.tsx and passed to TerminalScreen via appPropsMap
+
+## File Structure
+```
+src/components/scr-apps/{appName}/
+├── listItem/
+│   ├── {AppName}AppItem.tsx     # Required - terminal display component
+│   └── {AppName}AppItem.css     # Optional - only if unique styling needed
+└── window/                      # Optional - for custom windows
+    └── {AppName}AppWindow.tsx
+```
+
+## App List Item Implementation
+
+### Basic Pattern
+```tsx
+import React from 'react';
+import ScrApp from '../../ScrAppItem';
+import { GameTime } from '../../../../types/gameState';
+
+interface AgeAppProps {
+  gameTime: GameTime; // Only app-specific props needed
+}
+
+const AgeApp: React.FC<AgeAppProps> = ({ gameTime }) => {
+  const { age } = gameTime;
+
+  return (
+    <ScrApp>
+      <div>
+        <div className="app-label">Age</div>
+        <div className="app-value">{age} Years</div>
+      </div>
+    </ScrApp>
+  );
+};
+
+export default AgeApp;
+```
+
+## CSS Classes and Styling
+
+### Standard Classes (defined in ScrAppItem.css)
+- `.app-label` - App name/title text
+- `.app-value` - Main display value
+- `.app-label-negative` - For negative values (like negative credits)
+- `.app-value-negative` - For negative value displays
+
+### Custom Classes (define in app-specific CSS only if needed)
+- Use descriptive names: `.job-title-tracker`, `.game-time-tracker`
+- Follow existing color scheme: blacks, whites, greys
+- Use CSS variables from globals.css for consistency
+
+### CSS Best Practices
+- **DO NOT create empty CSS files** - delete them instead
+- **DO NOT import CSS files** that are empty or comment-only
+- Use existing classes when possible to maintain DRY principles
+- Only create app-specific CSS for unique styling needs
+
+## App Registration
+
+### Constants Registration (scrAppListConstants.ts)
+```tsx
+export const APP_REGISTRY: Record<string, AppDefinition> = {
+  appName: {
+    id: 'appName',
+    name: 'Display Name',
+    title: 'Window Title',
+    component: AppNameApp,
+    category: 'utility', // 'core' | 'utility' | 'trading' | etc.
+    cost: 0,
+    deletable: true, // false for core apps
+    description: 'Brief description',
+    tiers: STANDARD_TIERS
+  }
+};
+```
+
+### Default Installation
+```tsx
+export const DEFAULT_INSTALLED_APPS: AppType[] = [
+  'credits',
+  'jobTitle', 
+  'age',
+  'date',
+  'appName', // Add new apps here
+  'scrAppStore'
+];
+```
+
+## Props Pattern in App.tsx
+
+### Prop Building Logic (App.tsx)
+```tsx
+// Build app props map for TerminalScreen
+const appPropsMap = getAppPropsMap(apps, { credits, gameTime, gamePhase });
+
+// Pass to TerminalScreen via componentProps
+const componentProps = {
+  terminalScreen: {
+    // ... other props
+    appPropsMap
+  }
+};
+```
+
+### App Props Builder (utils/appPropsBuilder.ts)
+```tsx
+// Individual app props
+export const getAppProps = (appId: string, gameState: AppPropsBuilderOptions) => {
+  const { credits, gameTime, gamePhase } = gameState;
+  
+  switch (appId) {
+    case 'credits': return { credits };
+    case 'jobTitle': return { gamePhase };
+    case 'age': return { gameTime };
+    case 'date': return { gameTime, gamePhase };
+    // ... other apps
+    default: return {};
+  }
+};
+
+// Props map for all apps
+export const getAppPropsMap = (apps: any[], gameState: AppPropsBuilderOptions) => {
+  return apps.reduce((map, app) => {
+    map[app.id] = getAppProps(app.id, gameState);
+    return map;
+  }, {} as Record<string, any>);
+};
+```
+
+## Integration with SortableItem
+
+### Rendering Pattern (TerminalScreen.tsx)
+```tsx
+// TerminalScreen receives appPropsMap from App.tsx
+interface TerminalScreenProps {
+  // ... other props
+  appPropsMap: Record<string, any>; // Pre-built app props from App.tsx
+}
+
+// Render app using pre-built props
+const renderApp = (appConfig: any) => {
+  if (!appConfig) return null;
+  
+  const AppComponent = appConfig.component;
+  const appProps = appPropsMap[appConfig.id]; // Use pre-built props
+
+  return <AppComponent {...appProps} />;
+};
+
+// Filter and render apps
+{apps
+  .filter((appConfig) => {
+    const isPendingDelete = pendingDeleteAppId === appConfig.id;
+    const isWindowOpen = openAppTypes.has(appConfig.id);
+    return !isPendingDelete && !isWindowOpen; // Apps disappear when window opens
+  })
+  .map((appConfig) => (
+    <SortableItem
+      key={appConfig.id}
+      id={appConfig.id}
+      onAppClick={() => onAppClick?.(appConfig.id, appConfig.title)}
+    >
+      {renderApp(appConfig)}
+    </SortableItem>
+  ))
+}
+```
+
+## Special App Types
+
+### Core Apps
+- Cannot be deleted (`deletable: false`)
+- Always installed by default
+- Examples: credits, scrAppStore
+
+### Utility Apps  
+- Can be deleted and reinstalled (`deletable: true`)
+- Examples: jobTitle, age, date, purgeZone
+
+### Complex Display Apps
+- May have multiple data sources or complex layout
+- Example: dateApp shows different info based on game phase
+
+## Behavior Patterns
+
+### Conditional Rendering
+```tsx
+// Show different content based on game state
+const isEarlyPhase = gamePhase === 'lineRat' || gamePhase === 'bayBoss';
+
+return (
+  <ScrApp>
+    <div className="game-time-tracker">
+      {isEarlyPhase ? (
+        <div>Simple view</div>
+      ) : (
+        <div>Complex view</div>
+      )}
+    </div>
+  </ScrApp>
+);
+```
+
+### Negative States
+```tsx
+// Handle negative values with special styling
+const isNegative = credits < 0;
+
+return (
+  <ScrApp>
+    <div>
+      <div className={isNegative ? 'app-label-negative' : 'app-label'}>Credits</div>
+      <div className={isNegative ? 'app-value-negative' : 'app-value'}>₵ {credits.toLocaleString()}</div>
+    </div>
+  </ScrApp>
+);
+```
+
+## Architecture Changes
+
+### NEW: Centralized Prop Building
+- **App.tsx**: Orchestrates game state and builds app props using `getAppPropsMap`
+- **TerminalScreen**: Pure UI component that receives pre-built props via `appPropsMap`
+- **appPropsBuilder.ts**: Centralized utility for building individual app props and props maps
+
+### NEW: Clean Separation of Concerns
+- **App.tsx**: Game state management, prop building, component orchestration
+- **TerminalScreen**: UI rendering, drag-and-drop, resize handling
+- **appPropsBuilder.ts**: App-specific prop building logic
+
+### NEW: Performance Benefits
+- App props are built once in App.tsx instead of on every render
+- No repeated calls to `getAppProps` for each app
+- TerminalScreen focuses purely on rendering 
