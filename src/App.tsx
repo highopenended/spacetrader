@@ -433,6 +433,8 @@ function App() {
       return (
         <CacheSyncAppWindow
           key={window.id}
+          credits={credits}
+          updateCredits={updateCredits}
           windowId={window.id}
           appType={window.appType}
           position={window.position}
@@ -444,7 +446,6 @@ function App() {
           onPositionChange={(position) => updateWindowPosition(window.appType, position)}
           onSizeChange={(size) => updateWindowSize(window.appType, size)}
           onBringToFront={() => bringToFront(window.id)}
-          updateCredits={updateCredits}
         />
       );
     }

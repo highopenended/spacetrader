@@ -16,10 +16,8 @@ import {
 } from '../utils/SaveLoadUtils';
 import { GameState } from '../types/gameState';
 
-export const useSaveLoad = () => {
+export const useSaveLoad = (credits: number, updateCredits: (amount: number) => void) => {
   const { 
-    updateCredits, 
-    credits,
     gamePhase,
     gameTime,
     isPaused,

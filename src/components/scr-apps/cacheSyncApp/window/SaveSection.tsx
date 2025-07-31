@@ -5,9 +5,12 @@ interface SaveSectionProps {
   onSaveToCache: () => boolean;
   onExportToFile: () => boolean;
   saveCost: number;
+  credits: number;
 }
 
-const SaveSection: React.FC<SaveSectionProps> = ({ onSaveToCache, onExportToFile, saveCost }) => {
+const SaveSection: React.FC<SaveSectionProps> = ({ onSaveToCache, onExportToFile, saveCost, credits }) => {
+  const hasInsufficientFunds = credits < saveCost;
+
   return (
     <div className="save-section">
       <div className="section-header">
@@ -17,8 +20,8 @@ const SaveSection: React.FC<SaveSectionProps> = ({ onSaveToCache, onExportToFile
         <div className="save-options">
           <div className="save-option-row" onClick={onSaveToCache}>
             <div className="cost-box">
-              <div className="cost-amount">₵{saveCost}</div>
-              <div className="cost-label">COST</div>
+              <div className={`cost-amount ${hasInsufficientFunds ? 'insufficient' : ''}`}>₵{saveCost}</div>
+              <div className={`cost-label ${hasInsufficientFunds ? 'insufficient' : ''}`}>COST</div>
             </div>
             <div className="save-button local-cache-save">
               <div className="button-icon">💾</div>
@@ -26,13 +29,18 @@ const SaveSection: React.FC<SaveSectionProps> = ({ onSaveToCache, onExportToFile
                 <div className="button-label">Save to Local Cache</div>
                 <div className="button-description">Store in local cache</div>
               </div>
+              {hasInsufficientFunds && (
+                <div className="insufficient-funds-overlay">
+                  <div className="insufficient-funds-text">INSUFFICIENT FUNDS</div>
+                </div>
+              )}
             </div>
           </div>
           
           <div className="save-option-row" onClick={onExportToFile}>
             <div className="cost-box">
-              <div className="cost-amount">₵{saveCost}</div>
-              <div className="cost-label">COST</div>
+              <div className={`cost-amount ${hasInsufficientFunds ? 'insufficient' : ''}`}>₵{saveCost}</div>
+              <div className={`cost-label ${hasInsufficientFunds ? 'insufficient' : ''}`}>COST</div>
             </div>
             <div className="save-button file-save">
               <div className="button-icon">📄</div>
@@ -40,6 +48,11 @@ const SaveSection: React.FC<SaveSectionProps> = ({ onSaveToCache, onExportToFile
                 <div className="button-label">Save as .scrap</div>
                 <div className="button-description">Export to file</div>
               </div>
+              {hasInsufficientFunds && (
+                <div className="insufficient-funds-overlay">
+                  <div className="insufficient-funds-text">INSUFFICIENT FUNDS</div>
+                </div>
+              )}
             </div>
           </div>
         </div>

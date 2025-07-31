@@ -5,10 +5,13 @@ import LoadSection from './LoadSection';
 import { useSaveLoad } from '../../../../hooks/useSaveLoad';
 
 interface CacheSyncAppWindowProps extends BaseWindowProps {
-  // Props will be determined based on what functionality this app needs
+  credits: number;
+  updateCredits: (amount: number) => void;
 }
 
 const CacheSyncAppWindow: React.FC<CacheSyncAppWindowProps> = ({
+  credits,
+  updateCredits,
   ...windowProps
 }) => {
   const {
@@ -17,7 +20,7 @@ const CacheSyncAppWindow: React.FC<CacheSyncAppWindowProps> = ({
     exportToFile,
     importFromFile,
     SAVE_COST
-  } = useSaveLoad();
+  } = useSaveLoad(credits, updateCredits);
 
   return (
     <ScrAppWindow
@@ -30,6 +33,7 @@ const CacheSyncAppWindow: React.FC<CacheSyncAppWindowProps> = ({
           onSaveToCache={saveToLocalCache}
           onExportToFile={exportToFile}
           saveCost={SAVE_COST}
+          credits={credits}
         />
         <LoadSection 
           onLoadFromCache={loadFromLocalCache}

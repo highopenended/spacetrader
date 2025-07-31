@@ -334,15 +334,6 @@ export const canSafelyInteract = (scrap: ScrapObject, playerState: any): boolean
   return !!playerState[requiredProtection];
 };
 
-/**
- * Get all scrap types as an array (useful for UI lists)
- */
-export const getAllScrapTypes = (): (ScrapType & { id: ScrapTypeId })[] => {
-  return Object.entries(ScrapRegistry).map(([id, scrapType]) => ({
-    ...scrapType,
-    id: id as ScrapTypeId
-  }));
-};
 
 /**
  * Get all mutators as an array (useful for UI lists)
