@@ -1,14 +1,6 @@
 import React from 'react';
 import TerminalScreen from './components/terminalScreen/TerminalScreen';
 import AdminToolbar from './components/adminToolbar/AdminToolbar';
-import ScrAppWindow from './components/scr-apps/scrAppWindow/ScrAppWindow';
-import AgeAppWindow from './components/scr-apps/ageApp/window/AgeAppWindow';
-import JobTitleAppWindow from './components/scr-apps/jobTitleApp/window/JobTitleAppWindow';
-import CreditsAppWindow from './components/scr-apps/creditsApp/window/CreditsAppWindow';
-import PurgeZoneAppWindow from './components/scr-apps/purgeZoneApp/window/PurgeZoneAppWindow';
-import ScrAppStoreAppWindow from './components/scr-apps/scrAppStoreApp/window/ScrAppStoreAppWindow';
-import ChronoTrackAppWindow from './components/scr-apps/chronoTrackApp/window/ChronoTrackAppWindow';
-import CacheSyncAppWindow from './components/scr-apps/cacheSyncApp/window/CacheSyncAppWindow';
 import WorkScreen from './components/workMode/workScreen/WorkScreen';
 import GameBackground from './components/gameBackgrounds/GameBackground';
 import { useGameState } from './hooks/useGameState';
@@ -16,6 +8,7 @@ import { useWindowManager } from './hooks/useWindowManager';
 import { useDragHandler_Apps } from './hooks/useDragHandler_Apps';
 import { WindowData } from './types/gameState';
 import PurgeConfirmPopup from './components/ui/PurgeConfirmPopup';
+import { renderWindow } from './constants/windowRegistry';
 
 import { DndContext, DragOverlay, useSensor, PointerSensor, rectIntersection, UniqueIdentifier } from '@dnd-kit/core';
 import { getAppProps } from './utils/appPropsBuilder';
@@ -304,171 +297,27 @@ function App() {
 
   // resetGame is now provided by useGameState hook
 
-  const renderWindow = (window: WindowData) => {
-    if (window.appType === 'purgeZone') {
-      return (
-        <PurgeZoneAppWindow
-          key={window.id}
-          windowId={window.id}
-          appType={window.appType}
-          position={window.position}
-          size={window.size}
-          zIndex={window.zIndex}
-          overId={overId}
-          draggedAppType={purgeNodeDragState.draggedAppType}
-          onClose={() => closeWindow(window.id)}
-          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
-          onSizeChange={(size) => updateWindowSize(window.appType, size)}
-          onBringToFront={() => bringToFront(window.id)}
-          updateCredits={updateCredits}
-        />
-      );
-    }
-    if (window.appType === 'age') {
-      return (
-        <AgeAppWindow
-          key={window.id}
-          gameTime={gameTime}
-          windowId={window.id}
-          appType={window.appType}
-          position={window.position}
-          size={window.size}
-          zIndex={window.zIndex}
-          overId={overId}
-          draggedAppType={purgeNodeDragState.draggedAppType}
-          onClose={() => closeWindow(window.id)}
-          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
-          onSizeChange={(size) => updateWindowSize(window.appType, size)}
-          onBringToFront={() => bringToFront(window.id)}
-          updateCredits={updateCredits}
-        />
-      );
-    }
-    if (window.appType === 'jobTitle') {
-      return (
-        <JobTitleAppWindow
-          key={window.id}
-          gamePhase={gamePhase}
-          windowId={window.id}
-          appType={window.appType}
-          position={window.position}
-          size={window.size}
-          zIndex={window.zIndex}
-          overId={overId}
-          draggedAppType={purgeNodeDragState.draggedAppType}
-          onClose={() => closeWindow(window.id)}
-          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
-          onSizeChange={(size) => updateWindowSize(window.appType, size)}
-          onBringToFront={() => bringToFront(window.id)}
-          updateCredits={updateCredits}
-        />
-      );
-    }
-    if (window.appType === 'scrAppStore') {
-      return (
-        <ScrAppStoreAppWindow
-          key={window.id}
-          credits={credits}
-          gamePhase={gamePhase}
-          getAvailableApps={getAvailableApps}
-          installedApps={installedApps}
-          installApp={installApp}
-          windowId={window.id}
-          appType={window.appType}
-          position={window.position}
-          size={window.size}
-          zIndex={window.zIndex}
-          overId={overId}
-          draggedAppType={purgeNodeDragState.draggedAppType}
-          onClose={() => closeWindow(window.id)}
-          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
-          onSizeChange={(size) => updateWindowSize(window.appType, size)}
-          onBringToFront={() => bringToFront(window.id)}
-          updateCredits={updateCredits}
-        />
-      );
-    }
-    if (window.appType === 'chronoTrack') {
-      return (
-        <ChronoTrackAppWindow
-          key={window.id}
-          gameTime={gameTime}
-          gamePhase={gamePhase}
-          windowId={window.id}
-          appType={window.appType}
-          position={window.position}
-          size={window.size}
-          zIndex={window.zIndex}
-          overId={overId}
-          draggedAppType={purgeNodeDragState.draggedAppType}
-          onClose={() => closeWindow(window.id)}
-          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
-          onSizeChange={(size) => updateWindowSize(window.appType, size)}
-          onBringToFront={() => bringToFront(window.id)}
-          updateCredits={updateCredits}
-        />
-      );
-    }
-    if (window.appType === 'credits') {
-      return (
-        <CreditsAppWindow
-          key={window.id}
-          credits={credits}
-          windowId={window.id}
-          appType={window.appType}
-          position={window.position}
-          size={window.size}
-          zIndex={window.zIndex}
-          overId={overId}
-          draggedAppType={purgeNodeDragState.draggedAppType}
-          onClose={() => closeWindow(window.id)}
-          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
-          onSizeChange={(size) => updateWindowSize(window.appType, size)}
-          onBringToFront={() => bringToFront(window.id)}
-          updateCredits={updateCredits}
-        />
-      );
-    }
-    if (window.appType === 'cacheSync') {
-      return (
-        <CacheSyncAppWindow
-          key={window.id}
-          credits={credits}
-          updateCredits={updateCredits}
-          windowId={window.id}
-          appType={window.appType}
-          position={window.position}
-          size={window.size}
-          zIndex={window.zIndex}
-          overId={overId}
-          draggedAppType={purgeNodeDragState.draggedAppType}
-          onClose={() => closeWindow(window.id)}
-          onPositionChange={(position) => updateWindowPosition(window.appType, position)}
-          onSizeChange={(size) => updateWindowSize(window.appType, size)}
-          onBringToFront={() => bringToFront(window.id)}
-        />
-      );
-    }
-    return (
-      <ScrAppWindow
-        key={window.id}
-        windowId={window.id}
-        appType={window.appType}
-        title={window.title}
-        position={window.position}
-        size={window.size}
-        zIndex={window.zIndex}
-        overId={overId}
-        draggedAppType={purgeNodeDragState.draggedAppType}
-        onClose={() => closeWindow(window.id)}
-        onPositionChange={(position) => updateWindowPosition(window.appType, position)}
-        onSizeChange={(size) => updateWindowSize(window.appType, size)}
-        onBringToFront={() => bringToFront(window.id)}
-        updateCredits={updateCredits}
-      >
-        {window.content}
-      </ScrAppWindow>
-    );
+  const renderWindowComponent = (window: WindowData) => {
+    const gameState = {
+      credits,
+      gameTime,
+      gamePhase,
+      overId,
+      purgeNodeDragState,
+      updateCredits,
+      getAvailableApps,
+      installedApps,
+      installApp
+    };
+    
+    const windowManager = {
+      closeWindow,
+      updateWindowPosition,
+      updateWindowSize,
+      bringToFront
+    };
+    
+    return renderWindow(window, gameState, windowManager);
   };
 
   return (
@@ -522,7 +371,7 @@ function App() {
           resetGame={resetGame}
           setGameBackground={setGameBackground}
         />
-        {windows.map(renderWindow)}
+        {windows.map(renderWindowComponent)}
         <PurgeConfirmPopup
           open={!!pendingDelete.appId}
           appName={pendingDelete.appId ? (apps.find((a: any) => a.id === pendingDelete.appId)?.name || pendingDelete.appId) : ''}
