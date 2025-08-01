@@ -36,9 +36,20 @@
 
 
 
-.terminal-header.minimized {
-  background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
-  border-bottom-color: #666;
+.terminal-screen.collapsed {
+  height: auto;
+}
+
+.terminal-screen.collapsed .terminal-content {
+  display: none;
+}
+
+.terminal-screen.expanded {
+  height: 100vh;
+}
+
+.terminal-screen.manual {
+  /* Use inline style height */
 }
 
 .minimize-indicator {
@@ -202,37 +213,7 @@
   animation: scanlines-flicker 3s linear infinite;
 }
 
-.terminal-resize-handle {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 8px;
-  background: linear-gradient(135deg, #222 0%, #111 100%);
-  border-top: 1px solid #444;
-  cursor: ns-resize;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 
-.terminal-resize-handle::before {
-  content: '';
-  width: 20px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent 0%, #666 20%, #666 80%, transparent 100%);
-  border-radius: 1px;
-}
-
-.terminal-resize-handle:hover {
-  background: linear-gradient(135deg, #333 0%, #222 100%);
-  border-top-color: #666;
-}
-
-.terminal-resize-handle:hover::before {
-  background: linear-gradient(90deg, transparent 0%, #888 20%, #888 80%, transparent 100%);
-}
 
 @keyframes scanlines-flicker {
   0%, 100% { opacity: 1; }

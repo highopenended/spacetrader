@@ -35,13 +35,8 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   onDockWindows,
   appPropsMap
 }) => {
-  // Resize state
-  const [height, setHeight] = useState<number>(window.innerHeight); // Start at full viewport height
-  const [isResizing, setIsResizing] = useState(false);
-  const [resizeStartY, setResizeStartY] = useState(0);
-  const [resizeStartHeight, setResizeStartHeight] = useState(0);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [previousHeight, setPreviousHeight] = useState<number>(window.innerHeight);
+  // Terminal state
+  const [terminalMode, setTerminalMode] = useState<'expanded' | 'collapsed'>('expanded');
 
   // WINDOW DOCKING SYSTEM: Make terminal droppable for window docking
   const { setNodeRef } = useDroppable({
@@ -50,72 +45,16 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
 
   const isDockActive = overId === 'terminal-dock-zone';
 
-  // Resize handlers
-  const handleResizeStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-    setResizeStartY(e.clientY);
-    setResizeStartHeight(height);
-  }, [height]);
 
-  const handleResizeMove = useCallback((e: MouseEvent) => {
-    if (!isResizing) return;
-    
-    const deltaY = e.clientY - resizeStartY;
-    let newHeight = resizeStartHeight + deltaY; // Changed from - to + to make dragging down increase height
-    
-    // Constrain to viewport bounds
-    const minHeight = 60; // Minimum terminal height (header only)
-    const maxHeight = window.innerHeight; // Full viewport height
-    newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
-    
-    // Snap to full height when close to bottom
-    const snapThreshold = 20;
-    const distanceFromBottom = window.innerHeight - (e.clientY + 8); // 8px for handle height
-    
-    if (distanceFromBottom < snapThreshold) {
-      newHeight = maxHeight;
-    }
-    
-    setHeight(newHeight);
-    
-    // Update minimized state based on height
-    if (newHeight <= 60) {
-      setIsMinimized(true);
+
+  // Toggle handler for expand/collapse
+  const handleToggle = useCallback(() => {
+    if (terminalMode === 'collapsed') {
+      setTerminalMode('expanded');
     } else {
-      setIsMinimized(false);
+      setTerminalMode('collapsed');
     }
-  }, [isResizing, resizeStartY, resizeStartHeight]);
-
-  const handleResizeEnd = useCallback(() => {
-    setIsResizing(false);
-  }, []);
-
-  // Set up resize event listeners
-  useEffect(() => {
-    if (isResizing) {
-      document.addEventListener('mousemove', handleResizeMove);
-      document.addEventListener('mouseup', handleResizeEnd);
-      return () => {
-        document.removeEventListener('mousemove', handleResizeMove);
-        document.removeEventListener('mouseup', handleResizeEnd);
-      };
-    }
-  }, [isResizing, handleResizeMove, handleResizeEnd]);
-
-  // Single-click handler for minimize/restore
-  const handleClick = useCallback(() => {
-    if (isMinimized) {
-      // Restore to previous height
-      setHeight(previousHeight);
-      setIsMinimized(false);
-    } else {
-      // Minimize to header height only
-      setPreviousHeight(height);
-      setHeight(60); // Header height + padding
-      setIsMinimized(true);
-    }
-  }, [isMinimized, previousHeight, height]);
+  }, [terminalMode]);
 
   // Render an app based on its configuration
   const renderApp = (appConfig: any) => {
@@ -131,17 +70,27 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
     );
   };
 
+  // Calculate height based on mode
+  const getTerminalHeight = () => {
+    switch (terminalMode) {
+      case 'expanded':
+        return '100vh';
+      case 'collapsed':
+        return 'auto'; // Let CSS handle the height
+      default:
+        return '100vh';
+    }
+  };
+
   return (
     <div 
-      className="terminal-screen"
-      style={{ height: `${height}px` }}
+      className={`terminal-screen ${terminalMode}`}
+      style={{ height: getTerminalHeight() }}
     >
-        <div 
-          className={`terminal-header ${isMinimized ? 'minimized' : ''}`}
-        >
+        <div className="terminal-header">
           <div className="terminal-title">
             SCRAPCOM TERMINAL
-            {isMinimized && <span className="minimize-indicator"> [MIN]</span>}
+            {terminalMode === 'collapsed' && <span className="minimize-indicator"> [MIN]</span>}
           </div>
           <div className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>
             <div className="status-light"></div>
@@ -156,8 +105,8 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
             openWindowCount={openAppTypes.size}
           />
           <TerminalToggle 
-            isMinimized={isMinimized}
-            onToggle={handleClick}
+            isMinimized={terminalMode === 'collapsed'}
+            onToggle={handleToggle}
           />
         </div>
         
@@ -188,7 +137,7 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
             </SortableContext>
           </div>
         
-        <div className="terminal-resize-handle" onMouseDown={handleResizeStart}></div>
+
         <div className="terminal-scanlines"></div>
       </div>
   );

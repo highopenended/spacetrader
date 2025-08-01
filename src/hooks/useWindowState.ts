@@ -12,7 +12,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { WindowData } from '../types/windowState';
 import { WINDOW_DEFAULTS, APP_WINDOW_DEFAULTS } from '../constants/windowConstants';
 import { APP_REGISTRY } from '../constants/scrAppListConstants';
-import { clampPositionToBounds, getViewportBounds } from '../utils/viewportConstraints';
+import { clampPositionToBounds, getViewportBounds, isPositionOutOfBounds } from '../utils/viewportConstraints';
 
 export const useWindowState = () => {
   const [windows, setWindows] = useState<WindowData[]>([]);
@@ -20,40 +20,7 @@ export const useWindowState = () => {
   const [lastWindowSizes, setLastWindowSizes] = useState<Record<string, { width: number; height: number }>>({});
   const [nextZIndex, setNextZIndex] = useState(1000); // Start at 1000, increment for each new window
 
-  // Monitor viewport changes and reposition windows
-  useEffect(() => {
-    const handleViewportResize = () => {
-      setWindows(prevWindows => 
-        prevWindows.map(window => {
-          // Constrain each window to new viewport bounds
-          const constrainedPosition = clampPositionToBounds(
-            window.position, 
-            window.size, 
-            20 // Default footer height - could be made dynamic
-          );
-          
-          // Only update if position actually changed
-          if (constrainedPosition.x !== window.position.x || constrainedPosition.y !== window.position.y) {
-            // Update the last known position too
-            setLastWindowPositions(prev => ({
-              ...prev,
-              [window.appType]: constrainedPosition
-            }));
-            
-            return {
-              ...window,
-              position: constrainedPosition
-            };
-          }
-          
-          return window;
-        })
-      );
-    };
 
-    window.addEventListener('resize', handleViewportResize);
-    return () => window.removeEventListener('resize', handleViewportResize);
-  }, []);
 
   const updateWindowPosition = (appType: string, position: { x: number; y: number }) => {
     setLastWindowPositions(prev => ({
@@ -74,14 +41,33 @@ export const useWindowState = () => {
     const windowContent = content || defaultContent;
     
     // Use saved position/size if provided, otherwise use last known or defaults
-    const lastPosition = savedPosition || lastWindowPositions[appType];
+    let lastPosition = savedPosition || lastWindowPositions[appType];
     const defaultPosition = { 
       x: WINDOW_DEFAULTS.POSITION.x + (windows.length * WINDOW_DEFAULTS.POSITION_OFFSET), 
       y: WINDOW_DEFAULTS.POSITION.y + (windows.length * WINDOW_DEFAULTS.POSITION_OFFSET) 
     };
     
-    const lastSize = savedSize || lastWindowSizes[appType];
+    let lastSize = savedSize || lastWindowSizes[appType];
     const defaultSize = APP_WINDOW_DEFAULTS[appType] || WINDOW_DEFAULTS.SIZE;
+    
+    // Check if saved position is out of bounds and clamp it to viewport bounds
+    if (lastPosition) {
+      // Use lastSize if available, otherwise use default size for bounds checking
+      const sizeForBoundsCheck = lastSize || defaultSize;
+      const isOutOfBounds = isPositionOutOfBounds(lastPosition, sizeForBoundsCheck, 0);
+      if (isOutOfBounds) {
+        // Clamp the position to viewport bounds instead of clearing it
+        const clampedPosition = clampPositionToBounds(lastPosition, sizeForBoundsCheck, 0);
+        
+        // Update the saved position with the clamped version
+        setLastWindowPositions(prev => ({
+          ...prev,
+          [appType]: clampedPosition
+        }));
+        
+        lastPosition = clampedPosition; // Use the clamped position
+      }
+    }
     
     const newWindow: WindowData = {
       id: `window-${appType}-${Date.now()}`,
@@ -96,6 +82,26 @@ export const useWindowState = () => {
     setWindows(prev => [...prev, newWindow]);
   };
 
+  const enforceWindowBounds = (appType: string) => {
+    // Find the actual opened window and check if it's out of bounds
+    const openedWindow = windows.find(window => window.appType === appType);
+    
+    if (openedWindow) {
+      const isOutOfBounds = isPositionOutOfBounds(openedWindow.position, openedWindow.size, 0);
+      if (isOutOfBounds) {
+        // Clear the saved position so next time it opens with default positioning
+        setLastWindowPositions(prev => {
+          const updated = { ...prev };
+          delete updated[appType];
+          return updated;
+        });
+        
+        // Also close the offscreen window
+        setWindows(prev => prev.filter(window => window.appType !== appType));
+      }
+    }
+  };
+
   const openOrCloseWindow = (appType: string, title: string, content?: React.ReactNode) => {
     // Check if a window for this app type already exists
     const existingWindowIndex = windows.findIndex(window => window.appType === appType);
@@ -104,7 +110,7 @@ export const useWindowState = () => {
       // Window exists, close it
       setWindows(prev => prev.filter(window => window.appType !== appType));
     } else {
-      // Window doesn't exist, open it using syncWindowLayout
+      // Window doesn't exist, open it (bounds checking happens in syncWindowLayout)
       syncWindowLayout(appType, title, content);
     }
   };
@@ -220,6 +226,7 @@ export const useWindowState = () => {
     updateWindowSize,
     openOrCloseWindow,
     syncWindowLayout,
+    enforceWindowBounds,
     closeWindow,
     closeWindowsByAppType,
     bringToFront,
