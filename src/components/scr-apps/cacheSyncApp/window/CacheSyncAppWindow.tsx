@@ -25,7 +25,7 @@ const CacheSyncAppWindow: React.FC<CacheSyncAppWindowProps> = ({
     <ScrAppWindow
       title="Cache Sync"
       {...windowProps}
-      minSize={{ width: 300, height: 200 }}
+      minSize={{ width: 350, height: 350 }}
     >
       <div className="window-content-padded">
         <SaveSection 
@@ -34,6 +34,7 @@ const CacheSyncAppWindow: React.FC<CacheSyncAppWindowProps> = ({
           saveCost={SAVE_COST}
           credits={credits}
         />
+        <div style={{ height: 'var(--spacing-sm)' }} />
         <LoadSection 
           onLoadFromCache={loadFromLocalCache}
           onFileLoad={importFromFile}

@@ -18,11 +18,7 @@ const SaveSection: React.FC<SaveSectionProps> = ({ onSaveToCache, onExportToFile
       </div>
       <div className="section-content">
         <div className="save-options">
-          <div className="save-option-row" onClick={onSaveToCache}>
-            <div className="cost-box">
-              <div className={`cost-amount ${hasInsufficientFunds ? 'insufficient' : ''}`}>₵{saveCost}</div>
-              <div className={`cost-label ${hasInsufficientFunds ? 'insufficient' : ''}`}>COST</div>
-            </div>
+          <div className={`save-option-row ${hasInsufficientFunds ? 'insufficient-funds' : ''}`} onClick={onSaveToCache}>
             <div className="save-button local-cache-save">
               <div className="button-icon">💾</div>
               <div className="button-text">
@@ -35,24 +31,28 @@ const SaveSection: React.FC<SaveSectionProps> = ({ onSaveToCache, onExportToFile
                 </div>
               )}
             </div>
-          </div>
-          
-          <div className="save-option-row" onClick={onExportToFile}>
             <div className="cost-box">
               <div className={`cost-amount ${hasInsufficientFunds ? 'insufficient' : ''}`}>₵{saveCost}</div>
               <div className={`cost-label ${hasInsufficientFunds ? 'insufficient' : ''}`}>COST</div>
             </div>
+          </div>
+          
+          <div className={`save-option-row ${hasInsufficientFunds ? 'insufficient-funds' : ''}`} onClick={onExportToFile}>
             <div className="save-button file-save">
               <div className="button-icon">📄</div>
               <div className="button-text">
-                <div className="button-label">Save as .scrap</div>
-                <div className="button-description">Export to file</div>
+                <div className="button-label">Export as .scrap</div>
+                <div className="button-description">Export to .scrap file</div>
               </div>
               {hasInsufficientFunds && (
                 <div className="insufficient-funds-overlay">
                   <div className="insufficient-funds-text">INSUFFICIENT FUNDS</div>
                 </div>
               )}
+            </div>
+            <div className="cost-box">
+              <div className={`cost-amount ${hasInsufficientFunds ? 'insufficient' : ''}`}>₵{saveCost}</div>
+              <div className={`cost-label ${hasInsufficientFunds ? 'insufficient' : ''}`}>COST</div>
             </div>
           </div>
         </div>

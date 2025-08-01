@@ -3,13 +3,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   border: 2px dashed #555;
   border-radius: 4px;
   background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
   cursor: pointer;
   transition: all 0.2s ease;
-  min-height: 80px;
+  min-height: 60px;
   font-family: 'Courier New', monospace;
 }
 
@@ -32,7 +32,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
   text-align: center;
 }
 
