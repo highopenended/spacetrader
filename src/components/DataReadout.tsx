@@ -12,8 +12,8 @@
  * 
  * CORRECT PATTERN:
  * - Get game state (credits, gameTime, gamePhase) via useToggleContext()
- * - Get installedApps via useGameState() (this is safe as it's not game state)
- * - NEVER call useGameState() for credits, gameTime, or gamePhase
+ * - Get installedApps via useToggleContext() (passed from App.tsx)
+ * - NEVER call useGameState() directly
  * 
  * This ensures DataReadout stays synchronized with all other components that display
  * the same information (like CreditsAppItem, ChronoTrackAppWindow, etc.).
@@ -21,14 +21,12 @@
 
 import React from 'react';
 import { useToggleContext } from '../contexts/ToggleContext';
-import { useGameState } from '../hooks/useGameState';
 import { getAnnumReckoningName, getLedgerCycleName, getGrindName } from '../utils/gameStateUtils';
 import { getJobTitle } from '../utils/gameStateUtils';
 import './DataReadout.css';
 
 const DataReadout: React.FC = () => {
-  const { toggleStates, gameMode, beginWorkSession, credits, gameTime, gamePhase } = useToggleContext();
-  const { installedApps } = useGameState();
+  const { toggleStates, gameMode, beginWorkSession, credits, gameTime, gamePhase, installedApps } = useToggleContext();
   const { annumReckoning, ledgerCycle, grind } = gameTime;
 
   // Check if ChronoTrack, JobTitle, and Credits are installed

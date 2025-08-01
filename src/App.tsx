@@ -1,3 +1,22 @@
+/**
+ * CRITICAL ARCHITECTURAL RULE - READ BEFORE MAKING CHANGES:
+ * 
+ * SINGLE INSTANCE PATTERN: Each custom hook that manages state should be called 
+ * exactly once at the top level of your app (App.tsx). This prevents the 
+ * "multiple state instances" problem that keeps recurring.
+ * 
+ * ✅ CORRECT: State hooks only called in App.tsx, passed down as props
+ * ❌ WRONG: Calling useGameState(), useWindowManager(), etc. in child components
+ * 
+ * This rule prevents:
+ * - Multiple state instances getting out of sync
+ * - Save/load working with different state than UI
+ * - Components showing different values for same data
+ * 
+ * ENFORCE THIS PATTERN: If you need state in a component, get it from props,
+ * not by calling the hook directly.
+ */
+
 import React from 'react';
 import TerminalScreen from './components/terminalScreen/TerminalScreen';
 import AdminToolbar from './components/adminToolbar/AdminToolbar';
@@ -8,6 +27,7 @@ import { useWindowManager } from './hooks/useWindowManager';
 import { useDragHandler_Apps } from './hooks/useDragHandler_Apps';
 import { useCustomCollisionDetection } from './hooks/useCustomCollisionDetection';
 import { usePurgeZoneDrag } from './hooks/usePurgeZoneDrag';
+import { useSaveLoad } from './hooks/useSaveLoad';
 import { WindowData } from './types/gameState';
 import PurgeConfirmPopup from './components/ui/PurgeConfirmPopup';
 import { renderWindow } from './constants/windowRegistry';
@@ -48,7 +68,9 @@ function App() {
     beginWorkSession,
     setGameBackground,
     encodeGameState,
-    decodeGameState
+    decodeGameState,
+    getAppTierData,
+    changeAppTier
   } = useGameState();
 
   // Set up app drag handler
@@ -67,7 +89,18 @@ function App() {
     closeWindowsByAppType,
     bringToFront,
     dockAllWindows,
+    encodeWindowState,
+    decodeWindowState
   } = useWindowManager();
+
+  // Create save/load functions with all encode/decode functions
+  const {
+    saveToLocalCache,
+    loadFromLocalCache,
+    exportToFile,
+    importFromFile,
+    SAVE_COST
+  } = useSaveLoad(credits, updateCredits, encodeGameState, decodeGameState, encodeWindowState, decodeWindowState);
 
   // Use purge zone drag hook
   const {
@@ -103,7 +136,16 @@ function App() {
       installedApps,
       installApp,
       encodeGameState,
-      decodeGameState
+      decodeGameState,
+      getAppTierData,
+      changeAppTier,
+      encodeWindowState,
+      decodeWindowState,
+      saveToLocalCache,
+      loadFromLocalCache,
+      exportToFile,
+      importFromFile,
+      SAVE_COST
     };
 
     const windowManager = {

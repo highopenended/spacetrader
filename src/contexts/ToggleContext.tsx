@@ -49,13 +49,13 @@ interface ToggleContextType {
   credits: number;
   gameTime: any;
   gamePhase: any;
+  installedApps: InstalledApp[];
 }
 
 const ToggleContext = createContext<ToggleContextType | undefined>(undefined);
 
 interface ToggleProviderProps {
   children: ReactNode;
-  installedApps?: InstalledApp[];
   // Work mode props from useGameState
   gameMode: GameMode;
   onBeginWorkSession: () => void;
@@ -63,6 +63,7 @@ interface ToggleProviderProps {
   credits: number;
   gameTime: any;
   gamePhase: any;
+  installedApps: InstalledApp[];
 }
 
 export const ToggleProvider: React.FC<ToggleProviderProps> = ({ 
@@ -117,7 +118,8 @@ export const ToggleProvider: React.FC<ToggleProviderProps> = ({
       beginWorkSession: onBeginWorkSession,
       credits,
       gameTime,
-      gamePhase
+      gamePhase,
+      installedApps
     }}>
       {children}
     </ToggleContext.Provider>

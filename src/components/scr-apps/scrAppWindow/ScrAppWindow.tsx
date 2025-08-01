@@ -64,6 +64,8 @@ export interface BaseWindowProps {
   overId?: any; // For drag-over detection (PurgeZone specific)
   updateCredits?: (amount: number) => void; // For credit transactions
   draggedAppType?: string | null; // For debug: which app is being dragged
+  getAppTierData?: (appId: string) => any; // For tier management
+  changeAppTier?: (appId: string, tier: number) => void; // For tier changes
 }
 
 interface ScrAppWindowProps extends BaseWindowProps {
@@ -87,7 +89,9 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   onBringToFront,
   overId,
   updateCredits,
-  draggedAppType
+  draggedAppType,
+  getAppTierData,
+  changeAppTier
 }) => {
   const [currentSize, setCurrentSize] = useState(size);
   const [isResizing, setIsResizing] = useState(false);
@@ -107,8 +111,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   });
 
   // Get tier data for this app
-  const { getAppTierData, changeAppTier } = useGameState();
-  const tierData = getAppTierData(appType);
+  const tierData = getAppTierData?.(appType);
   const appRegistry = APP_REGISTRY[appType];
 
   // PURGE NODE DRAG SYSTEM: @dnd-kit draggable for deletion detection only
@@ -197,27 +200,27 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   }, [showUpgradeInfo, currentSize, savedSize, upgradeInfoSize, onSizeChange, onWidthChange]);
 
   const handleUpgrade = useCallback(() => {
-    const nextTier = tierData.currentTier + 1;
+    const nextTier = tierData?.currentTier + 1;
     const nextTierData = appRegistry?.tiers.find(t => t.tier === nextTier);
     
     if (nextTierData && updateCredits) {
       // Deduct upgrade cost
       updateCredits(-nextTierData.flatUpgradeCost);
-      changeAppTier(appType, nextTier);
+      changeAppTier?.(appType, nextTier);
     }
-  }, [appType, tierData.currentTier, appRegistry, changeAppTier, updateCredits]);
+  }, [appType, tierData?.currentTier, appRegistry, changeAppTier, updateCredits]);
 
   const handleDowngrade = useCallback(() => {
-    const prevTier = tierData.currentTier - 1;
+    const prevTier = tierData?.currentTier - 1;
     const prevTierData = appRegistry?.tiers.find(t => t.tier === prevTier);
-    const currentTierData = appRegistry?.tiers.find(t => t.tier === tierData.currentTier);
+    const currentTierData = appRegistry?.tiers.find(t => t.tier === tierData?.currentTier);
     
     if (prevTierData && prevTier >= 1 && currentTierData && updateCredits) {
       // Deduct downgrade cost
       updateCredits(-currentTierData.flatDowngradeCost);
-      changeAppTier(appType, prevTier);
+      changeAppTier?.(appType, prevTier);
     }
-  }, [appType, tierData.currentTier, appRegistry, changeAppTier, updateCredits]);
+  }, [appType, tierData?.currentTier, appRegistry, changeAppTier, updateCredits]);
 
   useEffect(() => {
     if (isResizing) {
@@ -244,7 +247,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     }
   }, [currentSize, showUpgradeInfo]);
 
-  const currentTier = tierData.currentTier;
+  const currentTier = tierData?.currentTier;
   const nextTier = currentTier + 1;
   const prevTier = currentTier - 1;
   const currentTierData = appRegistry?.tiers.find(t => t.tier === currentTier);

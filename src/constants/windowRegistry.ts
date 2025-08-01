@@ -34,6 +34,15 @@ interface WindowGameState {
   installApp: (appId: string, order?: number) => void;
   encodeGameState: () => any;
   decodeGameState: (state: any) => boolean;
+  getAppTierData: (appType: string) => any;
+  changeAppTier: (appType: string, tier: number) => void;
+  encodeWindowState: () => any;
+  decodeWindowState: (state: any) => boolean;
+  saveToLocalCache: () => boolean;
+  loadFromLocalCache: () => boolean;
+  exportToFile: () => boolean;
+  importFromFile: (file: File) => Promise<boolean>;
+  SAVE_COST: number;
 }
 
 // Interface for window configuration
@@ -54,6 +63,7 @@ const buildCommonProps = (
   key: window.id,
   windowId: window.id,
   appType: window.appType,
+  title: window.title,
   position: window.position,
   size: window.size,
   zIndex: window.zIndex,
@@ -64,6 +74,8 @@ const buildCommonProps = (
   onSizeChange: (size: { width: number; height: number }) => windowManager.updateWindowSize(window.appType, size),
   onBringToFront: () => windowManager.bringToFront(window.id),
   updateCredits: gameState.updateCredits,
+  getAppTierData: gameState.getAppTierData,
+  changeAppTier: gameState.changeAppTier,
 });
 
 // Window registry mapping app types to their configurations
@@ -119,8 +131,11 @@ export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
     getProps: (window, gameState, windowManager) => ({
       ...buildCommonProps(window, gameState, windowManager),
       credits: gameState.credits,
-      encodeGameState: gameState.encodeGameState,
-      decodeGameState: gameState.decodeGameState
+      saveToLocalCache: gameState.saveToLocalCache,
+      loadFromLocalCache: gameState.loadFromLocalCache,
+      exportToFile: gameState.exportToFile,
+      importFromFile: gameState.importFromFile,
+      SAVE_COST: gameState.SAVE_COST
     })
   }
 };

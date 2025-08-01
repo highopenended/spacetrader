@@ -2,30 +2,25 @@ import React from 'react';
 import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
 import SaveSection from './SaveSection';
 import LoadSection from './LoadSection';
-import { useSaveLoad } from '../../../../hooks/useSaveLoad';
 
 interface CacheSyncAppWindowProps extends BaseWindowProps {
   credits: number;
-  updateCredits: (amount: number) => void;
-  encodeGameState: () => any;
-  decodeGameState: (state: any) => boolean;
+  saveToLocalCache: () => boolean;
+  loadFromLocalCache: () => boolean;
+  exportToFile: () => boolean;
+  importFromFile: (file: File) => Promise<boolean>;
+  SAVE_COST: number;
 }
 
 const CacheSyncAppWindow: React.FC<CacheSyncAppWindowProps> = ({
   credits,
-  updateCredits,
-  encodeGameState,
-  decodeGameState,
+  saveToLocalCache,
+  loadFromLocalCache,
+  exportToFile,
+  importFromFile,
+  SAVE_COST,
   ...windowProps
 }) => {
-  const {
-    saveToLocalCache,
-    loadFromLocalCache,
-    exportToFile,
-    importFromFile,
-    SAVE_COST
-  } = useSaveLoad(credits, updateCredits, encodeGameState, decodeGameState);
-
   return (
     <ScrAppWindow
       title="Cache Sync"

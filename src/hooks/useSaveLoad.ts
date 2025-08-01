@@ -2,12 +2,14 @@
  * Save/Load Hook
  * 
  * Manages save and load operations with credit costs.
- * Integrates with game state and window state for save/load functionality.
+ * Orchestrates all state encoding/decoding from a single location.
  * Handles credit deductions for save/load operations.
+ * 
+ * SINGLE INSTANCE PATTERN: This hook receives all encode/decode functions
+ * from App.tsx to ensure it works with the same state instances as the UI.
  */
 
 import { useCallback } from 'react';
-import { useWindowManager } from './useWindowManager';
 import { 
   saveGameToLocalStorage, 
   loadGameFromLocalStorage, 
@@ -19,13 +21,10 @@ export const useSaveLoad = (
   credits: number, 
   updateCredits: (amount: number) => void,
   encodeGameState: () => any,
-  decodeGameState: (state: any) => boolean
+  decodeGameState: (state: any) => boolean,
+  encodeWindowState: () => any,
+  decodeWindowState: (state: any) => boolean
 ) => {
-  const {
-    encodeWindowState,
-    decodeWindowState
-  } = useWindowManager();
-
   // Credit costs for save operations only
   const SAVE_COST = 50;
 
