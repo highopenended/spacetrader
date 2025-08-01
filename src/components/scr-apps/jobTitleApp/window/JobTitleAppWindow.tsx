@@ -75,7 +75,6 @@ const JobTitleAppWindow: React.FC<JobTitleAppWindowProps> = ({
     <ScrAppWindow
       title="Job Title"
       {...windowProps}
-      size={{ width: 300, height: 150 }}
       minSize={{ width: 300, height: 150 }}
     >
       {content}

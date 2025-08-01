@@ -32,6 +32,7 @@ import { useToggleState } from './hooks/useToggleState';
 import { WindowData } from './types/windowState';
 import PurgeConfirmPopup from './components/ui/PurgeConfirmPopup';
 import { renderWindow } from './constants/windowRegistry';
+import { resetGame } from './utils/resetGameUtils';
 
 import { DndContext, DragOverlay, useSensor, PointerSensor } from '@dnd-kit/core';
 import { getAppPropsMap } from './utils/appPropsBuilder';
@@ -64,7 +65,7 @@ function App() {
     installAppOrder,
     getAvailableApps,
     resetToDefaults,
-    resetGame,
+    resetGameState,
     beginWorkSession,
     setGameBackground,
     encodeGameState,
@@ -89,6 +90,7 @@ function App() {
     closeWindowsByAppType,
     bringToFront,
     dockAllWindows,
+    resetWindowState,
     encodeWindowState,
     decodeWindowState
   } = useWindowState();
@@ -97,6 +99,7 @@ function App() {
   const {
     toggleStates,
     setToggleState,
+    resetToggleState,
     encodeToggleState,
     decodeToggleState
   } = useToggleState();
@@ -109,6 +112,15 @@ function App() {
     importFromFile,
     SAVE_COST
   } = useSaveLoad(credits, updateCredits, encodeGameState, decodeGameState, encodeWindowState, decodeWindowState, encodeToggleState, decodeToggleState);
+
+  // Create reset function that coordinates all state resets
+  const handleResetGame = () => {
+    resetGame({
+      resetGameState,
+      resetWindowState,
+      resetToggleState
+    });
+  };
 
   // Use purge zone drag hook
   const {
@@ -215,7 +227,7 @@ function App() {
       isPaused,
       pauseTime,
       resumeTime,
-      resetGame,
+      resetGame: handleResetGame,
       setGameBackground
     },
     purgeConfirm: {

@@ -23,6 +23,11 @@ export const useToggleState = () => {
     setToggleStates(prev => ({ ...prev, [key]: value }));
   }, []);
 
+  // ===== RESET FUNCTION =====
+  const resetToggleState = useCallback(() => {
+    setToggleStates(initialToggleStates);
+  }, []);
+
   // ===== SAVE/LOAD FUNCTIONS =====
   const encodeToggleState = useCallback(() => {
     return {
@@ -56,6 +61,7 @@ export const useToggleState = () => {
   return {
     toggleStates,
     setToggleState,
+    resetToggleState,
     encodeToggleState,
     decodeToggleState
   };

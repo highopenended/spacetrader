@@ -8,9 +8,10 @@
  * Used by: App.tsx and potentially other components that need window management
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { WindowData } from '../types/windowState';
-import { WINDOW_DEFAULTS } from '../constants/windowConstants';
+import { WINDOW_DEFAULTS, APP_WINDOW_DEFAULTS } from '../constants/windowConstants';
+import { APP_REGISTRY } from '../constants/scrAppListConstants';
 import { clampPositionToBounds, getViewportBounds } from '../utils/viewportConstraints';
 
 export const useWindowState = () => {
@@ -68,10 +69,34 @@ export const useWindowState = () => {
     }));
   };
 
-  const openOrCloseWindow = (appType: string, title: string, content?: React.ReactNode) => {
+  const syncWindowLayout = (appType: string, title: string, content?: React.ReactNode, savedPosition?: { x: number; y: number }, savedSize?: { width: number; height: number }) => {
     const defaultContent = React.createElement('div', {}, 'No Data Available');
     const windowContent = content || defaultContent;
     
+    // Use saved position/size if provided, otherwise use last known or defaults
+    const lastPosition = savedPosition || lastWindowPositions[appType];
+    const defaultPosition = { 
+      x: WINDOW_DEFAULTS.POSITION.x + (windows.length * WINDOW_DEFAULTS.POSITION_OFFSET), 
+      y: WINDOW_DEFAULTS.POSITION.y + (windows.length * WINDOW_DEFAULTS.POSITION_OFFSET) 
+    };
+    
+    const lastSize = savedSize || lastWindowSizes[appType];
+    const defaultSize = APP_WINDOW_DEFAULTS[appType] || WINDOW_DEFAULTS.SIZE;
+    
+    const newWindow: WindowData = {
+      id: `window-${appType}-${Date.now()}`,
+      appType,
+      title,
+      content: windowContent,
+      position: lastPosition || defaultPosition,
+      size: lastSize || defaultSize,
+      zIndex: nextZIndex
+    };
+    setNextZIndex(prev => prev + 1); // Increment for next window
+    setWindows(prev => [...prev, newWindow]);
+  };
+
+  const openOrCloseWindow = (appType: string, title: string, content?: React.ReactNode) => {
     // Check if a window for this app type already exists
     const existingWindowIndex = windows.findIndex(window => window.appType === appType);
     
@@ -79,39 +104,8 @@ export const useWindowState = () => {
       // Window exists, close it
       setWindows(prev => prev.filter(window => window.appType !== appType));
     } else {
-      // Window doesn't exist, open it
-      // Use last known position or default with offset
-      const lastPosition = lastWindowPositions[appType];
-      const defaultPosition = { 
-        x: WINDOW_DEFAULTS.POSITION.x + (windows.length * WINDOW_DEFAULTS.POSITION_OFFSET), 
-        y: WINDOW_DEFAULTS.POSITION.y + (windows.length * WINDOW_DEFAULTS.POSITION_OFFSET) 
-      };
-      
-      // Use last known size or appropriate default for app type
-      const lastSize = lastWindowSizes[appType];
-      const getDefaultSizeForApp = (appType: string) => {
-        switch (appType) {
-          case 'scrAppStore':
-            return { width: 600, height: 400 };
-          case 'purgeZone':
-            return { width: 300, height: 200 };
-          default:
-            return WINDOW_DEFAULTS.SIZE;
-        }
-      };
-      const defaultSize = getDefaultSizeForApp(appType);
-      
-      const newWindow: WindowData = {
-        id: `window-${appType}-${Date.now()}`,
-        appType,
-        title,
-        content: windowContent,
-        position: lastPosition || defaultPosition,
-        size: lastSize || defaultSize,
-        zIndex: nextZIndex
-      };
-      setNextZIndex(prev => prev + 1); // Increment for next window
-      setWindows(prev => [...prev, newWindow]);
+      // Window doesn't exist, open it using syncWindowLayout
+      syncWindowLayout(appType, title, content);
     }
   };
 
@@ -141,12 +135,24 @@ export const useWindowState = () => {
     setWindows([]);
   };
 
+  // ===== RESET FUNCTION =====
+  const resetWindowState = useCallback(() => {
+    // Close all windows
+    setWindows([]);
+    // Reset position and size tracking
+    setLastWindowPositions({});
+    setLastWindowSizes({});
+    // Reset z-index counter
+    setNextZIndex(1000);
+  }, []);
+
   // ===== SAVE/LOAD FUNCTIONS =====
   const encodeWindowState = () => {
     return {
       lastWindowPositions,
       lastWindowSizes,
-      nextZIndex
+      nextZIndex,
+      openWindowTypes: windows.map(w => w.appType) // Track which windows were open for reconstruction
     };
   };
 
@@ -181,6 +187,26 @@ export const useWindowState = () => {
       setLastWindowSizes(encodedState.lastWindowSizes);
       setNextZIndex(encodedState.nextZIndex);
 
+      // WINDOW RECONSTRUCTION: Restore open windows after loading saved state
+      // This is why syncWindowLayout exists as a separate function - it allows us to
+      // reconstruct windows with their saved positions and sizes when loading a game,
+      // rather than having to minimize/re-expand windows to apply the proper layout.
+      if (encodedState.openWindowTypes) {
+        // Clear current windows to prevent duplicates
+        setWindows([]);
+        
+        // Reconstruct each window that was previously open
+        encodedState.openWindowTypes.forEach((appType: string) => {
+          const appConfig = APP_REGISTRY[appType];
+          if (appConfig) {
+            // Pass the decoded position and size directly to avoid async state issues
+            const savedPosition = encodedState.lastWindowPositions[appType];
+            const savedSize = encodedState.lastWindowSizes[appType];
+            syncWindowLayout(appType, appConfig.name, null, savedPosition, savedSize);
+          }
+        });
+      }
+
       return true;
     } catch (error) {
       console.error('Failed to decode window state:', error);
@@ -193,10 +219,12 @@ export const useWindowState = () => {
     updateWindowPosition,
     updateWindowSize,
     openOrCloseWindow,
+    syncWindowLayout,
     closeWindow,
     closeWindowsByAppType,
     bringToFront,
     dockAllWindows,
+    resetWindowState,
     
     // Save/Load
     encodeWindowState,

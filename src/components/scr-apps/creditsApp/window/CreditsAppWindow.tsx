@@ -45,7 +45,6 @@ const CreditsAppWindow: React.FC<CreditsAppWindowProps> = ({
     <ScrAppWindow
       title="Credits"
       {...windowProps}
-      size={{ width: 300, height: 150 }}
       minSize={{ width: 300, height: 150 }}
     >
       {content}

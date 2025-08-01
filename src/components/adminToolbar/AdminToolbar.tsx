@@ -45,7 +45,7 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
   }, []);
   
   const { elementRef: toolbarRef, position, isDragging, handleMouseDown, setPosition } = useDragHandler_Windows({
-    initialPosition: { x: 20, y: 20 },
+    initialPosition: { x: 20, y: window.innerHeight - 60 },
     dragConstraint,
     constrainToViewport: true
   });

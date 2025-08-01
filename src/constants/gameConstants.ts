@@ -29,7 +29,7 @@ import { GameTime, GamePhase, GameMode, PlayerState } from '../types/gameState';
 import { DEFAULT_INSTALLED_APPS } from './scrAppListConstants';
 
 // Initial game state constants
-export const INITIAL_CREDITS = 0;
+export const INITIAL_CREDITS = 10000;
 export const INITIAL_GAME_PHASE: GamePhase = 'lineRat';
 export const INITIAL_GAME_MODE: GameMode = 'freeMode';
 

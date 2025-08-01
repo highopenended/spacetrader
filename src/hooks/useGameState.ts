@@ -286,7 +286,7 @@ export const useGameState = () => {
   }, []);
 
   // ===== RESET FUNCTION =====
-  const resetGame = useCallback(() => {
+  const resetGameState = useCallback(() => {
     setGameState(initialGameState);
   }, []);
 
@@ -387,6 +387,6 @@ export const useGameState = () => {
     decodeGameState,
     
     // Global
-    resetGame
+    resetGameState
   };
 }; 
