@@ -13,7 +13,7 @@ import { WindowData } from '../types/windowState';
 import { WINDOW_DEFAULTS } from '../constants/windowConstants';
 import { clampPositionToBounds, getViewportBounds } from '../utils/viewportConstraints';
 
-export const useWindowManager = () => {
+export const useWindowState = () => {
   const [windows, setWindows] = useState<WindowData[]>([]);
   const [lastWindowPositions, setLastWindowPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [lastWindowSizes, setLastWindowSizes] = useState<Record<string, { width: number; height: number }>>({});

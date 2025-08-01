@@ -6,7 +6,7 @@
  * "multiple state instances" problem that keeps recurring.
  * 
  * ✅ CORRECT: State hooks only called in App.tsx, passed down as props
- * ❌ WRONG: Calling useGameState(), useWindowManager(), etc. in child components
+ * ❌ WRONG: Calling useGameState(), useWindowState(), etc. in child components
  * 
  * This rule prevents:
  * - Multiple state instances getting out of sync
@@ -23,7 +23,7 @@ import AdminToolbar from './components/adminToolbar/AdminToolbar';
 import WorkScreen from './components/workMode/workScreen/WorkScreen';
 import GameBackground from './components/gameBackgrounds/GameBackground';
 import { useGameState } from './hooks/useGameState';
-import { useWindowManager } from './hooks/useWindowManager';
+import { useWindowState } from './hooks/useWindowState';
 import { useDragHandler_Apps } from './hooks/useDragHandler_Apps';
 import { useCustomCollisionDetection } from './hooks/useCustomCollisionDetection';
 import { usePurgeZoneDrag } from './hooks/usePurgeZoneDrag';
@@ -91,7 +91,7 @@ function App() {
     dockAllWindows,
     encodeWindowState,
     decodeWindowState
-  } = useWindowManager();
+  } = useWindowState();
 
   // Add toggle state hook (single instance pattern)
   const {

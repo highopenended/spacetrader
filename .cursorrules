@@ -100,7 +100,7 @@ const AppNameAppWindow: React.FC<AppNameAppWindowProps> = ({
 - Handle click events for window toggling
 
 ### Window Management
-- Use `useWindowManager` hook for window state
+- Use `useWindowState` hook for window state
 - Implement `openOrCloseWindow` for app clicks
 - Handle window positioning and sizing callbacks
 - **Automatic viewport constraints** - All windows stay within screen bounds
@@ -152,7 +152,7 @@ const AppNameAppWindow: React.FC<AppNameAppWindowProps> = ({
 
 ### Hooks
 - `useGameState` - Unified game state management (credits, time, phases, apps)
-- `useWindowManager` - Window positions and sizes
+- `useWindowState` - Window positions and sizes
 - `useDragHandler_Windows` - Window positioning and resizing with viewport constraints
 - `useDragHandler_Apps` - App list drag-and-drop for reordering and deletion
 - `useViewportBounds` - Viewport constraint management
