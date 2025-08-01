@@ -3,18 +3,22 @@ import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
 import ToggleSection from '../../scrAppWindow/ToggleSection';
 import { GamePhase, GameMode } from '../../../../types/gameState';
 import { GAME_PHASES } from '../../../../constants/gameConstants';
-import { useToggleContext } from '../../../../contexts/ToggleContext';
 import './JobTitleAppWindow.css';
 
 interface JobTitleAppWindowProps extends BaseWindowProps {
   gamePhase: GamePhase;
+  gameMode: GameMode;
+  beginWorkSession: () => void;
 }
 
 const JobTitleAppWindow: React.FC<JobTitleAppWindowProps> = ({
   gamePhase,
+  gameMode,
+  beginWorkSession,
+  toggleStates,
+  setToggleState,
   ...windowProps
 }) => {
-  const { gameMode, beginWorkSession, toggleStates, setToggleState } = useToggleContext();
   const jobTitle = GAME_PHASES[gamePhase].title;
   const [jobTitleReadoutEnabled, setJobTitleReadoutEnabled] = useState(toggleStates.jobTitleReadoutEnabled);
   const [workButtonReadoutEnabled, setWorkButtonReadoutEnabled] = useState(toggleStates.workButtonReadoutEnabled);
@@ -22,13 +26,13 @@ const JobTitleAppWindow: React.FC<JobTitleAppWindowProps> = ({
   const toggleJobTitleReadout = () => {
     const newState = !jobTitleReadoutEnabled;
     setJobTitleReadoutEnabled(newState);
-    setToggleState('jobTitleReadoutEnabled', newState);
+    setToggleState?.('jobTitleReadoutEnabled', newState);
   };
 
   const toggleWorkButtonReadout = () => {
     const newState = !workButtonReadoutEnabled;
     setWorkButtonReadoutEnabled(newState);
-    setToggleState('workButtonReadoutEnabled', newState);
+    setToggleState?.('workButtonReadoutEnabled', newState);
   };
 
   const toggleConfig = [

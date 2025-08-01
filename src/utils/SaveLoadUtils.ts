@@ -8,7 +8,8 @@
 
 interface SaveData {
   gameState: any; // Encoded game state from useGameState
-  windowState?: any; // Encoded window state from useWindowManager (optional for backward compatibility)
+  windowState: any; // Encoded window state from useWindowManager
+  toggleState: any; // Encoded toggle state from useToggleState
   timestamp: number;
   saveDate: string;
 }
@@ -25,6 +26,7 @@ export const saveGameToLocalStorage = (saveData: any): boolean => {
     const fullSaveData: SaveData = {
       gameState: saveData.gameState,
       windowState: saveData.windowState,
+      toggleState: saveData.toggleState,
       timestamp: Date.now(),
       saveDate: new Date().toISOString()
     };
@@ -63,6 +65,7 @@ export const exportGameToFile = (saveData: any): boolean => {
     const fullSaveData: SaveData = {
       gameState: saveData.gameState,
       windowState: saveData.windowState,
+      toggleState: saveData.toggleState,
       timestamp: Date.now(),
       saveDate: new Date().toISOString()
     };

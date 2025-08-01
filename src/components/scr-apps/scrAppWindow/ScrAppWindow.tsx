@@ -66,6 +66,8 @@ export interface BaseWindowProps {
   draggedAppType?: string | null; // For debug: which app is being dragged
   getAppTierData?: (appId: string) => any; // For tier management
   changeAppTier?: (appId: string, tier: number) => void; // For tier changes
+  toggleStates?: any; // For DataReadout visibility controls
+  setToggleState?: (key: string, value: boolean) => void; // For updating toggle states
 }
 
 interface ScrAppWindowProps extends BaseWindowProps {
@@ -91,7 +93,9 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   updateCredits,
   draggedAppType,
   getAppTierData,
-  changeAppTier
+  changeAppTier,
+  toggleStates,
+  setToggleState
 }) => {
   const [currentSize, setCurrentSize] = useState(size);
   const [isResizing, setIsResizing] = useState(false);

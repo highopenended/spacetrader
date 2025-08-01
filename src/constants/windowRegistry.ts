@@ -15,15 +15,17 @@ import PurgeZoneAppWindow from '../components/scr-apps/purgeZoneApp/window/Purge
 import ScrAppStoreAppWindow from '../components/scr-apps/scrAppStoreApp/window/ScrAppStoreAppWindow';
 import ChronoTrackAppWindow from '../components/scr-apps/chronoTrackApp/window/ChronoTrackAppWindow';
 import CacheSyncAppWindow from '../components/scr-apps/cacheSyncApp/window/CacheSyncAppWindow';
-import { WindowData } from '../types/gameState';
-import { GameTime, GamePhase } from '../types/gameState';
+import { WindowData } from '../types/windowState';
+import { GameTime, GamePhase, GameMode } from '../types/gameState';
 import { WindowManagerContext } from '../contexts/WindowManagerContext';
 
-// Interface for game state passed to window renderers
-interface WindowGameState {
+// Interface for window controller passed to window renderers
+interface WindowController {
   credits: number;
   gameTime: GameTime;
   gamePhase: GamePhase;
+  gameMode: GameMode;
+  beginWorkSession: () => void;
   overId: any;
   purgeNodeDragState: {
     draggedAppType: string | null;
@@ -48,7 +50,7 @@ interface WindowGameState {
 // Interface for window configuration
 interface WindowConfig {
   component: React.ComponentType<any>;
-  getProps: (window: WindowData, gameState: WindowGameState, windowManager: WindowManagerContext) => any;
+  getProps: (window: WindowData, windowController: WindowController, windowManager: WindowManagerContext, toggleData?: { toggleStates: any; setToggleState: any }) => any;
 }
 
 /**
@@ -57,8 +59,9 @@ interface WindowConfig {
  */
 const buildCommonProps = (
   window: WindowData,
-  gameState: WindowGameState,
-  windowManager: WindowManagerContext
+  windowController: WindowController,
+  windowManager: WindowManagerContext,
+  toggleData?: { toggleStates: any; setToggleState: any }
 ) => ({
   key: window.id,
   windowId: window.id,
@@ -67,75 +70,79 @@ const buildCommonProps = (
   position: window.position,
   size: window.size,
   zIndex: window.zIndex,
-  overId: gameState.overId,
-  draggedAppType: gameState.purgeNodeDragState.draggedAppType,
+  overId: windowController.overId,
+  draggedAppType: windowController.purgeNodeDragState.draggedAppType,
   onClose: () => windowManager.closeWindow(window.id),
   onPositionChange: (pos: { x: number; y: number }) => windowManager.updateWindowPosition(window.appType, pos),
   onSizeChange: (size: { width: number; height: number }) => windowManager.updateWindowSize(window.appType, size),
   onBringToFront: () => windowManager.bringToFront(window.id),
-  updateCredits: gameState.updateCredits,
-  getAppTierData: gameState.getAppTierData,
-  changeAppTier: gameState.changeAppTier,
+  updateCredits: windowController.updateCredits,
+  getAppTierData: windowController.getAppTierData,
+  changeAppTier: windowController.changeAppTier,
+  toggleStates: toggleData?.toggleStates,
+  setToggleState: toggleData?.setToggleState,
 });
 
 // Window registry mapping app types to their configurations
 export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
   purgeZone: {
     component: PurgeZoneAppWindow,
-    getProps: (window, gameState, windowManager) => ({
-      ...buildCommonProps(window, gameState, windowManager)
+    getProps: (window, gameState, windowManager, toggleData) => ({
+      ...buildCommonProps(window, gameState, windowManager, toggleData)
     })
   },
   age: {
     component: AgeAppWindow,
-    getProps: (window, gameState, windowManager) => ({
-      ...buildCommonProps(window, gameState, windowManager),
-      gameTime: gameState.gameTime
+    getProps: (window, windowController, windowManager, toggleData) => ({
+      ...buildCommonProps(window, windowController, windowManager, toggleData),
+      gameTime: windowController.gameTime
     })
   },
   jobTitle: {
     component: JobTitleAppWindow,
-    getProps: (window, gameState, windowManager) => ({
-      ...buildCommonProps(window, gameState, windowManager),
-      gamePhase: gameState.gamePhase
+    getProps: (window, windowController, windowManager, toggleData) => ({
+      ...buildCommonProps(window, windowController, windowManager, toggleData),
+      gamePhase: windowController.gamePhase,
+      gameMode: windowController.gameMode,
+      beginWorkSession: windowController.beginWorkSession
     })
   },
   scrAppStore: {
     component: ScrAppStoreAppWindow,
-    getProps: (window, gameState, windowManager) => ({
-      ...buildCommonProps(window, gameState, windowManager),
-      credits: gameState.credits,
-      gamePhase: gameState.gamePhase,
-      getAvailableApps: gameState.getAvailableApps,
-      installedApps: gameState.installedApps,
-      installApp: gameState.installApp
+    getProps: (window, windowController, windowManager, toggleData) => ({
+      ...buildCommonProps(window, windowController, windowManager, toggleData),
+      credits: windowController.credits,
+      gamePhase: windowController.gamePhase,
+      getAvailableApps: windowController.getAvailableApps,
+      installedApps: windowController.installedApps,
+      installApp: windowController.installApp
     })
   },
   chronoTrack: {
     component: ChronoTrackAppWindow,
-    getProps: (window, gameState, windowManager) => ({
-      ...buildCommonProps(window, gameState, windowManager),
-      gameTime: gameState.gameTime,
-      gamePhase: gameState.gamePhase
+    getProps: (window, windowController, windowManager, toggleData) => ({
+      ...buildCommonProps(window, windowController, windowManager, toggleData),
+      gameTime: windowController.gameTime,
+      gamePhase: windowController.gamePhase
     })
   },
   credits: {
     component: CreditsAppWindow,
-    getProps: (window, gameState, windowManager) => ({
-      ...buildCommonProps(window, gameState, windowManager),
-      credits: gameState.credits
+    getProps: (window, windowController, windowManager, toggleData) => ({
+      ...buildCommonProps(window, windowController, windowManager, toggleData),
+      credits: windowController.credits
     })
   },
   cacheSync: {
     component: CacheSyncAppWindow,
-    getProps: (window, gameState, windowManager) => ({
-      ...buildCommonProps(window, gameState, windowManager),
-      credits: gameState.credits,
-      saveToLocalCache: gameState.saveToLocalCache,
-      loadFromLocalCache: gameState.loadFromLocalCache,
-      exportToFile: gameState.exportToFile,
-      importFromFile: gameState.importFromFile,
-      SAVE_COST: gameState.SAVE_COST
+    getProps: (window, windowController, windowManager, toggleData) => ({
+      ...buildCommonProps(window, windowController, windowManager, toggleData),
+      credits: windowController.credits,
+      saveToLocalCache: windowController.saveToLocalCache,
+      loadFromLocalCache: windowController.loadFromLocalCache,
+      exportToFile: windowController.exportToFile,
+      importFromFile: windowController.importFromFile,
+      SAVE_COST: windowController.SAVE_COST
     })
   }
 };
@@ -146,14 +153,15 @@ export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
  */
 export const renderWindow = (
   window: WindowData, 
-  gameState: WindowGameState, 
-  windowManager: WindowManagerContext
+  windowController: WindowController, 
+  windowManager: WindowManagerContext,
+  toggleData?: { toggleStates: any; setToggleState: any }
 ): React.ReactElement => {
   const config = WINDOW_REGISTRY[window.appType];
   
   if (config) {
     const WindowComponent = config.component;
-    const props = config.getProps(window, gameState, windowManager);
+    const props = config.getProps(window, windowController, windowManager, toggleData);
     return React.createElement(WindowComponent, props);
   }
   
@@ -166,13 +174,13 @@ export const renderWindow = (
     position: window.position,
     size: window.size,
     zIndex: window.zIndex,
-    overId: gameState.overId,
-    draggedAppType: gameState.purgeNodeDragState.draggedAppType,
+    overId: windowController.overId,
+    draggedAppType: windowController.purgeNodeDragState.draggedAppType,
     onClose: () => windowManager.closeWindow(window.id),
     onPositionChange: (position) => windowManager.updateWindowPosition(window.appType, position),
     onSizeChange: (size) => windowManager.updateWindowSize(window.appType, size),
     onBringToFront: () => windowManager.bringToFront(window.id),
-    updateCredits: gameState.updateCredits,
+    updateCredits: windowController.updateCredits,
     children: window.content
   });
 }; 

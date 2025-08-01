@@ -28,13 +28,13 @@ import { useDragHandler_Apps } from './hooks/useDragHandler_Apps';
 import { useCustomCollisionDetection } from './hooks/useCustomCollisionDetection';
 import { usePurgeZoneDrag } from './hooks/usePurgeZoneDrag';
 import { useSaveLoad } from './hooks/useSaveLoad';
-import { WindowData } from './types/gameState';
+import { useToggleState } from './hooks/useToggleState';
+import { WindowData } from './types/windowState';
 import PurgeConfirmPopup from './components/ui/PurgeConfirmPopup';
 import { renderWindow } from './constants/windowRegistry';
 
 import { DndContext, DragOverlay, useSensor, PointerSensor } from '@dnd-kit/core';
 import { getAppPropsMap } from './utils/appPropsBuilder';
-import { ToggleProvider } from './contexts/ToggleContext';
 import DataReadout from './components/DataReadout';
 
 function App() {
@@ -93,6 +93,14 @@ function App() {
     decodeWindowState
   } = useWindowManager();
 
+  // Add toggle state hook (single instance pattern)
+  const {
+    toggleStates,
+    setToggleState,
+    encodeToggleState,
+    decodeToggleState
+  } = useToggleState();
+
   // Create save/load functions with all encode/decode functions
   const {
     saveToLocalCache,
@@ -100,7 +108,7 @@ function App() {
     exportToFile,
     importFromFile,
     SAVE_COST
-  } = useSaveLoad(credits, updateCredits, encodeGameState, decodeGameState, encodeWindowState, decodeWindowState);
+  } = useSaveLoad(credits, updateCredits, encodeGameState, decodeGameState, encodeWindowState, decodeWindowState, encodeToggleState, decodeToggleState);
 
   // Use purge zone drag hook
   const {
@@ -125,10 +133,12 @@ function App() {
 
 
   const renderWindowComponent = (window: WindowData) => {
-    const gameState = {
+    const windowController = {
       credits,
       gameTime,
       gamePhase,
+      gameMode,
+      beginWorkSession,
       overId,
       purgeNodeDragState,
       updateCredits,
@@ -148,6 +158,11 @@ function App() {
       SAVE_COST
     };
 
+    const toggleData = {
+      toggleStates,
+      setToggleState
+    };
+
     const windowManager = {
       closeWindow,
       updateWindowPosition,
@@ -155,7 +170,7 @@ function App() {
       bringToFront
     };
 
-    return renderWindow(window, gameState, windowManager);
+    return renderWindow(window, windowController, windowManager, toggleData);
   };
 
   // Build app props map for TerminalScreen
@@ -163,14 +178,6 @@ function App() {
 
   // Combined props object
   const componentProps = {
-    toggleProvider: {
-      installedApps,
-      gameMode,
-      onBeginWorkSession: beginWorkSession,
-      credits,
-      gameTime,
-      gamePhase
-    },
     dndContext: {
       collisionDetection: customCollisionDetection,
       onDragStart: (event: any) => handleUnifiedDragStart(event, handleDragStart),
@@ -278,25 +285,30 @@ function App() {
   };
 
   return (
-    <ToggleProvider {...componentProps.toggleProvider}>
-      <DndContext {...componentProps.dndContext}>
+    <DndContext {...componentProps.dndContext}>
+      <div className="App">
+        <GameBackground backgroundId={gameBackground} />
+        <DataReadout 
+          toggleStates={toggleStates}
+          gameMode={gameMode}
+          beginWorkSession={beginWorkSession}
+          credits={credits}
+          gameTime={gameTime}
+          gamePhase={gamePhase}
+          installedApps={installedApps}
+        />
+        <TerminalScreen {...componentProps.terminalScreen} />
+        <AdminToolbar {...componentProps.adminToolbar} />
+        <PurgeConfirmPopup {...componentProps.purgeConfirm} />
+        {windows.map(renderWindowComponent)}
 
-        <div className="App">
-          <GameBackground backgroundId={gameBackground} />
-          <DataReadout />
-          <TerminalScreen {...componentProps.terminalScreen} />
-          <AdminToolbar {...componentProps.adminToolbar} />
-          <PurgeConfirmPopup {...componentProps.purgeConfirm} />
-          {windows.map(renderWindowComponent)}
-
-          {gameMode === 'workMode' && <WorkScreen />}
-    
-          <DragOverlay {...componentProps.dragOverlay}>
-            {renderDragOverlayContent()}
-        </DragOverlay>
-      </div>
-      </DndContext>
-    </ToggleProvider>
+        {gameMode === 'workMode' && <WorkScreen />}
+  
+        <DragOverlay {...componentProps.dragOverlay}>
+          {renderDragOverlayContent()}
+      </DragOverlay>
+    </div>
+    </DndContext>
   );
 }
 

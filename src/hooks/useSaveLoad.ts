@@ -23,7 +23,9 @@ export const useSaveLoad = (
   encodeGameState: () => any,
   decodeGameState: (state: any) => boolean,
   encodeWindowState: () => any,
-  decodeWindowState: (state: any) => boolean
+  decodeWindowState: (state: any) => boolean,
+  encodeToggleState: () => any,
+  decodeToggleState: (state: any) => boolean
 ) => {
   // Credit costs for save operations only
   const SAVE_COST = 50;
@@ -37,7 +39,8 @@ export const useSaveLoad = (
 
     const saveData = {
       gameState: encodeGameState(),
-      windowState: encodeWindowState()
+      windowState: encodeWindowState(),
+      toggleState: encodeToggleState()
     };
 
     const success = saveGameToLocalStorage(saveData);
@@ -46,7 +49,7 @@ export const useSaveLoad = (
       console.log(`Game saved to local cache. Cost: ${SAVE_COST} credits`);
     }
     return success;
-  }, [credits, encodeGameState, encodeWindowState, updateCredits]);
+  }, [credits, encodeGameState, encodeWindowState, encodeToggleState, updateCredits]);
 
   // Load from local cache
   const loadFromLocalCache = useCallback(() => {
@@ -63,17 +66,23 @@ export const useSaveLoad = (
       return false;
     }
 
-    // Decode window state (optional - window state might not exist in old saves)
-    if (loadedData.windowState) {
-      const windowSuccess = decodeWindowState(loadedData.windowState);
-      if (!windowSuccess) {
-        console.warn('Failed to decode window state, using defaults');
-      }
+    // Decode window state
+    const windowSuccess = decodeWindowState(loadedData.windowState);
+    if (!windowSuccess) {
+      console.error('Failed to decode window state');
+      return false;
+    }
+
+    // Decode toggle state
+    const toggleSuccess = decodeToggleState(loadedData.toggleState);
+    if (!toggleSuccess) {
+      console.error('Failed to decode toggle state');
+      return false;
     }
 
     console.log('Game loaded from local cache');
     return true;
-  }, [decodeGameState, decodeWindowState]);
+  }, [decodeGameState, decodeWindowState, decodeToggleState]);
 
   // Export to file
   const exportToFile = useCallback(() => {
@@ -84,7 +93,8 @@ export const useSaveLoad = (
 
     const saveData = {
       gameState: encodeGameState(),
-      windowState: encodeWindowState()
+      windowState: encodeWindowState(),
+      toggleState: encodeToggleState()
     };
 
     const success = exportGameToFile(saveData);
@@ -93,7 +103,7 @@ export const useSaveLoad = (
       console.log(`Game exported to file. Cost: ${SAVE_COST} credits`);
     }
     return success;
-  }, [credits, encodeGameState, encodeWindowState, updateCredits]);
+  }, [credits, encodeGameState, encodeWindowState, encodeToggleState, updateCredits]);
 
   // Import from file
   const importFromFile = useCallback(async (file: File) => {
@@ -110,17 +120,23 @@ export const useSaveLoad = (
       return false;
     }
 
-    // Decode window state (optional - window state might not exist in old saves)
-    if (loadedData.windowState) {
-      const windowSuccess = decodeWindowState(loadedData.windowState);
-      if (!windowSuccess) {
-        console.warn('Failed to decode window state from file, using defaults');
-      }
+    // Decode window state
+    const windowSuccess = decodeWindowState(loadedData.windowState);
+    if (!windowSuccess) {
+      console.error('Failed to decode window state from file');
+      return false;
+    }
+
+    // Decode toggle state
+    const toggleSuccess = decodeToggleState(loadedData.toggleState);
+    if (!toggleSuccess) {
+      console.error('Failed to decode toggle state from file');
+      return false;
     }
 
     console.log('Game imported from file');
     return true;
-  }, [decodeGameState, decodeWindowState]);
+  }, [decodeGameState, decodeWindowState, decodeToggleState]);
 
   return {
     saveToLocalCache,

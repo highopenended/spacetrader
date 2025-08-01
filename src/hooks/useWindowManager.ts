@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { WindowData } from '../types/gameState';
+import { WindowData } from '../types/windowState';
 import { WINDOW_DEFAULTS } from '../constants/windowConstants';
 import { clampPositionToBounds, getViewportBounds } from '../utils/viewportConstraints';
 

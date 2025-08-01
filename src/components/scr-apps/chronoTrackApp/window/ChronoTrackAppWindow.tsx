@@ -3,7 +3,6 @@ import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
 import ToggleSection from '../../scrAppWindow/ToggleSection';
 import { GameTime, GamePhase } from '../../../../types/gameState';
 import { getLedgerCycleName, getAnnumReckoningName, getGrindName } from '../../../../utils/gameStateUtils';
-import { useToggleContext } from '../../../../contexts/ToggleContext';
 
 interface ChronoTrackAppWindowProps extends BaseWindowProps {
   gameTime: GameTime;
@@ -13,17 +12,18 @@ interface ChronoTrackAppWindowProps extends BaseWindowProps {
 const ChronoTrackAppWindow: React.FC<ChronoTrackAppWindowProps> = ({
   gameTime,
   gamePhase,
+  toggleStates,
+  setToggleState,
   ...windowProps
 }) => {
   const { annumReckoning, ledgerCycle, grind, age, yearOfDeath } = gameTime;
   const yearOfBirth = annumReckoning - age;
-  const { toggleStates, setToggleState } = useToggleContext();
   const [dateReadoutEnabled, setDateReadoutEnabled] = useState(toggleStates.dateReadoutEnabled);
 
   const toggleDateReadout = () => {
     const newState = !dateReadoutEnabled;
     setDateReadoutEnabled(newState);
-    setToggleState('dateReadoutEnabled', newState);
+    setToggleState?.('dateReadoutEnabled', newState);
   };
 
   const toggleConfig = [

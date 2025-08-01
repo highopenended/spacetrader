@@ -6,27 +6,42 @@
  * 
  * STATE FLOW ARCHITECTURE:
  * 
- * This component is wrapped inside ToggleProvider, so it MUST get game state through
- * the context rather than calling useGameState() directly. This prevents the "two
- * instances of state" problem where DataReadout and app components show different values.
+ * This component receives all data via props from App.tsx to ensure
+ * single source of truth and prevent state synchronization issues.
  * 
  * CORRECT PATTERN:
- * - Get game state (credits, gameTime, gamePhase) via useToggleContext()
- * - Get installedApps via useToggleContext() (passed from App.tsx)
- * - NEVER call useGameState() directly
- * 
- * This ensures DataReadout stays synchronized with all other components that display
- * the same information (like CreditsAppItem, ChronoTrackAppWindow, etc.).
+ * - Get all data via props from App.tsx
+ * - NEVER call useGameState() or useToggleContext() directly
+ * - This ensures DataReadout stays synchronized with all other components
  */
 
 import React from 'react';
-import { useToggleContext } from '../contexts/ToggleContext';
+import { ToggleStates } from '../types/toggleState';
 import { getAnnumReckoningName, getLedgerCycleName, getGrindName } from '../utils/gameStateUtils';
 import { getJobTitle } from '../utils/gameStateUtils';
+import { GameTime, GamePhase, GameMode } from '../types/gameState';
+import { InstalledApp } from '../types/scrAppListState';
 import './DataReadout.css';
 
-const DataReadout: React.FC = () => {
-  const { toggleStates, gameMode, beginWorkSession, credits, gameTime, gamePhase, installedApps } = useToggleContext();
+interface DataReadoutProps {
+  toggleStates: ToggleStates;
+  gameMode: GameMode;
+  beginWorkSession: () => void;
+  credits: number;
+  gameTime: GameTime;
+  gamePhase: GamePhase;
+  installedApps: InstalledApp[];
+}
+
+const DataReadout: React.FC<DataReadoutProps> = ({
+  toggleStates,
+  gameMode,
+  beginWorkSession,
+  credits,
+  gameTime,
+  gamePhase,
+  installedApps
+}) => {
   const { annumReckoning, ledgerCycle, grind } = gameTime;
 
   // Check if ChronoTrack, JobTitle, and Credits are installed

@@ -9,14 +9,12 @@
  * - GameTime: Represents the in-game time system (years, months, days, etc.)
  * - GamePhase: Union type of all possible game progression phases
  * - GameState: Complete game state structure (currently unused but available for future use)
- * - WindowData: Structure for window management system
  * 
  * Used by:
  * - Unified game state hook (useGameState)
  * - All components that display game state
  * - Utility functions that manipulate game state
  * - Constants file for type safety
- * - Window management system
  * 
  * Dependencies: None (pure type definitions)
  */
@@ -73,14 +71,4 @@ export interface GameState {
   
   // Scrap system
   scrapObjects: ScrapObject[];  // Active scrap objects on screen
-}
-
-export interface WindowData {
-  id: string;
-  appType: string;
-  title: string;
-  content: React.ReactNode;
-  position: { x: number; y: number };
-  size: { width: number; height: number };
-  zIndex: number;
 } 
