@@ -137,7 +137,13 @@ export const useGameState = () => {
   const installApp = useCallback((appId: string, position?: number) => {
     setGameState(prev => {
       if (prev.installedApps.some(app => app.id === appId)) return prev; // Already installed
-      if (!APP_REGISTRY[appId]) return prev; // App doesn't exist
+      
+      const appDefinition = APP_REGISTRY[appId];
+      if (!appDefinition) return prev; // App doesn't exist
+
+      // Calculate purchase cost internally (same logic as UI components)
+      const purchaseCost = appDefinition.tiers?.[0]?.flatUpgradeCost || 0;
+      if (prev.credits < purchaseCost) return prev; // Can't afford
 
       const newApp: InstalledApp = {
         id: appId,
@@ -152,6 +158,7 @@ export const useGameState = () => {
         const newList = [...prev.installedApps, newApp].sort((a, b) => a.order - b.order);
         return {
           ...prev,
+          credits: prev.credits - purchaseCost, // Deduct purchase cost
           installedApps: newList.map((app, index) => ({
             ...app,
             order: index + 1
@@ -160,6 +167,7 @@ export const useGameState = () => {
       } else {
         return {
           ...prev,
+          credits: prev.credits - purchaseCost, // Deduct purchase cost
           installedApps: [...prev.installedApps, newApp]
         };
       }
