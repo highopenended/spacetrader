@@ -2,42 +2,29 @@
  * Save/Load Hook
  * 
  * Manages save and load operations with credit costs.
- * Integrates with game state for save/load functionality.
+ * Integrates with game state and window state for save/load functionality.
  * Handles credit deductions for save/load operations.
  */
 
 import { useCallback } from 'react';
-import { useGameState } from './useGameState';
+import { useWindowManager } from './useWindowManager';
 import { 
   saveGameToLocalStorage, 
   loadGameFromLocalStorage, 
   exportGameToFile, 
   importGameFromFile 
 } from '../utils/SaveLoadUtils';
-import { GameState } from '../types/gameState';
 
-export const useSaveLoad = (credits: number, updateCredits: (amount: number) => void) => {
-  const { 
-    gamePhase,
-    gameTime,
-    isPaused,
-    installedApps,
-    gameMode,
-    gameBackground,
-    setCredits,
-    setGamePhase,
-    setGameTime,
-    pauseTime,
-    resumeTime,
-    installApp,
-    uninstallApp,
-    reorderApps,
-    getAvailableApps,
-    resetToDefaults,
-    resetGame,
-    beginWorkSession,
-    setGameBackground
-  } = useGameState();
+export const useSaveLoad = (
+  credits: number, 
+  updateCredits: (amount: number) => void,
+  encodeGameState: () => any,
+  decodeGameState: (state: any) => boolean
+) => {
+  const {
+    encodeWindowState,
+    decodeWindowState
+  } = useWindowManager();
 
   // Credit costs for save operations only
   const SAVE_COST = 50;
@@ -49,52 +36,45 @@ export const useSaveLoad = (credits: number, updateCredits: (amount: number) => 
       return false;
     }
 
-    const gameState: GameState = {
-      gamePhase,
-      credits,
-      currentTime: gameTime,
-      isPaused,
-      lastUpdate: Date.now(),
-      playerState: {
-        isProtectedFromSharp: false,
-        isProtectedFromRadiation: false,
-        isProtectedFromCorrosive: false,
-        isProtectedFromExplosive: false,
-        isProtectedFromQuantum: false
-      },
-      scrapObjects: []
+    const saveData = {
+      gameState: encodeGameState(),
+      windowState: encodeWindowState()
     };
 
-    const success = saveGameToLocalStorage(gameState);
+    const success = saveGameToLocalStorage(saveData);
     if (success) {
       updateCredits(-SAVE_COST);
       console.log(`Game saved to local cache. Cost: ${SAVE_COST} credits`);
     }
     return success;
-  }, [credits, gamePhase, gameTime, isPaused, updateCredits]);
+  }, [credits, encodeGameState, encodeWindowState, updateCredits]);
 
   // Load from local cache
   const loadFromLocalCache = useCallback(() => {
-    const loadedGameState = loadGameFromLocalStorage();
-    if (!loadedGameState) {
+    const loadedData = loadGameFromLocalStorage();
+    if (!loadedData) {
       console.error('No save file found in local cache');
       return false;
     }
 
-    // Apply loaded game state
-    setCredits(loadedGameState.credits);
-    setGamePhase(loadedGameState.gamePhase);
-    setGameTime(loadedGameState.currentTime);
-    
-    if (loadedGameState.isPaused) {
-      pauseTime();
-    } else {
-      resumeTime();
+    // Decode game state
+    const gameSuccess = decodeGameState(loadedData.gameState);
+    if (!gameSuccess) {
+      console.error('Failed to decode game state');
+      return false;
+    }
+
+    // Decode window state (optional - window state might not exist in old saves)
+    if (loadedData.windowState) {
+      const windowSuccess = decodeWindowState(loadedData.windowState);
+      if (!windowSuccess) {
+        console.warn('Failed to decode window state, using defaults');
+      }
     }
 
     console.log('Game loaded from local cache');
     return true;
-  }, [setCredits, setGamePhase, setGameTime, pauseTime, resumeTime]);
+  }, [decodeGameState, decodeWindowState]);
 
   // Export to file
   const exportToFile = useCallback(() => {
@@ -103,52 +83,45 @@ export const useSaveLoad = (credits: number, updateCredits: (amount: number) => 
       return false;
     }
 
-    const gameState: GameState = {
-      gamePhase,
-      credits,
-      currentTime: gameTime,
-      isPaused,
-      lastUpdate: Date.now(),
-      playerState: {
-        isProtectedFromSharp: false,
-        isProtectedFromRadiation: false,
-        isProtectedFromCorrosive: false,
-        isProtectedFromExplosive: false,
-        isProtectedFromQuantum: false
-      },
-      scrapObjects: []
+    const saveData = {
+      gameState: encodeGameState(),
+      windowState: encodeWindowState()
     };
 
-    const success = exportGameToFile(gameState);
+    const success = exportGameToFile(saveData);
     if (success) {
       updateCredits(-SAVE_COST);
       console.log(`Game exported to file. Cost: ${SAVE_COST} credits`);
     }
     return success;
-  }, [credits, gamePhase, gameTime, isPaused, updateCredits]);
+  }, [credits, encodeGameState, encodeWindowState, updateCredits]);
 
   // Import from file
   const importFromFile = useCallback(async (file: File) => {
-    const loadedGameState = await importGameFromFile(file);
-    if (!loadedGameState) {
+    const loadedData = await importGameFromFile(file);
+    if (!loadedData) {
       console.error('Failed to import game from file');
       return false;
     }
 
-    // Apply loaded game state
-    setCredits(loadedGameState.credits);
-    setGamePhase(loadedGameState.gamePhase);
-    setGameTime(loadedGameState.currentTime);
-    
-    if (loadedGameState.isPaused) {
-      pauseTime();
-    } else {
-      resumeTime();
+    // Decode game state
+    const gameSuccess = decodeGameState(loadedData.gameState);
+    if (!gameSuccess) {
+      console.error('Failed to decode game state from file');
+      return false;
+    }
+
+    // Decode window state (optional - window state might not exist in old saves)
+    if (loadedData.windowState) {
+      const windowSuccess = decodeWindowState(loadedData.windowState);
+      if (!windowSuccess) {
+        console.warn('Failed to decode window state from file, using defaults');
+      }
     }
 
     console.log('Game imported from file');
     return true;
-  }, [setCredits, setGamePhase, setGameTime, pauseTime, resumeTime]);
+  }, [decodeGameState, decodeWindowState]);
 
   return {
     saveToLocalCache,

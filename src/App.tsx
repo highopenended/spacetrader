@@ -46,7 +46,9 @@ function App() {
     resetToDefaults,
     resetGame,
     beginWorkSession,
-    setGameBackground
+    setGameBackground,
+    encodeGameState,
+    decodeGameState
   } = useGameState();
 
   // Set up app drag handler
@@ -99,7 +101,9 @@ function App() {
       updateCredits,
       getAvailableApps,
       installedApps,
-      installApp
+      installApp,
+      encodeGameState,
+      decodeGameState
     };
 
     const windowManager = {

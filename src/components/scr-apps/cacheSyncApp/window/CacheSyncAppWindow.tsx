@@ -7,11 +7,15 @@ import { useSaveLoad } from '../../../../hooks/useSaveLoad';
 interface CacheSyncAppWindowProps extends BaseWindowProps {
   credits: number;
   updateCredits: (amount: number) => void;
+  encodeGameState: () => any;
+  decodeGameState: (state: any) => boolean;
 }
 
 const CacheSyncAppWindow: React.FC<CacheSyncAppWindowProps> = ({
   credits,
   updateCredits,
+  encodeGameState,
+  decodeGameState,
   ...windowProps
 }) => {
   const {
@@ -20,7 +24,7 @@ const CacheSyncAppWindow: React.FC<CacheSyncAppWindowProps> = ({
     exportToFile,
     importFromFile,
     SAVE_COST
-  } = useSaveLoad(credits, updateCredits);
+  } = useSaveLoad(credits, updateCredits, encodeGameState, decodeGameState);
 
   return (
     <ScrAppWindow

@@ -141,6 +141,53 @@ export const useWindowManager = () => {
     setWindows([]);
   };
 
+  // ===== SAVE/LOAD FUNCTIONS =====
+  const encodeWindowState = () => {
+    return {
+      lastWindowPositions,
+      lastWindowSizes,
+      nextZIndex
+    };
+  };
+
+  const decodeWindowState = (encodedState: any) => {
+    if (!encodedState) return false;
+    
+    try {
+      // Validate required fields
+      if (!encodedState.lastWindowPositions || 
+          !encodedState.lastWindowSizes ||
+          typeof encodedState.nextZIndex !== 'number') {
+        console.error('Invalid window state format');
+        return false;
+      }
+
+      // Validate position and size data structure
+      const positionsValid = Object.values(encodedState.lastWindowPositions).every(
+        (pos: any) => typeof pos === 'object' && typeof pos.x === 'number' && typeof pos.y === 'number'
+      );
+      
+      const sizesValid = Object.values(encodedState.lastWindowSizes).every(
+        (size: any) => typeof size === 'object' && typeof size.width === 'number' && typeof size.height === 'number'
+      );
+
+      if (!positionsValid || !sizesValid) {
+        console.error('Invalid window position or size data');
+        return false;
+      }
+
+      // Apply the decoded state
+      setLastWindowPositions(encodedState.lastWindowPositions);
+      setLastWindowSizes(encodedState.lastWindowSizes);
+      setNextZIndex(encodedState.nextZIndex);
+
+      return true;
+    } catch (error) {
+      console.error('Failed to decode window state:', error);
+      return false;
+    }
+  };
+
   return {
     windows,
     updateWindowPosition,
@@ -150,5 +197,9 @@ export const useWindowManager = () => {
     closeWindowsByAppType,
     bringToFront,
     dockAllWindows,
+    
+    // Save/Load
+    encodeWindowState,
+    decodeWindowState,
   };
 }; 

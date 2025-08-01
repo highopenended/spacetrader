@@ -19,7 +19,7 @@ import { WindowData } from '../types/gameState';
 import { GameTime, GamePhase } from '../types/gameState';
 import { WindowManagerContext } from '../contexts/WindowManagerContext';
 
-// Interface for the game state context passed to window renderers
+// Interface for game state passed to window renderers
 interface WindowGameState {
   credits: number;
   gameTime: GameTime;
@@ -32,6 +32,8 @@ interface WindowGameState {
   getAvailableApps: () => any[];
   installedApps: any[];
   installApp: (appId: string, order?: number) => void;
+  encodeGameState: () => any;
+  decodeGameState: (state: any) => boolean;
 }
 
 // Interface for window configuration
@@ -116,7 +118,9 @@ export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
     component: CacheSyncAppWindow,
     getProps: (window, gameState, windowManager) => ({
       ...buildCommonProps(window, gameState, windowManager),
-      credits: gameState.credits
+      credits: gameState.credits,
+      encodeGameState: gameState.encodeGameState,
+      decodeGameState: gameState.decodeGameState
     })
   }
 };

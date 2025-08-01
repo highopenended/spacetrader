@@ -290,6 +290,56 @@ export const useGameState = () => {
     setGameState(initialGameState);
   }, []);
 
+  // ===== SAVE/LOAD FUNCTIONS =====
+  const encodeGameState = useCallback(() => {
+    return {
+      credits: gameState.credits,
+      gamePhase: gameState.gamePhase,
+      gameTime: gameState.gameTime,
+      isPaused: gameState.isPaused,
+      lastUpdate: gameState.lastUpdate,
+      installedApps: gameState.installedApps,
+      gameMode: gameState.gameMode,
+      gameBackground: gameState.gameBackground
+    };
+  }, [gameState]);
+
+  const decodeGameState = useCallback((encodedState: any) => {
+    if (!encodedState) return false;
+    
+    try {
+      // Validate required fields
+      if (typeof encodedState.credits !== 'number' ||
+          typeof encodedState.gamePhase !== 'string' ||
+          !encodedState.gameTime ||
+          typeof encodedState.isPaused !== 'boolean' ||
+          typeof encodedState.lastUpdate !== 'number' ||
+          !Array.isArray(encodedState.installedApps) ||
+          typeof encodedState.gameMode !== 'string' ||
+          typeof encodedState.gameBackground !== 'string') {
+        console.error('Invalid game state format');
+        return false;
+      }
+
+      // Apply the decoded state
+      setGameState({
+        credits: encodedState.credits,
+        gamePhase: encodedState.gamePhase,
+        gameTime: encodedState.gameTime,
+        isPaused: encodedState.isPaused,
+        lastUpdate: encodedState.lastUpdate,
+        installedApps: encodedState.installedApps,
+        gameMode: encodedState.gameMode,
+        gameBackground: encodedState.gameBackground
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Failed to decode game state:', error);
+      return false;
+    }
+  }, []);
+
   return {
     // State
     gameState,
@@ -331,6 +381,10 @@ export const useGameState = () => {
     getAvailableApps,
     changeAppTier,
     getAppTierData,
+    
+    // Save/Load
+    encodeGameState,
+    decodeGameState,
     
     // Global
     resetGame
