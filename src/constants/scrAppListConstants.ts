@@ -99,7 +99,9 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     component: CacheSyncApp,
     deletable: true,
     description: 'Save and load game progress',
-    tiers: STANDARD_TIERS
+    tiers: [
+      { tier: 1, flatUpgradeCost: 0, flatDowngradeCost: 0, monthlyCost: 0, information: 'Save and load functionality' }
+    ]
   },
 
   // Future apps (not implemented yet)

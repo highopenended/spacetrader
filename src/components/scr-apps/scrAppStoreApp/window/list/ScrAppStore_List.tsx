@@ -103,6 +103,12 @@ const ScrAppStore_List: React.FC<ScrAppStore_ListProps> = ({
     }
   };
 
+  const formatPriceDisplay = (price: number, isPurchased: boolean) => {
+    if (isPurchased) return 'PURCHASED';
+    if (price === 0) return 'FREE';
+    return `₵${price.toLocaleString()}`;
+  };
+
   return (
     <div className="scr-app-store-list">
       {/* Search Bar */}
@@ -151,7 +157,9 @@ const ScrAppStore_List: React.FC<ScrAppStore_ListProps> = ({
                   {app.name}
                 </div>
                 <div className="app-price-cell">
-                  {app.isPurchased ? 'PURCHASED' : `₵${app.purchasePrice.toLocaleString()}`}
+                  <span className={app.purchasePrice === 0 && !app.isPurchased ? 'free-price' : ''}>
+                    {formatPriceDisplay(app.purchasePrice, app.isPurchased)}
+                  </span>
                 </div>
               </div>
             ))

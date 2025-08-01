@@ -91,8 +91,11 @@ const ScrAppStore_Details: React.FC<ScrAppStore_DetailsProps> = ({
               onClick={handlePurchase}
               disabled={!canAfford}
             >
-              Purchase for ₵{purchasePrice.toLocaleString()}
+              {purchasePrice === 0 ? 'FREE INSTALL' : `Purchase for ₵${purchasePrice.toLocaleString()}`}
             </button>
+            {purchasePrice === 0 && (
+              <div className="fine-print">In-App Purchases Available</div>
+            )}
           </>
         )}
       </div>

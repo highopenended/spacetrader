@@ -148,6 +148,17 @@
   text-shadow: none;
 }
 
+.fine-print {
+  color: #666;
+  font-size: var(--font-size-xsmall);
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0.5px;
+  text-align: center;
+  margin-top: var(--spacing-xs);
+  font-style: italic;
+}
+
 /* Custom scrollbar for info section */
 .details-info::-webkit-scrollbar {
   width: 6px;

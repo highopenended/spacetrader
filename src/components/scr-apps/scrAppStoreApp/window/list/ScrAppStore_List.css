@@ -180,6 +180,15 @@
   font-style: italic;
 }
 
+/* Free Price Styling */
+.free-price {
+  color: #4a4 !important;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 3px rgba(102, 170, 102, 0.5);
+}
+
 
 
 /* No Results */
