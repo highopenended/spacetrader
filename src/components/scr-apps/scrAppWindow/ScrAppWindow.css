@@ -258,6 +258,39 @@
   text-shadow: none;
 }
 
+.no-upgrades-message {
+  color: #666;
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+  padding: var(--spacing-sm);
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border: 1px solid #333;
+  border-radius: var(--border-radius-small);
+  font-style: italic;
+}
+
+.status-message {
+  color: #666;
+  font-size: var(--font-size-xsmall);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+  font-style: italic;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px; /* Match button height */
+}
+
 .resize-handle {
   position: absolute;
   bottom: 2px;

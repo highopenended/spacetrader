@@ -257,6 +257,9 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   const prevTierData = appRegistry?.tiers.find(t => t.tier === prevTier);
   const canUpgrade = nextTierData !== undefined;
   const canDowngrade = prevTierData !== undefined && prevTier >= 1;
+  
+  // Check if app has only one tier (no upgrades available)
+  const hasMultipleTiers = appRegistry?.tiers && appRegistry.tiers.length > 1;
 
   // CLEAN: Use drop zone effects hook to handle all conditional styling
   const dropZoneEffects = useDropZoneEffects(overId, draggedAppType || null, appType);
@@ -281,34 +284,52 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
         <div className="tier-description">
           {canUpgrade ? nextTierData.information : currentTierData?.information || 'No information available'}
         </div>
-        <div className="footer-buttons">
-          <div className="button-group">
-            <div className="button-cost-text">
-              ₵{currentTierData?.flatDowngradeCost || 0}
-            </div>
-            <button 
-              className="downgrade-button" 
-              onClick={handleDowngrade}
-              disabled={!canDowngrade}
-              style={dropZoneEffects.buttonStyles}
-            >
-              Downgrade
-            </button>
+        
+        {/* Single tier app - show message instead of buttons */}
+        {!hasMultipleTiers ? (
+          <div className="no-upgrades-message">
+            APP CONTAINS NO UPGRADES
           </div>
-          <div className="button-group">
-            <div className="button-cost-text">
-              ₵{nextTierData?.flatUpgradeCost || 0}
+        ) : (
+          <div className="footer-buttons">
+            <div className="button-group">
+              {canDowngrade && (
+                <div className="button-cost-text">
+                  ₵{currentTierData?.flatDowngradeCost || 0}
+                </div>
+              )}
+              {canDowngrade ? (
+                <button 
+                  className="downgrade-button" 
+                  onClick={handleDowngrade}
+                  style={dropZoneEffects.buttonStyles}
+                >
+                  Downgrade
+                </button>
+              ) : (
+                <div className="status-message">ALREADY LOWEST TIER</div>
+              )}
             </div>
-            <button 
-              className="upgrade-button" 
-              onClick={handleUpgrade}
-              disabled={!canUpgrade}
-              style={dropZoneEffects.buttonStyles}
-            >
-              Upgrade
-            </button>
+            <div className="button-group">
+              {canUpgrade && (
+                <div className="button-cost-text">
+                  ₵{nextTierData?.flatUpgradeCost || 0}
+                </div>
+              )}
+              {canUpgrade ? (
+                <button 
+                  className="upgrade-button" 
+                  onClick={handleUpgrade}
+                  style={dropZoneEffects.buttonStyles}
+                >
+                  Upgrade
+                </button>
+              ) : (
+                <div className="status-message">ALREADY MAX TIER</div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
