@@ -8,7 +8,6 @@
 
 import React from 'react';
 import ScrAppWindow from '../components/scr-apps/scrAppWindow/ScrAppWindow';
-import AgeAppWindow from '../components/scr-apps/ageApp/window/AgeAppWindow';
 import JobTitleAppWindow from '../components/scr-apps/jobTitleApp/window/JobTitleAppWindow';
 import CreditsAppWindow from '../components/scr-apps/creditsApp/window/CreditsAppWindow';
 import PurgeZoneAppWindow from '../components/scr-apps/purgeZoneApp/window/PurgeZoneAppWindow';
@@ -91,13 +90,7 @@ export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
       ...buildCommonProps(window, gameState, windowManager, toggleData)
     })
   },
-  age: {
-    component: AgeAppWindow,
-    getProps: (window, windowController, windowManager, toggleData) => ({
-      ...buildCommonProps(window, windowController, windowManager, toggleData),
-      gameTime: windowController.gameTime
-    })
-  },
+
   jobTitle: {
     component: JobTitleAppWindow,
     getProps: (window, windowController, windowManager, toggleData) => ({

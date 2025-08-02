@@ -7,8 +7,6 @@
 
 import CreditsApp from '../components/scr-apps/creditsApp/listItem/CreditsAppItem';
 import JobTitleApp from '../components/scr-apps/jobTitleApp/listItem/JobTitleAppItem';
-import AgeApp from '../components/scr-apps/ageApp/listItem/AgeAppItem';
-import DateApp from '../components/scr-apps/dateApp/listItem/DateAppItem';
 import ScrAppStore from '../components/scr-apps/scrAppStoreApp/listItem/ScrAppStoreItem';
 import PurgeZoneApp from '../components/scr-apps/purgeZoneApp/listItem/PurgeZoneAppItem';
 import ChronoTrackApp from '../components/scr-apps/chronoTrackApp/listItem/ChronoTrackAppItem';
@@ -58,22 +56,7 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
       jobTitleReadoutEnabled: true
     }
   },
-  age: {
-    id: 'age',
-    name: 'Age Tracker',
-    component: AgeApp,
-    deletable: true,
-    description: 'Monitor your character age',
-    tiers: STANDARD_TIERS
-  },
-  date: {
-    id: 'date',
-    name: 'Date Tracker',
-    component: DateApp,
-    deletable: true,
-    description: 'Current in-game date and time',
-    tiers: STANDARD_TIERS
-  },
+
   purgeZone: {
     id: 'purgeZone',
     name: 'Purge Zone',
@@ -139,8 +122,6 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
 export const DEFAULT_INSTALLED_APPS: AppType[] = [
   'credits',
   'jobTitle', 
-  // 'age',
-  // 'date',
   // 'purgeZone',
   'chronoTrack',
   'scrAppStore'

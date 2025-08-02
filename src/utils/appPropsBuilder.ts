@@ -27,10 +27,6 @@ export const getAppProps = (appId: string, gameState: AppPropsBuilderOptions) =>
       return { credits };
     case 'jobTitle':
       return { gamePhase };
-    case 'age':
-      return { gameTime };
-    case 'date':
-      return { gameTime, gamePhase };
     case 'scrAppStore':
       return { hasNewApps: true }; // TODO: Make this dynamic when implementing app store
     case 'purgeZone':

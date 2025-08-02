@@ -19,6 +19,5 @@ export const APP_WINDOW_DEFAULTS: Record<string, { width: number; height: number
   jobTitle: { width: 300, height: 150 },
   credits: { width: 300, height: 150 },
   cacheSync: { width: 400, height: 400 },
-  age: WINDOW_DEFAULTS.SIZE, // Use global default
   chronoTrack: WINDOW_DEFAULTS.SIZE, // Use global default
 }; 
