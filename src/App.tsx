@@ -50,7 +50,7 @@ function App() {
     installedApps,
     gameMode,
     gameBackground,
-    
+
     // Actions
     updateCredits,
     setCredits,
@@ -201,6 +201,15 @@ function App() {
         }),
       ]
     },
+    dataReadout: {
+      toggleStates,
+      gameMode,
+      beginWorkSession,
+      credits,
+      gameTime,
+      gamePhase,
+      installedApps
+    },
     terminalScreen: {
       credits,
       gameTime,
@@ -258,41 +267,41 @@ function App() {
     // PURGE NODE DRAG SYSTEM: Tiny mouse-cursor-sized indicator for window deletion
     if (purgeNodeDragState.isPurgeNodeDragging) {
       return (
-            <div 
-              className="purge-node-drag-indicator"
-              style={{ 
-                width: '12px', 
-                height: '12px',
-                background: 'linear-gradient(135deg, #ff4444 0%, #aa2222 100%)',
-                border: '1px solid #ff6666',
-                borderRadius: '2px',
-                boxShadow: '0 0 8px rgba(255, 68, 68, 0.6)',
-                opacity: 0.9,
-                pointerEvents: 'none'
-              }}
-              title={`Deleting: ${purgeNodeDragState.draggedWindowTitle}`}
-            />
+        <div
+          className="purge-node-drag-indicator"
+          style={{
+            width: '12px',
+            height: '12px',
+            background: 'linear-gradient(135deg, #ff4444 0%, #aa2222 100%)',
+            border: '1px solid #ff6666',
+            borderRadius: '2px',
+            boxShadow: '0 0 8px rgba(255, 68, 68, 0.6)',
+            opacity: 0.9,
+            pointerEvents: 'none'
+          }}
+          title={`Deleting: ${purgeNodeDragState.draggedWindowTitle}`}
+        />
       );
     }
-    
+
     // STANDARD DRAG SYSTEM: Full app preview for app list reordering
     if (dragState.isDragging && dragState.draggedAppId) {
       const appConfig = apps.find(app => app.id === dragState.draggedAppId);
       if (!appConfig) return null;
-      
+
       const AppComponent = appConfig.component;
       const appProps = appPropsMap[appConfig.id];
 
       return (
-            <div 
-              className={`sortable-item dragging`}
-              style={{ opacity: 0.8, position: 'relative' }}
-            >
+        <div
+          className={`sortable-item dragging`}
+          style={{ opacity: 0.8, position: 'relative' }}
+        >
           <AppComponent {...appProps} />
         </div>
       );
     }
-    
+
     return null;
   };
 
@@ -300,26 +309,18 @@ function App() {
     <DndContext {...componentProps.dndContext}>
       <div className="App">
         <GameBackground backgroundId={gameBackground} />
-        <DataReadout 
-          toggleStates={toggleStates}
-          gameMode={gameMode}
-          beginWorkSession={beginWorkSession}
-          credits={credits}
-          gameTime={gameTime}
-          gamePhase={gamePhase}
-          installedApps={installedApps}
-        />
+        <DataReadout {...componentProps.dataReadout} />
         <TerminalScreen {...componentProps.terminalScreen} />
         <AdminToolbar {...componentProps.adminToolbar} />
         <PurgeConfirmPopup {...componentProps.purgeConfirm} />
         {windows.map(renderWindowComponent)}
 
         {gameMode === 'workMode' && <WorkScreen />}
-  
+
         <DragOverlay {...componentProps.dragOverlay}>
           {renderDragOverlayContent()}
-      </DragOverlay>
-    </div>
+        </DragOverlay>
+      </div>
     </DndContext>
   );
 }

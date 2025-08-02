@@ -126,8 +126,3 @@ export const DEFAULT_INSTALLED_APPS: AppType[] = [
   'chronoTrack',
   'scrAppStore'
 ];
-
-export const DRAG_CONSTANTS = {
-  ITEM_TYPE: 'SCR_APP',
-  ANIMATION_DURATION: 200
-}; 
