@@ -204,9 +204,6 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
     
     // Reset terminal drop zone state when drag ends (handled in App.tsx onDragEnd)
     
-    // UNIVERSAL DRAG RESET: Always reset drag state for all drag types
-    appDragEnd(event); // Resets app drag state (safe to call for all drag types)
-    
     // Clean up app drag mouse tracking
     if ((window as any).__appDragMouseMoveCleanup) {
       (window as any).__appDragMouseMoveCleanup();
@@ -219,7 +216,11 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
     // Window drag state is handled internally by useDragHandler_Windows
     // Purge node drag state is reset in the router's purgeNodeDragState
     
-    if (!over) return;
+    if (!over) {
+      // No drop target - handle reordering only
+      appDragEnd(event);
+      return;
+    }
     
     // DELETION HANDLING: Check if dropped on PurgeZone (handles both systems)
     if (over.id === 'purge-zone-window') {
@@ -262,8 +263,11 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
       return;
     }
     
-    // APP DRAG SYSTEM: Reordering is handled by appDragEnd (called earlier)
-    // No additional processing needed here
+    // APP DRAG SYSTEM: Handle reordering when dropped on other apps
+    if (active.data?.current?.type === 'app-drag-node') {
+      appDragEnd(event);
+      return;
+    }
   }, [appDragEnd, closeWindowsByAppType]);
 
   /**

@@ -50,16 +50,7 @@ export const useDragHandler_Apps = ({
 
     if (!over) return;
 
-    // Handle deletion
-    if (over.id === 'purge-zone-window') {
-      const appDefinition = APP_REGISTRY[active.id];
-      if (appDefinition && appDefinition.deletable) {
-        onAppUninstall(active.id);
-        return;
-      }
-    }
-
-    // Handle reordering
+    // Handle reordering only - deletion is handled by the router
     const appOrder = installedApps
       .sort((a, b) => a.order - b.order)
       .map(app => app.id);
@@ -75,7 +66,7 @@ export const useDragHandler_Apps = ({
       }));
       onAppsReorder(reorderedWithNewOrder);
     }
-  }, [installedApps, onAppUninstall, onAppsReorder]);
+  }, [installedApps, onAppsReorder]);
 
   return {
     dragState,
