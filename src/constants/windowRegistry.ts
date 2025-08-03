@@ -17,6 +17,7 @@ import CacheSyncAppWindow from '../components/scr-apps/cacheSyncApp/window/Cache
 import { WindowData } from '../types/windowState';
 import { GameTime, GamePhase, GameMode } from '../types/gameState';
 import { WindowManagerContext } from '../contexts/WindowManagerContext';
+import { APP_WINDOW_MIN_SIZES, WINDOW_DEFAULTS } from './windowConstants';
 
 // Interface for window controller passed to window renderers
 interface WindowController {
@@ -26,7 +27,7 @@ interface WindowController {
   gameMode: GameMode;
   beginWorkSession: () => void;
   overId: any;
-  purgeNodeDragState: {
+  dragNodeState: {
     draggedAppType: string | null;
   };
   updateCredits: (amount: number) => void;
@@ -70,7 +71,7 @@ const buildCommonProps = (
   size: window.size,
   zIndex: window.zIndex,
   overId: windowController.overId,
-  draggedAppType: windowController.purgeNodeDragState.draggedAppType,
+  draggedAppType: windowController.dragNodeState.draggedAppType,
   onClose: () => windowManager.closeWindow(window.id),
   onPositionChange: (pos: { x: number; y: number }) => windowManager.updateWindowPosition(window.appType, pos),
   onSizeChange: (size: { width: number; height: number }) => windowManager.updateWindowSize(window.appType, size),
@@ -80,6 +81,7 @@ const buildCommonProps = (
   changeAppTier: windowController.changeAppTier,
   toggleStates: toggleData?.toggleStates,
   setToggleState: toggleData?.setToggleState,
+  minSize: APP_WINDOW_MIN_SIZES[window.appType] || WINDOW_DEFAULTS.MIN_SIZE,
 });
 
 // Window registry mapping app types to their configurations
@@ -168,7 +170,7 @@ export const renderWindow = (
     size: window.size,
     zIndex: window.zIndex,
     overId: windowController.overId,
-    draggedAppType: windowController.purgeNodeDragState.draggedAppType,
+    draggedAppType: windowController.dragNodeState.draggedAppType,
     onClose: () => windowManager.closeWindow(window.id),
     onPositionChange: (position) => windowManager.updateWindowPosition(window.appType, position),
     onSizeChange: (size) => windowManager.updateWindowSize(window.appType, size),

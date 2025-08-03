@@ -25,7 +25,6 @@ const CacheSyncAppWindow: React.FC<CacheSyncAppWindowProps> = ({
     <ScrAppWindow
       title="Cache Sync"
       {...windowProps}
-      minSize={{ width: 350, height: 350 }}
     >
       <div className="window-content-padded">
         <SaveSection 

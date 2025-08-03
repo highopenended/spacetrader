@@ -121,7 +121,7 @@ function App() {
     setIsOverTerminalDropZone,
     appDragMousePosition,
     pendingDelete,
-    purgeNodeDragState,
+    dragNodeState,
     dragState,
     customCollisionDetection,
     handleUnifiedDragStart,
@@ -145,7 +145,7 @@ function App() {
       gameMode,
       beginWorkSession,
       overId,
-      purgeNodeDragState,
+      dragNodeState,
       updateCredits,
       getAvailableApps,
       installedApps,
@@ -275,11 +275,11 @@ function App() {
       zIndex: 2000,
       dropAnimation: { duration: 0, easing: 'ease' },
       style: {
-        // PURGE NODE DRAG SYSTEM: Position overlay at mouse cursor for purge indicator
-        ...(purgeNodeDragState.isPurgeNodeDragging && purgeNodeDragState.mousePosition && {
+        // DRAG NODE SYSTEM: Position overlay at mouse cursor for drag indicator
+        ...(dragNodeState.isDragNodeDragging && dragNodeState.mousePosition && {
           position: 'fixed' as const,
-          left: purgeNodeDragState.mousePosition.x - 6, // Center 12px indicator on cursor
-          top: purgeNodeDragState.mousePosition.y - 6,
+          left: dragNodeState.mousePosition.x - 6, // Center 12px indicator on cursor
+          top: dragNodeState.mousePosition.y - 6,
           transform: 'none', // Override @dnd-kit's transform
           pointerEvents: 'none' as const
         })
@@ -313,8 +313,8 @@ function App() {
   };
 
   const renderDragOverlay_PurgeNode = () => {
-    // PURGE NODE DRAG SYSTEM: Tiny mouse-cursor-sized indicator for window deletion
-    if (purgeNodeDragState.isPurgeNodeDragging) {
+    // DRAG NODE SYSTEM: Tiny mouse-cursor-sized indicator for window deletion
+    if (dragNodeState.isDragNodeDragging) {
       return (
         <DragOverlay {...componentProps.dragOverlay}>
           <div
@@ -329,7 +329,7 @@ function App() {
               opacity: 0.9,
               pointerEvents: 'none'
             }}
-            title={`Deleting: ${purgeNodeDragState.draggedWindowTitle}`}
+            title={`Deleting: ${dragNodeState.draggedWindowTitle}`}
           />
         </DragOverlay>
       );
@@ -351,7 +351,7 @@ function App() {
         {gameMode === 'workMode' && <WorkScreen />}
 
         {/* Debug readout for overId and drag type */}
-        <div
+        {/* <div
           style={{
             position: 'fixed',
             bottom: '10px',
@@ -369,12 +369,12 @@ function App() {
         >
           overId: {overId || 'null'}
           <br />
-          dragType: {dragState.isDragging ? 'app-drag-node' : purgeNodeDragState.isPurgeNodeDragging ? 'window-drag-node' : 'none'}
+          dragType: {dragState.isDragging ? 'app-drag-node' : dragNodeState.isDragNodeDragging ? 'window-drag-node' : 'none'}
           <br />
           overTerminal: {isOverTerminalDropZone ? 'true' : 'false'}
           <br />
           appDragPos: {appDragMousePosition ? `${appDragMousePosition.x}, ${appDragMousePosition.y}` : 'null'}
-        </div>
+        </div> */}
 
         {renderDragOverlay_AppGhost()}
         {renderDragOverlay_PurgeNode()}

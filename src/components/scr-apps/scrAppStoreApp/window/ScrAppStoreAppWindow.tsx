@@ -27,7 +27,6 @@ const ScrAppStoreAppWindow: React.FC<ScrAppStoreAppWindowProps> = ({
     <ScrAppWindow
       title="SCR-App Store"
       {...windowProps}
-      minSize={{ width: 600, height: 400 }}
     >
       <div className="scr-app-store-window-content">
         {/* Left Half: App List */}

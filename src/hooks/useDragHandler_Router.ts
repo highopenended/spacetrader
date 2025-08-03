@@ -15,9 +15,9 @@ import { rectIntersection } from '@dnd-kit/core';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useDragHandler_Apps } from './useDragHandler_Apps';
 
-// Interface for purge node drag state
-interface PurgeNodeDragState {
-  isPurgeNodeDragging: boolean;
+// Interface for drag node state
+interface DragNodeState {
+  isDragNodeDragging: boolean;
   draggedWindowTitle: string | null;
   draggedAppType: string | null;
   mousePosition: { x: number; y: number } | null;
@@ -58,8 +58,8 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
     appId: null, 
     prevOrder: [] 
   });
-  const [purgeNodeDragState, setPurgeNodeDragState] = useState<PurgeNodeDragState>({
-    isPurgeNodeDragging: false,
+  const [dragNodeState, setDragNodeState] = useState<DragNodeState>({
+    isDragNodeDragging: false,
     draggedWindowTitle: null,
     draggedAppType: null,
     mousePosition: null
@@ -135,8 +135,8 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
     // WINDOW DRAG SYSTEM: Handle window drag start
     if (active.data?.current?.type === 'window-drag-node') {
       const { windowTitle, appType } = active.data.current;
-      setPurgeNodeDragState({
-        isPurgeNodeDragging: true,
+      setDragNodeState({
+        isDragNodeDragging: true,
         draggedWindowTitle: windowTitle,
         draggedAppType: appType,
         mousePosition: null // Will be updated by mouse move handler
@@ -144,7 +144,7 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
       
       // Add mouse move listener to track cursor position for window drag indicator
       const handleWindowDragMouseMove = (e: MouseEvent) => {
-        setPurgeNodeDragState(prev => ({
+        setDragNodeState((prev: DragNodeState) => ({
           ...prev,
           mousePosition: { x: e.clientX, y: e.clientY }
         }));
@@ -189,8 +189,8 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
     const { active, over } = event;
     
     // WINDOW DRAG SYSTEM: Always reset window drag state when drag ends
-    setPurgeNodeDragState({
-      isPurgeNodeDragging: false,
+    setDragNodeState({
+      isDragNodeDragging: false,
       draggedWindowTitle: null,
       draggedAppType: null,
       mousePosition: null
@@ -293,24 +293,24 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
     setOverId(null);
   }, [pendingDelete, installAppOrder]);
 
-  return {
-    // State
-    overId,
-    setOverId,
-    isOverTerminalDropZone,
-    setIsOverTerminalDropZone,
-    appDragMousePosition,
-    pendingDelete,
-    purgeNodeDragState,
-    dragState,
-    
-    // Collision detection
-    customCollisionDetection,
-    
-    // Unified handlers
-    handleUnifiedDragStart,
-    handleUnifiedDragEnd,
-    handleConfirmPurge,
-    handleCancelPurge
-  };
+      return {
+      // State
+      overId,
+      setOverId,
+      isOverTerminalDropZone,
+      setIsOverTerminalDropZone,
+      appDragMousePosition,
+      pendingDelete,
+      dragNodeState,
+      dragState,
+      
+      // Collision detection
+      customCollisionDetection,
+      
+      // Unified handlers
+      handleUnifiedDragStart,
+      handleUnifiedDragEnd,
+      handleConfirmPurge,
+      handleCancelPurge
+    };
 }; 

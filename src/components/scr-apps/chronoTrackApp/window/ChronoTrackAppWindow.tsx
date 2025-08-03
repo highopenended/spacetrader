@@ -40,7 +40,6 @@ const ChronoTrackAppWindow: React.FC<ChronoTrackAppWindowProps> = ({
     <ScrAppWindow
       title="Chrono Track"
       {...windowProps}
-      minSize={{ width: 200, height: 100 }}
     >
       <div className="window-content-padded">
         <div className="window-column-layout">

@@ -34,7 +34,6 @@ const PurgeZoneAppWindow: React.FC<PurgeZoneAppWindowProps> = ({
     <ScrAppWindow
       title="Purge Zone"
       {...windowProps}
-      minSize={{ width: 100, height: 100 }}
     >
       {content}
     </ScrAppWindow>

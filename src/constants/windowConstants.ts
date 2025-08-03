@@ -15,9 +15,19 @@ export const WINDOW_DEFAULTS = {
 // App-specific default window sizes
 export const APP_WINDOW_DEFAULTS: Record<string, { width: number; height: number }> = {
   scrAppStore: { width: 600, height: 400 },
-  purgeZone: { width: 300, height: 200 },
-  jobTitle: { width: 300, height: 150 },
+  purgeZone: { width: 150, height: 150   },
+  jobTitle: { width: 300, height: 180 },
   credits: { width: 300, height: 150 },
-  cacheSync: { width: 400, height: 400 },
-  chronoTrack: WINDOW_DEFAULTS.SIZE, // Use global default
+  cacheSync: { width: 350, height: 350 },
+  chronoTrack: { width: 350, height: 200 }
+};
+
+// App-specific minimum window sizes
+export const APP_WINDOW_MIN_SIZES: Record<string, { width: number; height: number }> = {
+  scrAppStore: { width: 600, height: 400 },
+  purgeZone: { width: 150, height: 150 },
+  jobTitle: { width: 250, height: 180 },
+  credits: { width: 300, height: 150 },
+  cacheSync: { width: 350, height: 350 },
+  chronoTrack: { width: 350, height: 200 }
 }; 
