@@ -262,28 +262,8 @@ function App() {
     }
   };
 
-  // DragOverlay content helper
-  const renderDragOverlayContent = () => {
-    // PURGE NODE DRAG SYSTEM: Tiny mouse-cursor-sized indicator for window deletion
-    if (purgeNodeDragState.isPurgeNodeDragging) {
-      return (
-        <div
-          className="purge-node-drag-indicator"
-          style={{
-            width: '12px',
-            height: '12px',
-            background: 'linear-gradient(135deg, #ff4444 0%, #aa2222 100%)',
-            border: '1px solid #ff6666',
-            borderRadius: '2px',
-            boxShadow: '0 0 8px rgba(255, 68, 68, 0.6)',
-            opacity: 0.9,
-            pointerEvents: 'none'
-          }}
-          title={`Deleting: ${purgeNodeDragState.draggedWindowTitle}`}
-        />
-      );
-    }
-
+  // DragOverlay content helper (purely visual, for ghost image of app being dragged)
+  const renderDragOverlay_AppGhost = () => {
     // STANDARD DRAG SYSTEM: Full app preview for app list reordering
     if (dragState.isDragging && dragState.draggedAppId) {
       const appConfig = apps.find(app => app.id === dragState.draggedAppId);
@@ -293,12 +273,40 @@ function App() {
       const appProps = appPropsMap[appConfig.id];
 
       return (
-        <div
-          className={`sortable-item dragging`}
-          style={{ opacity: 0.8, position: 'relative' }}
-        >
-          <AppComponent {...appProps} />
-        </div>
+        <DragOverlay {...componentProps.dragOverlay}>
+          <div
+            className={`sortable-item dragging`}
+            style={{ opacity: 0.8, position: 'relative' }}
+          >
+            <AppComponent {...appProps} />
+          </div>
+        </DragOverlay>
+      );
+    }
+
+    return null;
+  };
+
+  const renderDragOverlay_PurgeNode = () => {
+    // PURGE NODE DRAG SYSTEM: Tiny mouse-cursor-sized indicator for window deletion
+    if (purgeNodeDragState.isPurgeNodeDragging) {
+      return (
+        <DragOverlay {...componentProps.dragOverlay}>
+          <div
+            className="purge-node-drag-indicator"
+            style={{
+              width: '12px',
+              height: '12px',
+              background: 'linear-gradient(135deg, #ff4444 0%, #aa2222 100%)',
+              border: '1px solid #ff6666',
+              borderRadius: '2px',
+              boxShadow: '0 0 8px rgba(255, 68, 68, 0.6)',
+              opacity: 0.9,
+              pointerEvents: 'none'
+            }}
+            title={`Deleting: ${purgeNodeDragState.draggedWindowTitle}`}
+          />
+        </DragOverlay>
       );
     }
 
@@ -317,9 +325,8 @@ function App() {
 
         {gameMode === 'workMode' && <WorkScreen />}
 
-        <DragOverlay {...componentProps.dragOverlay}>
-          {renderDragOverlayContent()}
-        </DragOverlay>
+        {renderDragOverlay_AppGhost()}
+        {renderDragOverlay_PurgeNode()}
       </div>
     </DndContext>
   );
