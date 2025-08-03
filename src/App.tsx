@@ -119,6 +119,7 @@ function App() {
     setOverId,
     isOverTerminalDropZone,
     setIsOverTerminalDropZone,
+    appDragMousePosition,
     pendingDelete,
     purgeNodeDragState,
     dragState,
@@ -206,7 +207,12 @@ function App() {
             const appId = active.id;
             const appConfig = apps.find(app => app.id === appId);
             if (appConfig) {
+                                      // Open window at drop coordinates (centered on drop point)
+            if (appDragMousePosition) {
+              openOrCloseWindow(appId, appConfig.name, undefined, appDragMousePosition);
+            } else {
               openOrCloseWindow(appId, appConfig.name);
+            }
             }
           }
           
@@ -366,6 +372,8 @@ function App() {
           dragType: {dragState.isDragging ? 'app-drag-node' : purgeNodeDragState.isPurgeNodeDragging ? 'window-drag-node' : 'none'}
           <br />
           overTerminal: {isOverTerminalDropZone ? 'true' : 'false'}
+          <br />
+          appDragPos: {appDragMousePosition ? `${appDragMousePosition.x}, ${appDragMousePosition.y}` : 'null'}
         </div>
 
         {renderDragOverlay_AppGhost()}

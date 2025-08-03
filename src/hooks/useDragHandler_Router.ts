@@ -53,6 +53,7 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
   // ROUTER STATE: Centralized state management
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
   const [isOverTerminalDropZone, setIsOverTerminalDropZone] = useState<boolean>(false);
+  const [appDragMousePosition, setAppDragMousePosition] = useState<{ x: number; y: number } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PendingDeleteState>({ 
     appId: null, 
     prevOrder: [] 
@@ -158,6 +159,18 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
     } else if (active.data?.current?.type === 'app-drag-node') {
       // APP DRAG SYSTEM: Handle app list reordering drag start
       appDragStart(event);
+      
+      // Track mouse position for app drags
+      const handleAppDragMouseMove = (e: MouseEvent) => {
+        setAppDragMousePosition({ x: e.clientX, y: e.clientY });
+      };
+      
+      document.addEventListener('mousemove', handleAppDragMouseMove);
+      
+      // Store cleanup function for drag end
+      (window as any).__appDragMouseMoveCleanup = () => {
+        document.removeEventListener('mousemove', handleAppDragMouseMove);
+      };
     } else {
       // Fallback for any other drag types
       appDragStart(event);
@@ -193,6 +206,16 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
     
     // UNIVERSAL DRAG RESET: Always reset drag state for all drag types
     appDragEnd(event); // Resets app drag state (safe to call for all drag types)
+    
+    // Clean up app drag mouse tracking
+    if ((window as any).__appDragMouseMoveCleanup) {
+      (window as any).__appDragMouseMoveCleanup();
+      delete (window as any).__appDragMouseMoveCleanup;
+    }
+    
+    // Reset app drag mouse position
+    setAppDragMousePosition(null);
+    
     // Window drag state is handled internally by useDragHandler_Windows
     // Purge node drag state is reset in the router's purgeNodeDragState
     
@@ -272,6 +295,7 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
     setOverId,
     isOverTerminalDropZone,
     setIsOverTerminalDropZone,
+    appDragMousePosition,
     pendingDelete,
     purgeNodeDragState,
     dragState,

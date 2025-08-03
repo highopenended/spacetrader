@@ -36,12 +36,12 @@ export const useWindowState = () => {
     }));
   };
 
-  const syncWindowLayout = (appType: string, title: string, content?: React.ReactNode, savedPosition?: { x: number; y: number }, savedSize?: { width: number; height: number }) => {
+  const syncWindowLayout = (appType: string, title: string, content?: React.ReactNode, dropPosition?: { x: number; y: number }, savedSize?: { width: number; height: number }) => {
     const defaultContent = React.createElement('div', {}, 'No Data Available');
     const windowContent = content || defaultContent;
     
-    // Use saved position/size if provided, otherwise use last known or defaults
-    let lastPosition = savedPosition || lastWindowPositions[appType];
+    // Use drop position if provided, otherwise use last known or defaults
+    let lastPosition = dropPosition || lastWindowPositions[appType];
     const defaultPosition = { 
       x: WINDOW_DEFAULTS.POSITION.x + (windows.length * WINDOW_DEFAULTS.POSITION_OFFSET), 
       y: WINDOW_DEFAULTS.POSITION.y + (windows.length * WINDOW_DEFAULTS.POSITION_OFFSET) 
@@ -49,6 +49,15 @@ export const useWindowState = () => {
     
     let lastSize = savedSize || lastWindowSizes[appType];
     const defaultSize = APP_WINDOW_DEFAULTS[appType] || WINDOW_DEFAULTS.SIZE;
+    
+    // If drop position is provided, center the window on the drop point
+    if (dropPosition) {
+      const windowSize = lastSize || defaultSize;
+      lastPosition = {
+        x: dropPosition.x - (windowSize.width / 2),
+        y: dropPosition.y - (windowSize.height / 2)
+      };
+    }
     
     // Check if saved position is out of bounds and clamp it to viewport bounds
     if (lastPosition) {
@@ -102,7 +111,7 @@ export const useWindowState = () => {
     }
   };
 
-  const openOrCloseWindow = (appType: string, title: string, content?: React.ReactNode) => {
+  const openOrCloseWindow = (appType: string, title: string, content?: React.ReactNode, dropPosition?: { x: number; y: number }) => {
     // Check if a window for this app type already exists
     const existingWindowIndex = windows.findIndex(window => window.appType === appType);
     
@@ -111,7 +120,7 @@ export const useWindowState = () => {
       setWindows(prev => prev.filter(window => window.appType !== appType));
     } else {
       // Window doesn't exist, open it (bounds checking happens in syncWindowLayout)
-      syncWindowLayout(appType, title, content);
+      syncWindowLayout(appType, title, content, dropPosition);
     }
   };
 
