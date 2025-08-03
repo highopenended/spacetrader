@@ -32,7 +32,10 @@ const SortableItem: React.FC<SortableItemProps> = ({
     isDragging,
   } = useSortable({ 
     id,
-    disabled 
+    disabled,
+    data: {
+      type: 'app-drag-node'
+    }
   });
 
   // Apply transform for smooth dragging

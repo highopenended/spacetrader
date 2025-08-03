@@ -24,9 +24,7 @@ import WorkScreen from './components/workMode/workScreen/WorkScreen';
 import GameBackground from './components/gameBackgrounds/GameBackground';
 import { useGameState } from './hooks/useGameState';
 import { useWindowState } from './hooks/useWindowState';
-import { useDragHandler_Apps } from './hooks/useDragHandler_Apps';
-import { useCustomCollisionDetection } from './hooks/useCustomCollisionDetection';
-import { usePurgeZoneDrag } from './hooks/usePurgeZoneDrag';
+import { useDragHandler_Router } from './hooks/useDragHandler_Router';
 import { useSaveLoad } from './hooks/useSaveLoad';
 import { useToggleState } from './hooks/useToggleState';
 import { WindowData } from './types/windowState';
@@ -74,13 +72,6 @@ function App() {
     changeAppTier
   } = useGameState();
 
-  // Set up app drag handler
-  const { dragState, handleDragStart, handleDragOver, handleDragEnd } = useDragHandler_Apps({
-    installedApps,
-    onAppsReorder: reorderApps,
-    onAppUninstall: uninstallApp
-  });
-
   const {
     windows,
     updateWindowPosition,
@@ -122,26 +113,27 @@ function App() {
     });
   };
 
-  // Use purge zone drag hook
+  // Use centralized drag handler router
   const {
-    purgeNodeDragState,
-    pendingDelete,
     overId,
+    setOverId,
+    isOverTerminalDropZone,
+    setIsOverTerminalDropZone,
+    pendingDelete,
+    purgeNodeDragState,
+    dragState,
+    customCollisionDetection,
     handleUnifiedDragStart,
     handleUnifiedDragEnd,
     handleConfirmPurge,
-    handleCancelPurge,
-    setOverId
-  } = usePurgeZoneDrag({
+    handleCancelPurge
+  } = useDragHandler_Router({
+    installedApps,
+    onAppsReorder: reorderApps,
+    onAppUninstall: uninstallApp,
     closeWindowsByAppType,
-    uninstallApp,
     installAppOrder
   });
-
-
-
-  // Use custom collision detection hook
-  const { customCollisionDetection } = useCustomCollisionDetection();
 
 
   const renderWindowComponent = (window: WindowData) => {
@@ -192,9 +184,36 @@ function App() {
   const componentProps = {
     dndContext: {
       collisionDetection: customCollisionDetection,
-      onDragStart: (event: any) => handleUnifiedDragStart(event, handleDragStart),
-      onDragOver: (event: any) => setOverId(event.over?.id ?? null),
-      onDragEnd: (event: any) => handleUnifiedDragEnd(event, apps, appOrder, handleDragEnd),
+      onDragStart: handleUnifiedDragStart,
+      onDragOver: (event: any) => {
+        const newOverId = event.over?.id ?? null;
+        setOverId(newOverId);
+        
+        // Check if we're over the TerminalScreen (either terminal-dock-zone or any app in the terminal)
+        const isOverTerminal = newOverId === 'terminal-dock-zone' || 
+                             (newOverId && event.active?.data?.current?.type === 'app-drag-node');
+        setIsOverTerminalDropZone(isOverTerminal);
+      },
+              onDragEnd: (event: any) => {
+          handleUnifiedDragEnd(event, apps, appOrder);
+          
+          // APP UNDOCK FEATURE: Open app as window when dropped outside terminal
+          const { active, over } = event;
+          if (active?.data?.current?.type === 'app-drag-node' && 
+              !over && 
+              !isOverTerminalDropZone) {
+            // App was dropped outside terminal and not over any drop zone
+            const appId = active.id;
+            const appConfig = apps.find(app => app.id === appId);
+            if (appConfig) {
+              openOrCloseWindow(appId, appConfig.name);
+            }
+          }
+          
+          // Reset overId and terminal state when drag ends
+          setOverId(null);
+          setIsOverTerminalDropZone(false);
+        },
       sensors: [
         useSensor(PointerSensor, {
           activationConstraint: { distance: 10 },
@@ -324,6 +343,30 @@ function App() {
         {windows.map(renderWindowComponent)}
 
         {gameMode === 'workMode' && <WorkScreen />}
+
+        {/* Debug readout for overId and drag type */}
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '10px',
+            left: '10px',
+            background: 'rgba(0, 0, 0, 0.8)',
+            color: '#00ff00',
+            padding: '8px 12px',
+            borderRadius: '4px',
+            fontFamily: 'Courier New, monospace',
+            fontSize: '12px',
+            zIndex: 9999,
+            border: '1px solid #333',
+            boxShadow: '0 0 10px rgba(0, 255, 0, 0.3)'
+          }}
+        >
+          overId: {overId || 'null'}
+          <br />
+          dragType: {dragState.isDragging ? 'app-drag-node' : purgeNodeDragState.isPurgeNodeDragging ? 'window-drag-node' : 'none'}
+          <br />
+          overTerminal: {isOverTerminalDropZone ? 'true' : 'false'}
+        </div>
 
         {renderDragOverlay_AppGhost()}
         {renderDragOverlay_PurgeNode()}

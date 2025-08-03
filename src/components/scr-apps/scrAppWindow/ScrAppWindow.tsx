@@ -92,8 +92,6 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   draggedAppType,
   getAppTierData,
   changeAppTier,
-  toggleStates,
-  setToggleState
 }) => {
   const [currentSize, setCurrentSize] = useState(size);
   const [isResizing, setIsResizing] = useState(false);
@@ -116,8 +114,8 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   const tierData = getAppTierData?.(appType);
   const appRegistry = APP_REGISTRY[appType];
 
-  // PURGE NODE DRAG SYSTEM: @dnd-kit draggable for deletion detection only
-  // This creates an invisible drag node that follows the mouse cursor for purge zone deletion
+  // WINDOW DRAG SYSTEM: @dnd-kit draggable for window drag operations
+  // This creates an invisible drag node that follows the mouse cursor for window positioning and deletion
   // Works alongside the custom window positioning drag system (useDragHandler_Windows)
   const { 
     attributes: purgeNodeDragAttributes, 
@@ -125,9 +123,9 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     setNodeRef: setPurgeNodeDragRef,
     isDragging: isPurgeNodeDragging
   } = useDraggable({
-    id: `purge-window-${windowId}`, // Prefix to distinguish from app list items
+    id: `window-drag-${windowId}`, // Prefix to distinguish from app list items
     data: { 
-      type: 'window-purge-node', // Clear type identifier for purge system
+      type: 'window-drag-node', // Clear type identifier for window drag system
       appType, 
       windowId,
       deletable: appRegistry?.deletable ?? true,
@@ -264,8 +262,8 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   // CLEAN: Use drop zone effects hook to handle all conditional styling
   const dropZoneEffects = useDropZoneEffects(overId, draggedAppType || null, appType);
 
-  // PURGE NODE DRAG SYSTEM: Combine refs for both drag systems
-  // The window needs refs for both positioning drag (useDragHandler_Windows) and purge drag (@dnd-kit)
+  // WINDOW DRAG SYSTEM: Combine refs for both drag systems
+  // The window needs refs for both positioning drag (useDragHandler_Windows) and window drag (@dnd-kit)
   const combinedWindowRef = useCallback((node: HTMLDivElement | null) => {
     windowRef.current = node;
     setPurgeNodeDragRef(node);
