@@ -68,10 +68,18 @@ export const useDragHandler_Apps = ({
     }
   }, [installedApps, onAppsReorder]);
 
+  const resetDragState = useCallback(() => {
+    setDragState({
+      isDragging: false,
+      draggedAppId: null
+    });
+  }, []);
+
   return {
     dragState,
     handleDragStart,
     handleDragOver,
-    handleDragEnd
+    handleDragEnd,
+    resetDragState
   };
 }; 

@@ -10,10 +10,11 @@
  * for all drag operations in the application.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { rectIntersection } from '@dnd-kit/core';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useDragHandler_Apps } from './useDragHandler_Apps';
+import { useUIContext } from './useUIContext';
 
 // Interface for drag node state
 interface DragNodeState {
@@ -50,6 +51,9 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
     installAppOrder
   } = dependencies;
 
+  // Get UI context directly
+  const { actions: uiActions } = useUIContext();
+
   // ROUTER STATE: Centralized state management
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
   const [isOverTerminalDropZone, setIsOverTerminalDropZone] = useState<boolean>(false);
@@ -58,6 +62,14 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
     appId: null, 
     prevOrder: [] 
   });
+
+    // Use ref to track current pendingDelete state for callbacks
+  const pendingDeleteRef = useRef<PendingDeleteState>({ appId: null, prevOrder: [] });
+  
+  // Update ref whenever state changes
+  useEffect(() => {
+    pendingDeleteRef.current = pendingDelete;
+  }, [pendingDelete]);
   const [dragNodeState, setDragNodeState] = useState<DragNodeState>({
     isDragNodeDragging: false,
     draggedWindowTitle: null,
@@ -66,7 +78,7 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
   });
 
   // COORDINATE: App list drag handler
-  const { dragState, handleDragStart: appDragStart, handleDragOver: appDragOver, handleDragEnd: appDragEnd } = useDragHandler_Apps({
+  const { dragState, handleDragStart: appDragStart, handleDragOver: appDragOver, handleDragEnd: appDragEnd, resetDragState: resetAppDragState } = useDragHandler_Apps({
     installedApps,
     onAppsReorder,
     onAppUninstall
@@ -178,6 +190,26 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
   }, [appDragStart]);
 
   /**
+   * UNIFIED DRAG OVER HANDLER - Tracks Drop Targets
+   * 
+   * This handler tracks which drop target is currently being hovered over.
+   * Updates overId and terminal drop zone state for visual feedback.
+   */
+  const handleUnifiedDragOver = useCallback((event: any) => {
+    const newOverId = event.over?.id ?? null;
+    
+    // Check if we're over the TerminalScreen (either terminal-dock-zone or any app in the terminal)
+    // Only count as over terminal if it's actually a terminal-related drop zone, not purge zone
+    const isOverTerminal = (newOverId === 'terminal-dock-zone' || 
+                          (newOverId && event.active?.data?.current?.type === 'app-drag-node')) &&
+                          newOverId !== 'purge-zone-window';
+    
+    // Update the router's state
+    setOverId(newOverId);
+    setIsOverTerminalDropZone(isOverTerminal);
+  }, []);
+
+  /**
    * UNIFIED DRAG END HANDLER - Coordinates Drag Completion for Both Systems
    * 
    * This handler manages the completion of drag operations for both drag systems:
@@ -202,8 +234,6 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
       delete (window as any).__windowDragMouseMoveCleanup;
     }
     
-    // Reset terminal drop zone state when drag ends (handled in App.tsx onDragEnd)
-    
     // Clean up app drag mouse tracking
     if ((window as any).__appDragMouseMoveCleanup) {
       (window as any).__appDragMouseMoveCleanup();
@@ -213,12 +243,17 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
     // Reset app drag mouse position
     setAppDragMousePosition(null);
     
-    // Window drag state is handled internally by useDragHandler_Windows
-    // Purge node drag state is reset in the router's purgeNodeDragState
+    // ALWAYS reset overId and terminal state when drag ends
+    setOverId(null);
+    setIsOverTerminalDropZone(false);
+    
+    // Don't reset pendingDelete here - it should persist until popup is handled
     
     if (!over) {
       // No drop target - handle reordering only
       appDragEnd(event);
+      // Reset router state for no-drop case
+      setAppDragMousePosition(null);
       return;
     }
     
@@ -238,16 +273,34 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
         
         if (deletable) {
           setPendingDelete({ appId: appType, prevOrder: appOrder });
+          uiActions.showPopup({
+            title: 'PURGE APP?',
+            message: `Are you sure you want to permanently purge ${windowTitle}?`,
+            confirmText: 'PURGE',
+            cancelText: 'ABORT',
+            type: 'alert',
+            onConfirm: () => handleConfirmPurge(),
+            onCancel: () => handleCancelPurge()
+          });
           return;
         }
       }
       
       // STANDARD DRAG SYSTEM: Handle app list item deletion (existing logic)
       const appDefinition = apps.find((app: any) => app.id === active.id);
-      if (appDefinition && appDefinition.deletable) {
-        setPendingDelete({ appId: active.id, prevOrder: appOrder });
-        return;
-      }
+              if (appDefinition && appDefinition.deletable) {
+          setPendingDelete({ appId: active.id, prevOrder: appOrder });
+          uiActions.showPopup({
+            title: 'PURGE APP?',
+            message: `Are you sure you want to permanently purge ${appDefinition.name}?`,
+            confirmText: 'PURGE',
+            cancelText: 'ABORT',
+            type: 'alert',
+            onConfirm: () => handleConfirmPurge(),
+            onCancel: () => handleCancelPurge()
+          });
+          return;
+        }
     }
     
     // WINDOW DOCKING SYSTEM: Check if dropped on Terminal for docking (minimize)
@@ -260,12 +313,19 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
         return;
       }
       // APP LIST DRAG SYSTEM: If app list drag hits terminal-dock-zone, ignore it
+      // Reset app drag state for this case
+      if (active.data?.current?.type === 'app-drag-node') {
+        appDragEnd(event);
+        setAppDragMousePosition(null);
+      }
       return;
     }
     
     // APP DRAG SYSTEM: Handle reordering when dropped on other apps
     if (active.data?.current?.type === 'app-drag-node') {
       appDragEnd(event);
+      // Reset router state for app reordering
+      setAppDragMousePosition(null);
       return;
     }
   }, [appDragEnd, closeWindowsByAppType]);
@@ -274,24 +334,32 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
    * Handle confirmation of purge deletion
    */
   const handleConfirmPurge = useCallback(() => {
-    if (pendingDelete.appId) {
-      closeWindowsByAppType(pendingDelete.appId);
-      onAppUninstall(pendingDelete.appId);
+    const currentPendingDelete = pendingDeleteRef.current;
+    if (currentPendingDelete.appId) {
+      closeWindowsByAppType(currentPendingDelete.appId);
+      onAppUninstall(currentPendingDelete.appId);
     }
     setPendingDelete({ appId: null, prevOrder: [] });
     setOverId(null);
-  }, [pendingDelete, closeWindowsByAppType, onAppUninstall]);
+    setIsOverTerminalDropZone(false);
+    setAppDragMousePosition(null);
+    resetAppDragState();
+  }, [closeWindowsByAppType, onAppUninstall, resetAppDragState]);
 
   /**
    * Handle cancellation of purge deletion
    */
   const handleCancelPurge = useCallback(() => {
-    if (pendingDelete.prevOrder.length) {
-      installAppOrder(pendingDelete.prevOrder);
+    const currentPendingDelete = pendingDeleteRef.current;
+    if (currentPendingDelete.prevOrder.length) {
+      installAppOrder(currentPendingDelete.prevOrder);
     }
     setPendingDelete({ appId: null, prevOrder: [] });
     setOverId(null);
-  }, [pendingDelete, installAppOrder]);
+    setIsOverTerminalDropZone(false);
+    setAppDragMousePosition(null);
+    resetAppDragState();
+  }, [installAppOrder, resetAppDragState]);
 
       return {
       // State
@@ -309,6 +377,7 @@ export const useDragHandler_Router = (dependencies: DragHandlerRouterDependencie
       
       // Unified handlers
       handleUnifiedDragStart,
+      handleUnifiedDragOver,
       handleUnifiedDragEnd,
       handleConfirmPurge,
       handleCancelPurge
