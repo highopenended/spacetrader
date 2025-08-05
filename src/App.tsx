@@ -125,8 +125,8 @@ function App() {
       gamePhase,
       gameMode,
       beginWorkSession,
-      overId: null, // Will be handled by DragManager
-      dragNodeState: { draggedAppType: null }, // Will be handled by DragManager
+      overId: currentOverId, // Updated by DragManager
+      dragNodeState: currentDragNodeState, // Updated by DragManager
       updateCredits,
       getAvailableApps,
       installedApps,
@@ -162,9 +162,9 @@ function App() {
   // Build app props map for TerminalScreen
   const appPropsMap = getAppPropsMap(apps, { credits, gameTime, gamePhase });
 
-  // Drag state for overlay positioning
-  const [dragState, setDragState] = React.useState<any>(null);
-  const [dragNodeState, setDragNodeState] = React.useState<any>(null);
+  // Track overId for visual feedback animations
+  const [currentOverId, setCurrentOverId] = React.useState<any>(null);
+  const [currentDragNodeState, setCurrentDragNodeState] = React.useState<any>({ draggedAppType: null });
 
   // Combined props object
   const componentProps = {
@@ -193,6 +193,7 @@ function App() {
       apps,
       appOrder,
       openAppTypes: new Set(windows.map(w => w.appType)),
+      overId: currentOverId, // Updated by DragManager
       onDockWindows: dockAllWindows,
       appPropsMap
     },
@@ -218,13 +219,7 @@ function App() {
       dropAnimation: { duration: 0, easing: 'ease' },
       style: {
         // DRAG NODE SYSTEM: Position overlay at mouse cursor for drag indicator
-        ...(dragNodeState?.isDragNodeDragging && dragNodeState?.mousePosition && {
-          position: 'fixed' as const,
-          left: dragNodeState.mousePosition.x - 6, // Center 12px indicator on cursor
-          top: dragNodeState.mousePosition.y - 6,
-          transform: 'none', // Override @dnd-kit's transform
-          pointerEvents: 'none' as const
-        })
+        // This will be handled by DragManager internally
       }
     }
   };
@@ -244,10 +239,8 @@ function App() {
         closeWindowsByAppType={closeWindowsByAppType}
         installAppOrder={installAppOrder}
         openOrCloseWindow={openOrCloseWindow}
-        onDragStateChange={(newDragState, newDragNodeState) => {
-          setDragState(newDragState);
-          setDragNodeState(newDragNodeState);
-        }}
+        onOverIdChange={setCurrentOverId}
+        onDragNodeStateChange={setCurrentDragNodeState}
       >
         <div className="App">
           <GameBackground backgroundId={gameBackground} />

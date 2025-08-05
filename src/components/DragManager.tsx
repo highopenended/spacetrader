@@ -15,7 +15,8 @@ interface DragManagerProps {
   closeWindowsByAppType: (appType: string) => void;
   installAppOrder: (order: string[]) => void;
   openOrCloseWindow: (appType: string, title: string, content?: React.ReactNode, dropPosition?: { x: number; y: number }) => void;
-  onDragStateChange: (dragState: any, dragNodeState: any) => void;
+  onOverIdChange: (overId: any) => void;
+  onDragNodeStateChange: (dragNodeState: any) => void;
 }
 
 const DragManager: React.FC<DragManagerProps> = ({
@@ -30,7 +31,8 @@ const DragManager: React.FC<DragManagerProps> = ({
   closeWindowsByAppType,
   installAppOrder,
   openOrCloseWindow,
-  onDragStateChange
+  onOverIdChange,
+  onDragNodeStateChange
 }) => {
   // Use centralized drag handler router (now inside UIProvider)
   const {
@@ -54,10 +56,7 @@ const DragManager: React.FC<DragManagerProps> = ({
     installAppOrder
   });
 
-  // Notify parent of drag state changes
-  React.useEffect(() => {
-    onDragStateChange(dragState, dragNodeState);
-  }, [dragState, dragNodeState, onDragStateChange]);
+
 
   // DragOverlay content helper (purely visual, for ghost image of app being dragged)
   const renderDragOverlay_AppGhost = () => {
@@ -88,7 +87,20 @@ const DragManager: React.FC<DragManagerProps> = ({
     // DRAG NODE SYSTEM: Tiny mouse-cursor-sized indicator for window deletion
     if (dragNodeState.isDragNodeDragging) {
       return (
-        <DragOverlay {...componentProps.dragOverlay}>
+        <DragOverlay 
+          {...componentProps.dragOverlay}
+          style={{
+            ...componentProps.dragOverlay.style,
+            // DRAG NODE SYSTEM: Position overlay at mouse cursor for drag indicator
+            ...(dragNodeState?.mousePosition && {
+              position: 'fixed' as const,
+              left: dragNodeState.mousePosition.x - 6, // Center 12px indicator on cursor
+              top: dragNodeState.mousePosition.y - 6,
+              transform: 'none', // Override @dnd-kit's transform
+              pointerEvents: 'none' as const
+            })
+          }}
+        >
           <div
             className="purge-node-drag-indicator"
             style={{
@@ -109,6 +121,16 @@ const DragManager: React.FC<DragManagerProps> = ({
 
     return null;
   };
+
+  // Notify parent of overId changes
+  React.useEffect(() => {
+    onOverIdChange(overId);
+  }, [overId, onOverIdChange]);
+
+  // Notify parent of dragNodeState changes
+  React.useEffect(() => {
+    onDragNodeStateChange(dragNodeState);
+  }, [dragNodeState, onDragNodeStateChange]);
 
   // Create updated componentProps with drag handlers
   const updatedComponentProps = {
@@ -142,7 +164,7 @@ const DragManager: React.FC<DragManagerProps> = ({
     }
   };
 
-  return (
+    return (
     <DndContext {...updatedComponentProps.dndContext}>
       {children}
       {renderDragOverlay_AppGhost()}
@@ -165,15 +187,15 @@ const DragManager: React.FC<DragManagerProps> = ({
           boxShadow: '0 0 10px rgba(0, 255, 0, 0.3)'
         }}
       >
-                 overId: {overId || 'null'}
-         <br />
-         dragType: {dragState.isDragging ? 'app-drag-node' : dragNodeState.isDragNodeDragging ? 'window-drag-node' : 'none'}
-         <br />
-         overTerminal: {isOverTerminalDropZone ? 'true' : 'false'}
-         <br />
-         appDragPos: {appDragMousePosition ? `${appDragMousePosition.x}, ${appDragMousePosition.y}` : 'null'}
-         <br />
-         toBePurged: {pendingDelete.appId || 'null'}
+        overId: {overId || 'null'}
+        <br />
+        dragType: {dragState.isDragging ? 'app-drag-node' : dragNodeState.isDragNodeDragging ? 'window-drag-node' : 'none'}
+        <br />
+        overTerminal: {isOverTerminalDropZone ? 'true' : 'false'}
+        <br />
+        appDragPos: {appDragMousePosition ? `${appDragMousePosition.x}, ${appDragMousePosition.y}` : 'null'}
+        <br />
+        toBePurged: {pendingDelete.appId || 'null'}
       </div>
     </DndContext>
   );
