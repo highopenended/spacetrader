@@ -1,20 +1,17 @@
 import React from 'react';
-import { useDroppable, UniqueIdentifier } from '@dnd-kit/core';
+import { useDroppable } from '@dnd-kit/core';
 import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
+import { useDragContext } from '../../../../contexts/DragContext';
 import './PurgeZoneAppWindow.css';
 
-interface PurgeZoneAppWindowProps extends BaseWindowProps {
-  overId?: UniqueIdentifier | null;
-}
-
-const PurgeZoneAppWindow: React.FC<PurgeZoneAppWindowProps> = ({
-  overId,
+const PurgeZoneAppWindow: React.FC<BaseWindowProps> = ({
   ...windowProps
 }) => {
   const { setNodeRef } = useDroppable({
     id: 'purge-zone-window',
   });
 
+  const { overId } = useDragContext();
   const isActive = overId === 'purge-zone-window';
 
   const content = (

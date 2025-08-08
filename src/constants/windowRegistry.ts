@@ -26,10 +26,6 @@ interface WindowController {
   gamePhase: GamePhase;
   gameMode: GameMode;
   beginWorkSession: () => void;
-  overId: any;
-  dragNodeState: {
-    draggedAppType: string | null;
-  };
   updateCredits: (amount: number) => void;
   getAvailableApps: () => any[];
   installedApps: any[];
@@ -70,8 +66,6 @@ const buildCommonProps = (
   position: window.position,
   size: window.size,
   zIndex: window.zIndex,
-  overId: windowController.overId,
-  draggedAppType: windowController.dragNodeState.draggedAppType,
   onClose: () => windowManager.closeWindow(window.id),
   onPositionChange: (pos: { x: number; y: number }) => windowManager.updateWindowPosition(window.appType, pos),
   onSizeChange: (size: { width: number; height: number }) => windowManager.updateWindowSize(window.appType, size),
@@ -169,8 +163,6 @@ export const renderWindow = (
     position: window.position,
     size: window.size,
     zIndex: window.zIndex,
-    overId: windowController.overId,
-    draggedAppType: windowController.dragNodeState.draggedAppType,
     onClose: () => windowManager.closeWindow(window.id),
     onPositionChange: (position) => windowManager.updateWindowPosition(window.appType, position),
     onSizeChange: (size) => windowManager.updateWindowSize(window.appType, size),

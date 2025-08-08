@@ -24,7 +24,6 @@ import WorkScreen from './components/workMode/workScreen/WorkScreen';
 import GameBackground from './components/gameBackgrounds/GameBackground';
 import { useGameState } from './hooks/useGameState';
 import { useWindowState } from './hooks/useWindowState';
-import { useDragHandler_Router } from './hooks/useDragHandler_Router';
 import { useSaveLoad } from './hooks/useSaveLoad';
 import { useToggleState } from './hooks/useToggleState';
 import { WindowData } from './types/windowState';
@@ -34,11 +33,10 @@ import { resetGame } from './utils/resetGameUtils';
 import { UIProvider, UIPopupComponent } from './contexts/UIContext';
 import DragManager from './components/DragManager';
 
-import { DndContext, DragOverlay, useSensor, PointerSensor } from '@dnd-kit/core';
 import { getAppPropsMap } from './utils/appPropsBuilder';
 import DataReadout from './components/DataReadout';
 
-function App() {
+function App() {  
   const {
     // Core state
     credits,
@@ -119,14 +117,12 @@ function App() {
 
 
   const renderWindowComponent = (window: WindowData) => {
-    const     windowController = {
+    const windowController = {
       credits,
       gameTime,
       gamePhase,
       gameMode,
       beginWorkSession,
-      overId: currentOverId, // Updated by DragManager
-      dragNodeState: currentDragNodeState, // Updated by DragManager
       updateCredits,
       getAvailableApps,
       installedApps,
@@ -162,19 +158,8 @@ function App() {
   // Build app props map for TerminalScreen
   const appPropsMap = getAppPropsMap(apps, { credits, gameTime, gamePhase });
 
-  // Track overId for visual feedback animations
-  const [currentOverId, setCurrentOverId] = React.useState<any>(null);
-  const [currentDragNodeState, setCurrentDragNodeState] = React.useState<any>({ draggedAppType: null });
-
-  // Combined props object
-  const componentProps = {
-    dndContext: {
-      sensors: [
-        useSensor(PointerSensor, {
-          activationConstraint: { distance: 10 },
-        }),
-      ]
-    },
+  // Combined props object - simplified and memoized
+  const componentProps = React.useMemo(() => ({
     dataReadout: {
       toggleStates,
       gameMode,
@@ -193,7 +178,6 @@ function App() {
       apps,
       appOrder,
       openAppTypes: new Set(windows.map(w => w.appType)),
-      overId: currentOverId, // Updated by DragManager
       onDockWindows: dockAllWindows,
       appPropsMap
     },
@@ -211,20 +195,32 @@ function App() {
       resumeTime,
       resetGame: handleResetGame,
       setGameBackground
-    },
-    
-
-    dragOverlay: {
-      zIndex: 2000,
-      dropAnimation: { duration: 0, easing: 'ease' },
-      style: {
-        // DRAG NODE SYSTEM: Position overlay at mouse cursor for drag indicator
-        // This will be handled by DragManager internally
-      }
     }
-  };
-
-
+  }), [
+    toggleStates,
+    gameMode,
+    beginWorkSession,
+    credits,
+    gameTime,
+    gamePhase,
+    installedApps,
+    isPaused,
+    openOrCloseWindow,
+    apps,
+    appOrder,
+    windows,
+    dockAllWindows,
+    appPropsMap,
+    updateCredits,
+    setCredits,
+    setGamePhase,
+    setGameTime,
+    advanceGamePhase,
+    pauseTime,
+    resumeTime,
+    handleResetGame,
+    setGameBackground
+  ]);
 
   return (
     <UIProvider>
@@ -233,14 +229,11 @@ function App() {
         apps={apps}
         appOrder={appOrder}
         appPropsMap={appPropsMap}
-        componentProps={componentProps}
         reorderApps={reorderApps}
         uninstallApp={uninstallApp}
         closeWindowsByAppType={closeWindowsByAppType}
         installAppOrder={installAppOrder}
         openOrCloseWindow={openOrCloseWindow}
-        onOverIdChange={setCurrentOverId}
-        onDragNodeStateChange={setCurrentDragNodeState}
       >
         <div className="App">
           <GameBackground backgroundId={gameBackground} />
@@ -251,8 +244,6 @@ function App() {
           {windows.map(renderWindowComponent)}
 
           {gameMode === 'workMode' && <WorkScreen />}
-
-/
         </div>
       </DragManager>
     </UIProvider>

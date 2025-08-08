@@ -1,10 +1,11 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import './TerminalScreen.css';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import SortableItem from '../scr-apps/SortableItem';
 import DockWindowsButton from './DockWindowsButton';
 import TerminalToggle from './TerminalToggle';
+import { useDragContext } from '../../contexts/DragContext';
 
 interface TerminalScreenProps {
   credits: number;
@@ -16,7 +17,6 @@ interface TerminalScreenProps {
   appOrder: string[];
   pendingDeleteAppId?: string | null;
   openAppTypes?: Set<string>;
-  overId?: any; // For drag-over detection (window docking)
   onDockWindows?: () => void;
   appPropsMap: Record<string, any>; // Pre-built app props from App.tsx
 }
@@ -31,12 +31,14 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   appOrder,
   pendingDeleteAppId = null,
   openAppTypes = new Set(),
-  overId,
   onDockWindows,
   appPropsMap
 }) => {
   // Terminal state
   const [terminalMode, setTerminalMode] = useState<'expanded' | 'collapsed'>('expanded');
+
+  // Get drag context for visual feedback
+  const { overId } = useDragContext();
 
   // WINDOW DOCKING SYSTEM: Make terminal droppable for window docking
   const { setNodeRef } = useDroppable({
