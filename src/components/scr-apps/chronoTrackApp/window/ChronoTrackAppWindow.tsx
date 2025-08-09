@@ -18,12 +18,12 @@ const ChronoTrackAppWindow: React.FC<ChronoTrackAppWindowProps> = ({
 }) => {
   const { annumReckoning, ledgerCycle, grind, age, yearOfDeath } = gameTime;
   const yearOfBirth = annumReckoning - age;
-  const [dateReadoutEnabled, setDateReadoutEnabled] = useState(toggleStates.dateReadoutEnabled);
+  const [dateReadoutEnabled, setDateReadoutEnabled] = useState(toggleStates.readoutEnabled_Date);
 
   const toggleDateReadout = () => {
     const newState = !dateReadoutEnabled;
     setDateReadoutEnabled(newState);
-    setToggleState?.('dateReadoutEnabled', newState);
+    setToggleState?.('readoutEnabled_Date', newState);
   };
 
   const toggleConfig = [

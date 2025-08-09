@@ -22,6 +22,12 @@ interface AdminToolbarProps {
   setGameBackground: (backgroundId: string) => void;
 }
 
+// Layout constants for consistent sizing/positioning
+const TOOLBAR_MARGIN = 16;
+const MINIMIZED_WIDTH = 140;
+const MINIMIZED_HEIGHT = 50; // keep in sync with CSS `.admin-toolbar.minimized`
+const EXPANDED_SIZE = 400;
+
 const AdminToolbar: React.FC<AdminToolbarProps> = ({ 
   credits,
   gamePhase,
@@ -39,29 +45,35 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
 }) => {
   const [isMinimized, setIsMinimized] = useState(true);
   
-  // Drag constraint: don't drag when clicking on buttons
+  // Drag constraint: don't drag when interacting with standard interactive controls
   const dragConstraint = useCallback((element: HTMLElement, event: React.MouseEvent) => {
-    return (event.target as HTMLElement).tagName !== 'BUTTON';
+    const target = event.target as HTMLElement;
+    const tag = target.tagName;
+    return !['BUTTON', 'SELECT', 'INPUT', 'TEXTAREA', 'A', 'LABEL'].includes(tag);
   }, []);
   
   const { elementRef: toolbarRef, position, isDragging, handleMouseDown, setPosition } = useDragHandler_Windows({
-    initialPosition: { x: 20, y: window.innerHeight - 60 },
+    // Default to bottom-right corner with a small margin, sized for minimized container
+    initialPosition: { 
+      x: window.innerWidth - MINIMIZED_WIDTH - TOOLBAR_MARGIN, 
+      y: window.innerHeight - MINIMIZED_HEIGHT - TOOLBAR_MARGIN 
+    },
     dragConstraint,
     constrainToViewport: true
   });
 
   const toggleMinimized = () => {
     if (!isMinimized) {
-      // When minimizing, move to bottom right
+      // When minimizing, move to bottom-right with margin, sized for minimized container
       setPosition({ 
-        x: window.innerWidth - 120, 
-        y: window.innerHeight - 60 
+        x: window.innerWidth - MINIMIZED_WIDTH - TOOLBAR_MARGIN, 
+        y: window.innerHeight - MINIMIZED_HEIGHT - TOOLBAR_MARGIN 
       });
     } else {
-      // When expanding, center on screen
+      // When expanding, center on screen based on expected expanded size
       setPosition({
-        x: (window.innerWidth - 400) / 2,
-        y: (window.innerHeight - 400) / 2
+        x: (window.innerWidth - EXPANDED_SIZE) / 2,
+        y: (window.innerHeight - EXPANDED_SIZE) / 2
       });
     }
     setIsMinimized(!isMinimized);
@@ -85,27 +97,21 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
   }, [isMinimized]); // Re-check when minimize state changes
 
   const addGrind = () => {
-    const newTime = { ...gameTime };
-    newTime.grind++;
-    const advancedTime = advanceGameTime(newTime);
-    setGameTime(advancedTime);
+    const updateTime = (producer: (t: GameTime) => GameTime) => setGameTime(producer(gameTime));
+    updateTime(prev => advanceGameTime({ ...prev, grind: prev.grind + 1 }));
   };
 
   const addLedgerCycle = () => {
-    const newTime = { ...gameTime };
-    newTime.ledgerCycle++;
-    const advancedTime = advanceGameTime(newTime);
-    setGameTime(advancedTime);
+    const updateTime = (producer: (t: GameTime) => GameTime) => setGameTime(producer(gameTime));
+    updateTime(prev => advanceGameTime({ ...prev, ledgerCycle: prev.ledgerCycle + 1 }));
   };
 
   const addAnnumReckoning = () => {
-    const newTime = { ...gameTime };
-    newTime.annumReckoning++;
-    newTime.age++;
-    setGameTime(newTime);
+    const updateTime = (producer: (t: GameTime) => GameTime) => setGameTime(producer(gameTime));
+    updateTime(prev => ({ ...prev, annumReckoning: prev.annumReckoning + 1, age: prev.age + 1 }));
   };
 
-  const creditAmounts = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000];
+  const creditAmounts = Array.from({ length: 9 }, (_, i) => 10 ** i);
   
   const formatCreditAmount = (amount: number): string => {
     if (amount >= 1000000) {
@@ -118,8 +124,16 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
   };
 
   const gamePhases: GamePhase[] = [
-    'lineRat', 'bayBoss', 'scrapCaptain', 'fleetBoss', 'subsectorWarden',
-    'sectorCommodore', 'ledgerPatrician', 'cathedraMinor', 'cathedraDominus', 'cathedraUltima'
+    'lineRat',
+    'bayBoss',
+    'scrapCaptain',
+    'fleetBoss',
+    'subsectorWarden',
+    'sectorCommodore',
+    'ledgerPatrician',
+    'cathedraMinor',
+    'cathedraDominus',
+    'cathedraUltima'
   ];
 
   const backgroundOptions = ['default', ...Object.keys(GameBackgroundRegistry)];

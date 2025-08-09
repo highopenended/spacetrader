@@ -13,12 +13,12 @@ const CreditsAppWindow: React.FC<CreditsAppWindowProps> = ({
   setToggleState,
   ...windowProps
 }) => {
-  const [creditsReadoutEnabled, setCreditsReadoutEnabled] = useState(toggleStates.creditsReadoutEnabled || false);
+  const [creditsReadoutEnabled, setCreditsReadoutEnabled] = useState(toggleStates.readoutEnabled_Credits || false);
 
   const toggleCreditsReadout = () => {
     const newState = !creditsReadoutEnabled;
     setCreditsReadoutEnabled(newState);
-    setToggleState?.('creditsReadoutEnabled', newState);
+    setToggleState?.('readoutEnabled_Credits', newState);
   };
 
   const toggleConfig = [

@@ -53,13 +53,13 @@ const DataReadout: React.FC<DataReadoutProps> = ({
     <div className="data-readout">
       <div className="data-readout-content">
         {/* Credits line */}
-        {toggleStates.creditsReadoutEnabled && isCreditsInstalled && (
+        {toggleStates.readoutEnabled_Credits && isCreditsInstalled && (
           <div style={{ color: credits < 0 ? '#ff6666' : '#4a4' }}>
             {`₵ ${credits.toLocaleString()}`}
           </div>
         )}
         {/* Work button */}
-        {toggleStates.workButtonReadoutEnabled && (
+        {toggleStates.readoutEnabled_WorkButton && (
           <button
             className={`work-button ${gameMode === 'workMode' ? 'working' : ''}`}
             onClick={beginWorkSession}
@@ -69,14 +69,14 @@ const DataReadout: React.FC<DataReadoutProps> = ({
           </button>
         )}
         {/* JobTitle line */}
-        {toggleStates.jobTitleReadoutEnabled && isJobTitleInstalled && (
+        {toggleStates.readoutEnabled_JobTitle && isJobTitleInstalled && (
           <div>
             {`Job: ${getJobTitle(gamePhase)}`}
           </div>
         )}
         
         {/* ChronoTrack date line */}
-        {toggleStates.dateReadoutEnabled && isChronoTrackInstalled && (
+        {toggleStates.readoutEnabled_Date && isChronoTrackInstalled && (
           <div>
             {`AR-${getAnnumReckoningName(annumReckoning)}|LC-${getLedgerCycleName(ledgerCycle)}|G-${getGrindName(grind)}`}
           </div>

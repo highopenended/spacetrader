@@ -6,9 +6,9 @@
  */
 
 export interface ToggleStates {
-  dateReadoutEnabled: boolean;
-  jobTitleReadoutEnabled: boolean;
-  workButtonReadoutEnabled: boolean;
-  creditsReadoutEnabled: boolean;
+  readoutEnabled_Date: boolean;
+  readoutEnabled_JobTitle: boolean;
+  readoutEnabled_WorkButton: boolean;
+  readoutEnabled_Credits: boolean;
   // Future toggles can be added here
 } 

@@ -10,10 +10,10 @@ import { useState, useCallback } from 'react';
 import { ToggleStates } from '../types/toggleState';
 
 const initialToggleStates: ToggleStates = {
-  dateReadoutEnabled: false,
-  jobTitleReadoutEnabled: false,
-  workButtonReadoutEnabled: true,
-  creditsReadoutEnabled: false,
+  readoutEnabled_Date: true,
+  readoutEnabled_JobTitle: true,
+  readoutEnabled_WorkButton: true,
+  readoutEnabled_Credits: true,
 };
 
 export const useToggleState = () => {
@@ -41,10 +41,10 @@ export const useToggleState = () => {
     try {
       // Validate required fields
       if (!encodedState.toggleStates ||
-          typeof encodedState.toggleStates.dateReadoutEnabled !== 'boolean' ||
-          typeof encodedState.toggleStates.jobTitleReadoutEnabled !== 'boolean' ||
-          typeof encodedState.toggleStates.workButtonReadoutEnabled !== 'boolean' ||
-          typeof encodedState.toggleStates.creditsReadoutEnabled !== 'boolean') {
+          typeof encodedState.toggleStates.readoutEnabled_Date !== 'boolean' ||
+          typeof encodedState.toggleStates.readoutEnabled_JobTitle !== 'boolean' ||
+          typeof encodedState.toggleStates.readoutEnabled_WorkButton !== 'boolean' ||
+          typeof encodedState.toggleStates.readoutEnabled_Credits !== 'boolean') {
         console.error('Invalid toggle state format');
         return false;
       }

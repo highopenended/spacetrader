@@ -14,10 +14,13 @@
 }
 
 .admin-toolbar.minimized {
-  width: 72px;
-  height: 24px;
-  padding: 2px;
+  width: 140px;
+  height: 50px;
+  padding: 0;
   max-width: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
 
 .admin-header {
@@ -35,30 +38,22 @@
   font-size: var(--font-size-xsmall);
 }
 
-.minimize-button, .expand-button {
-  background: #222;
-  border: 1px solid #444;
-  color: #ccc;
-  padding: 2px 4px;
-  margin: 0;
-  font-size: var(--font-size-xxsmall);
-  cursor: pointer;
-  border-radius: var(--border-radius-small);
-  min-width: auto;
-}
-
-.minimize-button:hover, .expand-button:hover {
-  background: #2a2a2a;
-  border-color: #666;
-  color: #fff;
-}
+/* `.minimize-button` uses the base `.admin-toolbar button` styles */
 
 .expand-button {
-  width: 100%;
-  height: 100%;
+  width: 95%;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: var(--font-size-xsmall);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+  border: 1px solid #666;
+  color: #ddd;
+  border-radius: var(--border-radius-small);
+  margin: 0;
 }
 
 .admin-section {
@@ -82,9 +77,9 @@
   border: 1px solid #444;
   color: #ccc;
   padding: 2px 4px;
-  margin: 2px;
+  margin: 1px;
   font-size: var(--font-size-xxsmall);
-  line-height: 1.2;
+  line-height: 1;
   cursor: pointer;
   border-radius: var(--border-radius-small);
 }
@@ -125,7 +120,7 @@
 .phase-buttons {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: 0px;
 }
 
 .phase-buttons button {
@@ -134,16 +129,7 @@
 }
 
 .reset-button {
-  background: #222;
-  border: 1px solid #444;
-  color: #ccc;
   width: 100%;
   padding: 4px;
   font-weight: bold;
-}
-
-.reset-button:hover {
-  background: #2a2a2a;
-  border-color: #666;
-  color: #fff;
 }

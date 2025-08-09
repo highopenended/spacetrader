@@ -20,19 +20,19 @@ const JobTitleAppWindow: React.FC<JobTitleAppWindowProps> = ({
   ...windowProps
 }) => {
   const jobTitle = GAME_PHASES[gamePhase].title;
-  const [jobTitleReadoutEnabled, setJobTitleReadoutEnabled] = useState(toggleStates.jobTitleReadoutEnabled);
-  const [workButtonReadoutEnabled, setWorkButtonReadoutEnabled] = useState(toggleStates.workButtonReadoutEnabled);
+  const [jobTitleReadoutEnabled, setJobTitleReadoutEnabled] = useState(toggleStates.readoutEnabled_JobTitle);
+  const [workButtonReadoutEnabled, setWorkButtonReadoutEnabled] = useState(toggleStates.readoutEnabled_WorkButton);
 
   const toggleJobTitleReadout = () => {
     const newState = !jobTitleReadoutEnabled;
     setJobTitleReadoutEnabled(newState);
-    setToggleState?.('jobTitleReadoutEnabled', newState);
+    setToggleState?.('readoutEnabled_JobTitle', newState);
   };
 
   const toggleWorkButtonReadout = () => {
     const newState = !workButtonReadoutEnabled;
     setWorkButtonReadoutEnabled(newState);
-    setToggleState?.('workButtonReadoutEnabled', newState);
+    setToggleState?.('readoutEnabled_WorkButton', newState);
   };
 
   const toggleConfig = [
