@@ -1,6 +1,6 @@
 /**
- * Drop Zone Effects Hook
- * 
+ * Drop Zone Effects Hook (colocated with ScrAppWindow)
+ *
  * Handles all visual effects when windows are dragged over drop zones.
  * Consolidates the repetitive conditional styling from ScrAppWindow.tsx.
  */
@@ -12,18 +12,15 @@ interface DropZoneEffects {
   isOverTerminalDock: boolean;
   windowStyles: React.CSSProperties;
   headerStyles: React.CSSProperties;
-  footerStyles: React.CSSProperties;
   buttonStyles: React.CSSProperties;
   contentStyles: React.CSSProperties;
-  footerContentStyles: React.CSSProperties;
-  tierDescriptionStyles: React.CSSProperties;
   resizeHandleStyles: React.CSSProperties;
   showDockOverlay: boolean;
   debugText: string | null;
 }
 
-export const useDropZoneEffects = (
-  overId: any,
+export const useWindowDropZoneEffects = (
+  overId: string | null,
   draggedAppType: string | null,
   appType: string
 ): DropZoneEffects => {
@@ -36,9 +33,11 @@ export const useDropZoneEffects = (
 
     // Purge zone styles (red corruption)
     const purgeStyles = {
-      background: 'linear-gradient(135deg, #1a0000 0%, #330000 50%, #1a0000 100%), repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(255, 0, 0, 0.1) 2px, rgba(255, 0, 0, 0.1) 4px)',
+      background:
+        'linear-gradient(135deg, #1a0000 0%, #330000 50%, #1a0000 100%), repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(255, 0, 0, 0.1) 2px, rgba(255, 0, 0, 0.1) 4px)',
       borderColor: '#ff0000',
-      boxShadow: '0 0 10px rgba(255, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.1), 0 0 30px rgba(255, 0, 0, 0.3)',
+      boxShadow:
+        '0 0 10px rgba(255, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.1), 0 0 30px rgba(255, 0, 0, 0.3)',
       filter: 'contrast(1.08) brightness(1.04)',
       animation: 'terminal-corruption 0.18s infinite, surge-cycle 6s infinite',
       color: '#ff4444',
@@ -69,11 +68,6 @@ export const useDropZoneEffects = (
           boxShadow: '0 0 5px rgba(255, 0, 0, 0.5)',
           textShadow: '0 0 2px #ff0000, 0 0 6px #ff0000'
         },
-        footerStyles: {
-          background: 'linear-gradient(135deg, #1a0000 0%, #2a0000 100%)',
-          borderColor: '#ff0000',
-          boxShadow: '0 0 8px rgba(255, 0, 0, 0.4), inset 0 0 10px rgba(255, 0, 0, 0.1)'
-        },
         buttonStyles: {
           background: 'linear-gradient(135deg, #2a0a0a 0%, #440000 100%)',
           borderColor: '#ff0000',
@@ -85,18 +79,9 @@ export const useDropZoneEffects = (
           filter: undefined,
           transition: undefined
         },
-        footerContentStyles: {
-          background: 'linear-gradient(135deg, #1a0000 0%, #2a0000 50%, #1a0000 100%)',
-          color: '#ff4444'
-        },
-        tierDescriptionStyles: {
-          background: 'linear-gradient(135deg, #110000 0%, #220000 100%)',
-          borderColor: '#ff0000',
-          boxShadow: 'inset 0 0 5px rgba(255, 0, 0, 0.3), 0 0 3px rgba(255, 0, 0, 0.2)',
-          color: '#ff6666'
-        },
         resizeHandleStyles: {
-          background: 'linear-gradient(135deg, transparent 0%, transparent 40%, #ff0000 50%, transparent 60%, transparent 100%)',
+          background:
+            'linear-gradient(135deg, transparent 0%, transparent 40%, #ff0000 50%, transparent 60%, transparent 100%)',
           filter: 'drop-shadow(0 0 2px #ff0000)'
         },
         showDockOverlay: false,
@@ -119,11 +104,6 @@ export const useDropZoneEffects = (
           boxShadow: '0 0 5px rgba(68, 170, 68, 0.5)',
           textShadow: '0 0 2px #4a4, 0 0 6px #4a4'
         },
-        footerStyles: {
-          background: 'linear-gradient(135deg, #001a00 0%, #002a00 100%)',
-          borderColor: '#4a4',
-          boxShadow: '0 0 8px rgba(68, 170, 68, 0.4), inset 0 0 10px rgba(68, 170, 68, 0.1)'
-        },
         buttonStyles: {
           background: 'linear-gradient(135deg, #0a2a0a 0%, #004400 100%)',
           borderColor: '#4a4',
@@ -135,18 +115,9 @@ export const useDropZoneEffects = (
           filter: 'blur(2px)',
           transition: 'filter 0.2s ease-out'
         },
-        footerContentStyles: {
-          background: 'linear-gradient(135deg, #001a00 0%, #002a00 50%, #001a00 100%)',
-          color: '#4a4'
-        },
-        tierDescriptionStyles: {
-          background: 'linear-gradient(135deg, #001100 0%, #002200 100%)',
-          borderColor: '#4a4',
-          boxShadow: 'inset 0 0 5px rgba(68, 170, 68, 0.3), 0 0 3px rgba(68, 170, 68, 0.2)',
-          color: '#6a6'
-        },
         resizeHandleStyles: {
-          background: 'linear-gradient(135deg, transparent 0%, transparent 40%, #4a4 50%, transparent 60%, transparent 100%)',
+          background:
+            'linear-gradient(135deg, transparent 0%, transparent 40%, #4a4 50%, transparent 60%, transparent 100%)',
           filter: 'drop-shadow(0 0 2px #4a4)'
         },
         showDockOverlay: true,
@@ -160,11 +131,8 @@ export const useDropZoneEffects = (
       isOverTerminalDock: false,
       windowStyles: baseStyles,
       headerStyles: baseStyles,
-      footerStyles: baseStyles,
       buttonStyles: baseStyles,
       contentStyles: baseStyles,
-      footerContentStyles: baseStyles,
-      tierDescriptionStyles: baseStyles,
       resizeHandleStyles: baseStyles,
       showDockOverlay: false,
       debugText: null
@@ -172,4 +140,6 @@ export const useDropZoneEffects = (
   }, [isOverPurgeZone, isOverTerminalDock]);
 
   return effects;
-}; 
+};
+
+

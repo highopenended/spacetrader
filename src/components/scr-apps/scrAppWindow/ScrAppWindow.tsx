@@ -44,7 +44,8 @@ import { WINDOW_DEFAULTS } from '../../../constants/windowConstants';
 import { APP_REGISTRY } from '../../../constants/scrAppListConstants';
 import { useDragHandler_Windows } from '../../../hooks/useDragHandler_Windows';
 import { useDraggable } from '@dnd-kit/core';
-import { useDropZoneEffects } from '../../../hooks/useDropZoneEffects';
+import { useWindowDropZoneEffects } from './useDropZoneEffects';
+import { useDragContext } from '../../../contexts/DragContext';
 
 // Base interface for all window management props
 export interface BaseWindowProps {
@@ -59,9 +60,7 @@ export interface BaseWindowProps {
   onSizeChange?: (size: { width: number; height: number }) => void;
   onWidthChange?: (width: number) => void;
   onBringToFront?: () => void;
-  overId?: any; // For drag-over detection (PurgeZone specific)
   updateCredits?: (amount: number) => void; // For credit transactions
-  draggedAppType?: string | null; // For debug: which app is being dragged
   getAppTierData?: (appId: string) => any; // For tier management
   changeAppTier?: (appId: string, tier: number) => void; // For tier changes
   toggleStates?: any; // For DataReadout visibility controls
@@ -87,9 +86,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   onSizeChange,
   onWidthChange,
   onBringToFront,
-  overId,
   updateCredits,
-  draggedAppType,
   getAppTierData,
   changeAppTier,
 }) => {
@@ -260,7 +257,13 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   const hasMultipleTiers = appRegistry?.tiers && appRegistry.tiers.length > 1;
 
   // CLEAN: Use drop zone effects hook to handle all conditional styling
-  const dropZoneEffects = useDropZoneEffects(overId, draggedAppType || null, appType);
+  // Pull drag-over state from context (source of truth), fallback to props if provided
+  const { overId: ctxOverId, dragState } = useDragContext();
+  const dropZoneEffects = useWindowDropZoneEffects(
+    ctxOverId,
+    dragState.draggedAppType || null,
+    appType
+  );
 
   // WINDOW DRAG SYSTEM: Combine refs for both drag systems
   // The window needs refs for both positioning drag (useDragHandler_Windows) and window drag (@dnd-kit)
