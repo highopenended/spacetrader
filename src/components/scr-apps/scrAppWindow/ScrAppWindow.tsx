@@ -258,10 +258,10 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
 
   // CLEAN: Use drop zone effects hook to handle all conditional styling
   // Pull drag-over state from context (source of truth), fallback to props if provided
-  const { overId: ctxOverId, dragState } = useDragContext();
+  const { overId: ctxOverId, draggedAppType } = useDragContext();
   const dropZoneEffects = useWindowDropZoneEffects(
     ctxOverId,
-    dragState.draggedAppType || null,
+    draggedAppType || null,
     appType
   );
 

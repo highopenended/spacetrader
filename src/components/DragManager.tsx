@@ -51,15 +51,21 @@ const DragManager: React.FC<DragManagerProps> = ({
     openOrCloseWindow
   });
 
-  // Create drag context value
-  const dragContextValue = {
+  // Create drag context value (memoized, minimal churn)
+  const dragContextValue = React.useMemo(() => ({
     overId,
     isOverTerminalDropZone,
-    dragState,
-    dragType: dragState.isDragging 
+    isDragging: dragState.isDragging,
+    draggedAppType: dragState.draggedAppType,
+    dragType: dragState.isDragging
       ? (dragState.draggedAppType ? 'window-drag-node' as const : 'app-drag-node' as const)
       : 'none' as const
-  };
+  }), [
+    overId,
+    isOverTerminalDropZone,
+    dragState.isDragging,
+    dragState.draggedAppType
+  ]);
 
   // DragOverlay content helper (purely visual, for ghost image of app being dragged)
   const renderDragOverlay_AppGhost = () => {

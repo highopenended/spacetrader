@@ -13,16 +13,11 @@ export interface DragContextState {
   // Visual feedback state
   overId: any;
   isOverTerminalDropZone: boolean;
-  
-  // Drag state
-  dragState: {
-    isDragging: boolean;
-    draggedAppId: string | null;
-    draggedAppType: string | null;
-    draggedWindowTitle: string | null;
-    mousePosition: { x: number; y: number } | null;
-  };
-  
+
+  // Minimal drag info needed by consumers
+  isDragging: boolean;
+  draggedAppType: string | null;
+
   // Drag type information (for debugging and conditional styling)
   dragType: 'none' | 'app-drag-node' | 'window-drag-node';
 }
