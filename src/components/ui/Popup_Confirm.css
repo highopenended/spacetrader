@@ -30,7 +30,49 @@
 .popup-alert {
   background: linear-gradient(135deg, #2a1010 0%, #3a1818 100%);
   border-color: #b44;
-  box-shadow: 0 0 16px 2px #000, 0 0 0 2px #b44 inset, 0 0 12px 2px #b44;
+  box-shadow: 
+    0 0 16px 2px #000,
+    0 0 0 2px #b44 inset,
+    0 0 12px 2px #b44,
+    0 0 30px 8px rgba(180, 68, 68, 0.18) inset,
+    0 0 8px 1px rgba(180, 68, 68, 0.12) inset;
+  animation: alert-pulse 3.2s ease-in-out infinite;
+  will-change: box-shadow, border-color;
+}
+
+/* CRT-style scanlines overlay for alert popups */
+.popup.popup-alert::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(255, 100, 100, 0.07) 2px,
+    rgba(255, 100, 100, 0.07) 4px
+  );
+  z-index: 2;
+  opacity: 0.8;
+  animation: scanlines-flicker 2.5s linear infinite, scanlines-move 1.5s linear infinite;
+}
+
+/* Inner red light overlay that subtly casts on content */
+.popup.popup-alert::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 80% at 50% -20%, rgba(180, 68, 68, 0.24), rgba(180, 68, 68, 0) 60%),
+    radial-gradient(120% 80% at 50% 120%, rgba(180, 68, 68, 0.16), rgba(180, 68, 68, 0) 60%);
+  z-index: 1;
+  opacity: 0.45;
+  animation: alert-inner-pulse 3.2s ease-in-out infinite;
 }
 
 .popup-goodNews {
@@ -106,6 +148,12 @@
   background: #3a1818;
 }
 
+/* Stronger danger glow on alert confirm button */
+.popup-alert .popup-btn.confirm {
+  box-shadow: 0 0 8px #b44, 0 0 0 1px #b44 inset;
+  text-shadow: 0 0 4px #b44;
+}
+
 .popup-alert .popup-btn.confirm {
   color: #e05a5a;
   border-color: #b44;
@@ -127,6 +175,11 @@
 .popup-btn.confirm:hover, .popup-btn.confirm:focus {
   background: #4a2222;
   color: #fff;
+}
+
+.popup-alert .popup-btn.confirm:hover,
+.popup-alert .popup-btn.confirm:focus {
+  box-shadow: 0 0 12px 2px #b44, 0 0 0 2px #b44 inset;
 }
 
 .popup-goodNews .popup-btn.confirm:hover, .popup-goodNews .popup-btn.confirm:focus {
@@ -167,3 +220,42 @@
   background: #224422;
   color: #fff;
 } 
+
+/* Keyframes shared with legacy purge popup for scanline effect */
+@keyframes scanlines-flicker {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes scanlines-move {
+  0% { background-position-x: 0; }
+  100% { background-position-x: 40px; }
+}
+
+/* Subtle red pulse for alert popup without size change */
+@keyframes alert-pulse {
+  0%, 100% {
+    border-color: #b44;
+    box-shadow:
+      0 0 16px 2px #000,
+      0 0 0 2px #b44 inset,
+      0 0 12px 2px #b44,
+      0 0 30px 8px rgba(180, 68, 68, 0.18) inset,
+      0 0 8px 1px rgba(180, 68, 68, 0.12) inset;
+  }
+  50% {
+    border-color: #c55;
+    box-shadow:
+      0 0 18px 3px #000,
+      0 0 0 2px #c55 inset,
+      0 0 16px 3px #c55,
+      0 0 48px 12px rgba(197, 85, 85, 0.26) inset,
+      0 0 12px 2px rgba(197, 85, 85, 0.18) inset;
+  }
+}
+
+/* Pulse the inner-glow overlay opacity for a clearer red cast */
+@keyframes alert-inner-pulse {
+  0%, 100% { opacity: 0.42; }
+  50% { opacity: 0.62; }
+}
