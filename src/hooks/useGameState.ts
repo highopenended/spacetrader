@@ -6,7 +6,7 @@
  * Handles cross-cutting concerns like monthly cost deductions automatically.
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 import { GameTime, GamePhase, GameMode } from '../types/gameState';
 import { advanceGameTime, getNextGamePhase } from '../utils/gameStateUtils';
@@ -209,16 +209,24 @@ export const useGameState = () => {
   }, []);
 
   // ===== COMPUTED VALUES =====
-  const appOrder = gameState.installedApps
-    .sort((a, b) => a.order - b.order)
-    .map(app => app.id);
+  const sortedInstalledApps = useMemo(
+    () => [...gameState.installedApps].sort((a, b) => a.order - b.order),
+    [gameState.installedApps]
+  );
 
-  const apps: (AppDefinition & InstalledApp)[] = gameState.installedApps
-    .sort((a, b) => a.order - b.order)
-    .map(installedApp => ({
-      ...APP_REGISTRY[installedApp.id],
-      ...installedApp
-    }));
+  const appOrder = useMemo(
+    () => sortedInstalledApps.map(app => app.id),
+    [sortedInstalledApps]
+  );
+
+  const apps: (AppDefinition & InstalledApp)[] = useMemo(
+    () =>
+      sortedInstalledApps.map(installedApp => ({
+        ...APP_REGISTRY[installedApp.id],
+        ...installedApp
+      })),
+    [sortedInstalledApps]
+  );
 
   const getAvailableApps = useCallback((): AppDefinition[] => {
     const installedIds = gameState.installedApps.map(app => app.id);
@@ -267,6 +275,9 @@ export const useGameState = () => {
   }, [appOrder, apps, resetToDefaults, installApp]);
 
   // ===== TIME INTERVAL MANAGEMENT =====
+  // Automatic time passage disabled for now. Keeping the original interval logic commented
+  // so it can be restored when needed.
+  /*
   useEffect(() => {
     if (!gameState.isPaused) {
       intervalRef.current = setInterval(advanceTime, 1000);
@@ -283,6 +294,7 @@ export const useGameState = () => {
       }
     };
   }, [gameState.isPaused, advanceTime]);
+  */
 
   // ===== CLEANUP =====
   useEffect(() => {
