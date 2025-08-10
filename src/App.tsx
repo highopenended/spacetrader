@@ -243,7 +243,7 @@ function App() {
           <UIPopupComponent />
           {windows.map(renderWindowComponent)}
 
-          {gameMode === 'workMode' && <WorkScreen />}
+          {gameMode === 'workMode' && <WorkScreen updateCredits={updateCredits} />}
         </div>
       </DragManager>
     </UIProvider>

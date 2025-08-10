@@ -5,9 +5,13 @@ import './ScrapItem.css';
 interface ScrapItemProps {
   scrap: ActiveScrapObject;
   style?: React.CSSProperties;
+  draggableProps?: {
+    onMouseDown?: (e: React.MouseEvent) => void;
+    onTouchStart?: (e: React.TouchEvent) => void;
+  };
 }
 
-const ScrapItem: React.FC<ScrapItemProps> = ({ scrap, style }) => {
+const ScrapItem: React.FC<ScrapItemProps> = ({ scrap, style, draggableProps }) => {
   // Memoize appearance calculation to prevent recalculation on every render
   const appearance = useMemo(() => getScrapAppearance(scrap), [
     scrap.typeId,
@@ -15,7 +19,7 @@ const ScrapItem: React.FC<ScrapItemProps> = ({ scrap, style }) => {
   ]);
   
   return (
-    <div className="scrap-item" style={style}>
+    <div className="scrap-item" style={style} {...draggableProps}>
       <div className="scrap-content">{appearance}</div>
     </div>
   );

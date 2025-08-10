@@ -1,0 +1,72 @@
+/**
+ * useDropZoneBounds
+ *
+ * Provides a ref to attach to a drop zone element and helpers to
+ * read its current screen bounds and hit-test a point against it.
+ *
+ * - Attaches listeners to keep cached bounds reasonably fresh
+ * - Exposes an explicit measure() to force-update when needed
+ */
+
+import { useRef, useCallback, useEffect } from 'react';
+
+export interface DropZoneBoundsApi {
+  dropZoneRef: React.MutableRefObject<HTMLDivElement | null>;
+  getBounds: () => DOMRect;
+  isPointInside: (x: number, y: number) => boolean;
+  measure: () => void;
+}
+
+export const useDropZoneBounds = (): DropZoneBoundsApi => {
+  const dropZoneRef = useRef<HTMLDivElement | null>(null);
+  const cachedRectRef = useRef<DOMRect | null>(null);
+
+  const measure = useCallback(() => {
+    if (dropZoneRef.current) {
+      cachedRectRef.current = dropZoneRef.current.getBoundingClientRect();
+    }
+  }, []);
+
+  useEffect(() => {
+    // Initial measure after mount
+    measure();
+
+    const handleWindowChange = () => {
+      // Re-measure on viewport-affecting events
+      measure();
+    };
+
+    window.addEventListener('resize', handleWindowChange);
+    window.addEventListener('scroll', handleWindowChange, true);
+
+    return () => {
+      window.removeEventListener('resize', handleWindowChange);
+      window.removeEventListener('scroll', handleWindowChange, true);
+    };
+  }, [measure]);
+
+  const getBounds = useCallback((): DOMRect => {
+    if (!cachedRectRef.current) {
+      measure();
+    }
+    return (
+      cachedRectRef.current ||
+      // Safe empty rect fallback
+      new DOMRect(0, 0, 0, 0)
+    );
+  }, [measure]);
+
+  const isPointInside = useCallback(
+    (x: number, y: number): boolean => {
+      const rect = getBounds();
+      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    },
+    [getBounds]
+  );
+
+  return { dropZoneRef, getBounds, isPointInside, measure };
+};
+
+export default useDropZoneBounds;
+
+

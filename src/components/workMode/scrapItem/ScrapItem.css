@@ -6,8 +6,7 @@
   user-select: none;
   /* Position at assembly line level */
   bottom: 24vh; /* Moved up from 20vh to position above the assembly line */
-  /* Animation for movement will be handled by CSS transforms */
-  transition: transform 0.1s linear;
+  /* Movement handled by rAF; transitions disabled to avoid whip */
 }
 
 .scrap-content {

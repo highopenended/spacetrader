@@ -35,3 +35,10 @@
   font-size: var(--font-size-small);
   text-shadow: 0 0 2px #333832;
 } 
+
+.timer-collected {
+  color: #c6c6c6;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-small);
+  text-shadow: 0 0 2px #333832;
+}
