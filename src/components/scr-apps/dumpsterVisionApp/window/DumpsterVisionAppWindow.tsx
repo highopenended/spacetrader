@@ -32,7 +32,7 @@ const DumpsterVisionAppWindow: React.FC<DumpsterVisionAppWindowProps> = ({
               fontWeight: isEnabled ? 600 : undefined
             }}
           >
-            {isEnabled ? 'ENABLED' : 'Disabled'}
+            {isEnabled ? 'ACTIVE' : 'OFFLINE'}
           </div>
           <div
             onClick={toggleEnabled}

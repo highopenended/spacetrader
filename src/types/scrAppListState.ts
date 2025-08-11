@@ -24,6 +24,10 @@ export interface AppDefinition {
   unlockRequirements?: string[]; // Future: requirements to unlock this app
   tiers: AppTier[]; // Array of upgrade tiers with costs
   defaultToggles?: Record<string, boolean>; // Default toggle states when app is installed
+  // Quick key metadata (optional)
+  shortcutKey?: string; // Display letter for quick keycap
+  showInQuickBar?: boolean; // Whether to render in the bottom quick keys bar
+  quickKeyLabel?: string; // Optional label under the keycap; falls back to name
 }
 
 export interface InstalledApp {

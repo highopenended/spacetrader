@@ -35,6 +35,7 @@ import DragManager from './components/DragManager';
 
 import { getAppPropsMap } from './utils/appPropsBuilder';
 import DataReadout from './components/DataReadout';
+import QuickKeysBar from './components/quickKeys/QuickKeysBar';
 
 function App() {  
   const {
@@ -239,6 +240,7 @@ function App() {
         <div className="App">
           <GameBackground backgroundId={gameBackground} />
           <DataReadout {...componentProps.dataReadout} />
+          <QuickKeysBar toggleStates={toggleStates} installedApps={installedApps} />
           <TerminalScreen {...componentProps.terminalScreen} />
           <AdminToolbar {...componentProps.adminToolbar} />
           <UIPopupComponent />
