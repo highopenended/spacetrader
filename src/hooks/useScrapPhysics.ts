@@ -33,11 +33,15 @@ export interface UseScrapPhysicsApi {
 
   // Integration step (call from rAF): returns true if any state changed
   stepAirborne: (dtSeconds: number) => boolean;
+  // Horizontal integration output: deltas (vw) to apply per id since last step
+  consumeHorizontalDeltas: () => Map<string, number>;
 }
 
 export const useScrapPhysics = (): UseScrapPhysicsApi => {
   const statesRef = useRef<Map<string, AirborneState>>(new Map());
   const [version, setVersion] = useState(0); // trigger re-render when states change
+  // Accumulated horizontal deltas per id since last consume
+  const horizontalDeltaRef = useRef<Map<string, number>>(new Map());
 
   const getAirborneState = useCallback((scrapId: string) => statesRef.current.get(scrapId), []);
   const isAirborne = useCallback((scrapId: string) => !!statesRef.current.get(scrapId)?.isAirborne, []);
@@ -85,6 +89,12 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
       let vy = state.vyVhPerSec + GRAVITY_VH_PER_S2 * dtSeconds;
       vy = clamp(vy, MAX_DOWNWARD_SPEED_VH_PER_S, MAX_UPWARD_SPEED_VH_PER_S);
       let y = state.yVh + vy * dtSeconds;
+      // Horizontal delta in vw for this step
+      const dx = state.vxVwPerSec * dtSeconds;
+      if (dx !== 0) {
+        const prev = horizontalDeltaRef.current.get(id) || 0;
+        horizontalDeltaRef.current.set(id, prev + dx);
+      }
 
       if (y <= 0) {
         // Land
@@ -103,9 +113,16 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
     return changed;
   }, []);
 
+  const consumeHorizontalDeltas = useCallback(() => {
+    // Return a copy and clear for next step
+    const out = new Map(horizontalDeltaRef.current);
+    horizontalDeltaRef.current.clear();
+    return out;
+  }, []);
+
   return useMemo(
-    () => ({ getAirborneState, isAirborne, getHorizontalVelocity, launchAirborneFromRelease, landScrap, stepAirborne }),
-    [getAirborneState, isAirborne, getHorizontalVelocity, launchAirborneFromRelease, landScrap, stepAirborne, version]
+    () => ({ getAirborneState, isAirborne, getHorizontalVelocity, launchAirborneFromRelease, landScrap, stepAirborne, consumeHorizontalDeltas }),
+    [getAirborneState, isAirborne, getHorizontalVelocity, launchAirborneFromRelease, landScrap, stepAirborne, consumeHorizontalDeltas, version]
   );
 };
 

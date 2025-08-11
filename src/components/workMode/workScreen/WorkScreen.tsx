@@ -113,6 +113,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
       // Prevent stream movement for airborne scraps by restoring their previous X
       if (prevState.activeScrap.length === 0) return updated;
       const prevXMap = new Map(prevState.activeScrap.map(s => [s.id, s.x] as const));
+      const dtSeconds = Math.max(0, deltaTime / 1000);
       const adjusted = {
         ...updated,
         activeScrap: updated.activeScrap.map(scrap => {
@@ -122,10 +123,8 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
             return { ...scrap, x: prevX, isOffScreen: false };
           }
           if (isAirborne(scrap.id)) {
-            // Apply horizontal momentum while airborne
             const prevX = prevXMap.get(scrap.id) ?? scrap.x;
             const vx = getHorizontalVelocity(scrap.id);
-            const dtSeconds = Math.max(0, deltaTime / 1000);
             const nextX = Math.max(0, Math.min(100, prevX + vx * dtSeconds));
             return { ...scrap, x: nextX };
           }
@@ -134,7 +133,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
       };
       return adjusted;
     });
-  }, [isAirborne, getHorizontalVelocity, draggedScrapId]);
+  }, [draggedScrapId, isAirborne, getHorizontalVelocity]);
 
   // Cleanup collected scrap periodically
   const cleanupScrap = useCallback(() => {
@@ -145,9 +144,9 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
     const deltaTime = currentTime - lastFrameTimeRef.current;
     const dtSeconds = Math.max(0, deltaTime / 1000);
 
-    updateScrapPositions(deltaTime);
-    // Physics step for airborne scraps
+    // Physics step first so horizontal deltas are available this frame
     stepAirborne(dtSeconds);
+    updateScrapPositions(deltaTime);
     checkScrapSpawning(currentTime);
 
     // Cleanup collected scrap every 100ms
