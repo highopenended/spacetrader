@@ -1,6 +1,6 @@
 .scrap-bin {
   position: fixed;
-  bottom: 4vh; /* Moved down below assembly line (was 12vh) */
+  bottom: 2vh; /* Moved down below assembly line (was 12vh) */
   left: 50%;
   transform: translateX(-50%);
   width: 8vw; /* Converted from 80px */

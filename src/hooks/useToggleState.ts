@@ -14,6 +14,7 @@ const initialToggleStates: ToggleStates = {
   readoutEnabled_JobTitle: true,
   readoutEnabled_WorkButton: true,
   readoutEnabled_Credits: true,
+  keyEnabled_DumpsterVision: true,
 };
 
 export const useToggleState = () => {
@@ -49,8 +50,15 @@ export const useToggleState = () => {
         return false;
       }
 
-      // Apply the decoded state
-      setToggleStates(encodedState.toggleStates);
+      // Apply the decoded state with safe fallback for new keys
+      const decoded = encodedState.toggleStates as ToggleStates;
+      const merged: ToggleStates = {
+        ...initialToggleStates,
+        ...decoded,
+        // Ensure new keys have defaults if absent in saved state
+        keyEnabled_DumpsterVision: typeof decoded.keyEnabled_DumpsterVision === 'boolean' ? decoded.keyEnabled_DumpsterVision : initialToggleStates.keyEnabled_DumpsterVision,
+      };
+      setToggleStates(merged);
       return true;
     } catch (error) {
       console.error('Failed to decode toggle state:', error);

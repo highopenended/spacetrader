@@ -7,7 +7,7 @@
  */
 
 // Baseline height (vh) for the assembly line; scrap sits at this bottom value when grounded (matches .scrap-item bottom in CSS)
-export const SCRAP_BASELINE_BOTTOM_VH = 26;
+export const SCRAP_BASELINE_BOTTOM_VH = 22;
 
 // Gravity in vh/s^2 (negative => downward). Tuned for snappy but weighty falls
 export const GRAVITY_VH_PER_S2 = -250;

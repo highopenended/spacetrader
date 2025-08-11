@@ -1,7 +1,7 @@
 .scrap-item {
   position: fixed;
-  width: 3.2vw; /* Increased from 2.4vw */
-  height: 3.2vw; /* Increased from 2.4vw - using vw to maintain square aspect ratio */
+  width: 3.6vw; /* Increased from 2.4vw */
+  height: 3.6vw; /* Increased from 2.4vw - using vw to maintain square aspect ratio */
   cursor: grab;
   user-select: none;
   /* Bottom is controlled by WorkScreen inline styles; no default here */
@@ -26,10 +26,10 @@
 
 .scrap-item:hover .scrap-content {
   transform: scale(1.1);
-  box-shadow: 
+  /* box-shadow: 
     0 4px 8px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    0 0 10px rgba(0, 255, 0, 0.3);
+    0 0 10px rgba(0, 255, 0, 0.3); */
 }
 
 .scrap-item:active {

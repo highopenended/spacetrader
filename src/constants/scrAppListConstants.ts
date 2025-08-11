@@ -12,6 +12,7 @@ import PurgeZoneApp from '../components/scr-apps/purgeZoneApp/listItem/PurgeZone
 import ChronoTrackApp from '../components/scr-apps/chronoTrackApp/listItem/ChronoTrackAppItem';
 import CacheSyncApp from '../components/scr-apps/cacheSyncApp/listItem/CacheSyncAppItem';
 import { AppDefinition, AppType, AppTier } from '../types/scrAppListState';
+import DumpsterVisionApp from '../components/scr-apps/dumpsterVisionApp/listItem/DumpsterVisionAppItem';
 
 // Standard tier costs for basic utility apps
 const STANDARD_TIERS: AppTier[] = [
@@ -85,6 +86,15 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     tiers: [
       { tier: 1, flatUpgradeCost: 0, flatDowngradeCost: 0, monthlyCost: 0, information: 'Save and load functionality' }
     ]
+  },
+
+  dumpsterVision: {
+    id: 'dumpsterVision',
+    name: 'Dumpster Vision',
+    component: DumpsterVisionApp,
+    deletable: true,
+    description: 'Dumpster scanning interface',
+    tiers: STANDARD_TIERS
   },
 
   // Future apps (not implemented yet)

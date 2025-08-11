@@ -14,6 +14,7 @@ import PurgeZoneAppWindow from '../components/scr-apps/purgeZoneApp/window/Purge
 import ScrAppStoreAppWindow from '../components/scr-apps/scrAppStoreApp/window/ScrAppStoreAppWindow';
 import ChronoTrackAppWindow from '../components/scr-apps/chronoTrackApp/window/ChronoTrackAppWindow';
 import CacheSyncAppWindow from '../components/scr-apps/cacheSyncApp/window/CacheSyncAppWindow';
+import DumpsterVisionAppWindow from '../components/scr-apps/dumpsterVisionApp/window/DumpsterVisionAppWindow';
 import { WindowData } from '../types/windowState';
 import { GameTime, GamePhase, GameMode } from '../types/gameState';
 import { WindowManagerContext } from '../contexts/WindowManagerContext';
@@ -132,6 +133,12 @@ export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
       exportToFile: windowController.exportToFile,
       importFromFile: windowController.importFromFile,
       SAVE_COST: windowController.SAVE_COST
+    })
+  },
+  dumpsterVision: {
+    component: DumpsterVisionAppWindow,
+    getProps: (window, windowController, windowManager, toggleData) => ({
+      ...buildCommonProps(window, windowController, windowManager, toggleData)
     })
   }
 };

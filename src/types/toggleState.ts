@@ -10,5 +10,6 @@ export interface ToggleStates {
   readoutEnabled_JobTitle: boolean;
   readoutEnabled_WorkButton: boolean;
   readoutEnabled_Credits: boolean;
+  keyEnabled_DumpsterVision: boolean;
   // Future toggles can be added here
 } 

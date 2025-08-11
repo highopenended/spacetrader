@@ -35,6 +35,8 @@ export const getAppProps = (appId: string, gameState: AppPropsBuilderOptions) =>
       return { gameTime, gamePhase }; // Tier 1 needs date and age info
     case 'cacheSync':
       return {}; // Cache sync doesn't need any props for now
+    case 'dumpsterVision':
+      return {}; // Placeholder - no props yet
     default:
       return {};
   }

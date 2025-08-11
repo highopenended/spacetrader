@@ -169,7 +169,7 @@ const DragManager: React.FC<DragManagerProps> = ({
         {renderDragOverlay_DragNode()}
         
         {/* Debug readout for overId and drag type */}
-        <div
+        {/* <div
           style={{
             position: 'fixed',
             bottom: '10px',
@@ -194,7 +194,7 @@ const DragManager: React.FC<DragManagerProps> = ({
           appDragPos: {dragState.mousePosition ? `${dragState.mousePosition.x}, ${dragState.mousePosition.y}` : 'null'}
           <br />
           toBePurged: {pendingDelete.appId || 'null'}
-        </div>
+        </div> */}
       </DndContext>
     </DragContextProvider>
   );
