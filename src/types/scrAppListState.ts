@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { ToggleStates } from './toggleState';
 
 export interface AppTier {
   tier: number;
@@ -28,6 +29,7 @@ export interface AppDefinition {
   shortcutKey?: string; // Display letter for quick keycap
   showInQuickBar?: boolean; // Whether to render in the bottom quick keys bar
   quickKeyLabel?: string; // Optional label under the keycap; falls back to name
+  quickToggleStateKey?: keyof ToggleStates; // Toggle state key to control enable/disable from quick bar and keyboard
 }
 
 export interface InstalledApp {

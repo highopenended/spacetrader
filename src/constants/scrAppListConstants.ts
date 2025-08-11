@@ -99,7 +99,8 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     // Quick key metadata
     shortcutKey: 'X',
     showInQuickBar: true,
-    quickKeyLabel: 'Dumpster Vision'
+    quickKeyLabel: 'Dumpster Vision',
+    quickToggleStateKey: 'keyEnabled_DumpsterVision'
   },
 
   // Future apps (not implemented yet)

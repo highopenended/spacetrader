@@ -36,6 +36,7 @@ import DragManager from './components/DragManager';
 import { getAppPropsMap } from './utils/appPropsBuilder';
 import DataReadout from './components/DataReadout';
 import QuickKeysBar from './components/quickKeys/QuickKeysBar';
+import KeyboardManager from './components/KeyboardManager';
 
 function App() {  
   const {
@@ -239,8 +240,9 @@ function App() {
       >
         <div className="App">
           <GameBackground backgroundId={gameBackground} />
+          <KeyboardManager installedApps={installedApps} toggleStates={toggleStates} setToggleState={setToggleState} />
           <DataReadout {...componentProps.dataReadout} />
-          <QuickKeysBar toggleStates={toggleStates} installedApps={installedApps} />
+          <QuickKeysBar toggleStates={toggleStates} installedApps={installedApps} setToggleState={setToggleState} />
           <TerminalScreen {...componentProps.terminalScreen} />
           <AdminToolbar {...componentProps.adminToolbar} />
           <UIPopupComponent />

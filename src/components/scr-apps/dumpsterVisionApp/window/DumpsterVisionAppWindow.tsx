@@ -1,24 +1,29 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
+import { APP_REGISTRY } from '../../../../constants/scrAppListConstants';
+import { ToggleStates } from '../../../../types/toggleState';
 
 interface DumpsterVisionAppWindowProps extends BaseWindowProps {}
 
 const DumpsterVisionAppWindow: React.FC<DumpsterVisionAppWindowProps> = ({
   toggleStates,
   setToggleState,
+  appType,
   ...windowProps
 }) => {
-  const [isEnabled, setIsEnabled] = useState(toggleStates?.keyEnabled_DumpsterVision ?? true);
+  const toggleKey = APP_REGISTRY[appType]?.quickToggleStateKey as keyof ToggleStates | undefined;
+  const isEnabled = toggleKey ? Boolean(toggleStates?.[toggleKey]) : true;
+  const keyLetter = APP_REGISTRY[appType]?.shortcutKey || 'X';
 
   const toggleEnabled = () => {
-    const newState = !isEnabled;
-    setIsEnabled(newState);
-    setToggleState?.('keyEnabled_DumpsterVision', newState);
+    if (!toggleKey) return;
+    setToggleState?.(toggleKey, !isEnabled);
   };
 
   return (
     <ScrAppWindow
       title="Dumpster Vision"
+      appType={appType}
       {...windowProps}
     >
       <div className="window-content-padded">
@@ -48,7 +53,7 @@ const DumpsterVisionAppWindow: React.FC<DumpsterVisionAppWindowProps> = ({
               height="140"
               viewBox="0 0 140 140"
               role="img"
-              aria-label={`Keyboard keycap: X (${isEnabled ? 'enabled' : 'disabled'})`}
+              aria-label={`Keyboard keycap: ${keyLetter} (${isEnabled ? 'enabled' : 'disabled'})`}
             >
               <rect x="10" y="10" width="120" height="120" rx="14" ry="14"
                 fill="#141414" stroke={isEnabled ? '#4a4' : '#555'} strokeWidth="2" />
@@ -61,7 +66,7 @@ const DumpsterVisionAppWindow: React.FC<DumpsterVisionAppWindowProps> = ({
                 fill={isEnabled ? '#9f9' : '#aaa'}
                 letterSpacing="2"
               >
-                X
+                {keyLetter}
               </text>
             </svg>
           </div>

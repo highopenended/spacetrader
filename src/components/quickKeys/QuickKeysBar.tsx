@@ -6,11 +6,24 @@ import { APP_REGISTRY } from '../../constants/scrAppListConstants';
 interface QuickKeysBarProps {
   toggleStates: ToggleStates;
   installedApps: InstalledApp[];
+  setToggleState: (key: keyof ToggleStates, value: boolean) => void;
 }
 
-const Keycap: React.FC<{ label: string; letter: string; glow?: boolean }> = ({ label, letter, glow = false }) => {
+const Keycap: React.FC<{ label: string; letter: string; glow?: boolean; onClick?: () => void }> = ({ label, letter, glow = false, onClick }) => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (!onClick) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: onClick ? 'pointer' : 'default' }}
+    >
       <svg
         width="40"
         height="40"
@@ -42,19 +55,18 @@ const Keycap: React.FC<{ label: string; letter: string; glow?: boolean }> = ({ l
   );
 };
 
-const QuickKeysBar: React.FC<QuickKeysBarProps> = ({ toggleStates, installedApps }) => {
-  // Build quick items from registry metadata
+const QuickKeysBar: React.FC<QuickKeysBarProps> = ({ toggleStates, installedApps, setToggleState }) => {
+  // Build quick items from registry metadata (always show when installed + configured)
   const quickItems = installedApps
     .map(app => APP_REGISTRY[app.id])
-    .filter(def => def && def.showInQuickBar && def.shortcutKey)
-    .filter(def => {
-      // Example: Dumpster Vision obeys its own enable toggle
-      if (def.id === 'dumpsterVision') {
-        return toggleStates.keyEnabled_DumpsterVision;
-      }
-      return true;
-    })
-    .map(def => ({ id: def.id, keyLetter: def.shortcutKey as string, label: def.quickKeyLabel || def.name }));
+    .filter((def): def is NonNullable<typeof def> => Boolean(def))
+    .filter(def => def.showInQuickBar && Boolean(def.shortcutKey))
+    .map(def => ({
+      id: def.id,
+      keyLetter: def.shortcutKey as string,
+      label: def.quickKeyLabel || def.name,
+      toggleKey: def.quickToggleStateKey
+    }));
 
   if (quickItems.length === 0) return null;
 
@@ -80,9 +92,21 @@ const QuickKeysBar: React.FC<QuickKeysBarProps> = ({ toggleStates, installedApps
           backdropFilter: 'blur(2px)'
         }}
       >
-        {quickItems.map(item => (
-          <Keycap key={item.id} label={item.label} letter={item.keyLetter} glow={true} />
-        ))}
+        {quickItems.map(item => {
+          const isOn = item.toggleKey ? Boolean(toggleStates[item.toggleKey]) : true;
+          const handleClick = item.toggleKey
+            ? () => setToggleState(item.toggleKey!, !isOn)
+            : undefined;
+          return (
+            <Keycap
+              key={item.id}
+              label={item.label}
+              letter={item.keyLetter}
+              glow={isOn}
+              onClick={handleClick}
+            />
+          );
+        })}
       </div>
     </div>
   );
