@@ -19,12 +19,13 @@ interface TerminalScreenProps {
   openAppTypes?: Set<string>;
   onDockWindows?: () => void;
   appPropsMap: Record<string, any>; // Pre-built app props from App.tsx
+  shouldCollapse?: boolean; // Collapse trigger from parent (e.g., when work mode begins)
 }
 
-const TerminalScreen: React.FC<TerminalScreenProps> = ({ 
-  credits, 
-  gameTime, 
-  gamePhase, 
+const TerminalScreen: React.FC<TerminalScreenProps> = ({
+  credits,
+  gameTime,
+  gamePhase,
   isOnline = true,
   onAppClick,
   apps,
@@ -32,7 +33,8 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   pendingDeleteAppId = null,
   openAppTypes = new Set(),
   onDockWindows,
-  appPropsMap
+  appPropsMap,
+  shouldCollapse
 }) => {
   // Terminal state
   const [terminalMode, setTerminalMode] = useState<'expanded' | 'collapsed'>('expanded');
@@ -58,15 +60,20 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
     }
   }, [terminalMode]);
 
+  // Collapse the terminal when instructed by parent (e.g., entering work mode)
+  React.useEffect(() => {
+    shouldCollapse ? setTerminalMode('collapsed') : setTerminalMode('expanded')
+  }, [shouldCollapse]);
+
   // Render an app based on its configuration
   const renderApp = (appConfig: any) => {
     if (!appConfig) return null;
-    
+
     const AppComponent = appConfig.component;
     const appProps = appPropsMap[appConfig.id]; // Use pre-built props from App.tsx
 
     return (
-      <AppComponent 
+      <AppComponent
         {...appProps}
       />
     );
@@ -85,63 +92,63 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   };
 
   return (
-    <div 
+    <div
       className={`terminal-screen ${terminalMode}`}
       style={{ height: getTerminalHeight() }}
     >
-        <div className="terminal-header">
-          <div className="terminal-title">
-            SCRAPCOM TERMINAL
-            {terminalMode === 'collapsed' && <span className="minimize-indicator"> [MIN]</span>}
-          </div>
-          <div className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>
-            <div className="status-light"></div>
-            <div className="status-text">{isOnline ? 'ONLINE' : 'OFFLINE'}</div>
-          </div>
+      <div className="terminal-header">
+        <div className="terminal-title">
+          SCRAPCOM TERMINAL
+          {terminalMode === 'collapsed' && <span className="minimize-indicator"> [MIN]</span>}
         </div>
-        
-        <div className="terminal-controls">
-          <DockWindowsButton 
-            onDockWindows={onDockWindows || (() => {})}
-            hasOpenWindows={openAppTypes.size > 0}
-            openWindowCount={openAppTypes.size}
-          />
-          <TerminalToggle 
-            isMinimized={terminalMode === 'collapsed'}
-            onToggle={handleToggle}
-          />
+        <div className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>
+          <div className="status-light"></div>
+          <div className="status-text">{isOnline ? 'ONLINE' : 'OFFLINE'}</div>
         </div>
-        
-        <div 
-          ref={setNodeRef}
-          className={`terminal-content${isDockActive ? ' dock-active' : ''}`}
-        >  
-            <SortableContext 
-              items={appOrder} 
-              strategy={verticalListSortingStrategy}
-            >
-              {apps
-                .filter((appConfig) => {
-                  const isPendingDelete = pendingDeleteAppId === appConfig.id;
-                  const isWindowOpen = openAppTypes.has(appConfig.id);
-                  return !isPendingDelete && !isWindowOpen;
-                })
-                .map((appConfig) => (
-                  <SortableItem
-                    key={appConfig.id}
-                    id={appConfig.id}
-                    onAppClick={() => onAppClick?.(appConfig.id, appConfig.name)}
-                  >
-                    {renderApp(appConfig)}
-                  </SortableItem>
-                ))
-              }
-            </SortableContext>
-          </div>
-        
-
-        <div className="terminal-scanlines"></div>
       </div>
+
+      <div className="terminal-controls">
+        <DockWindowsButton
+          onDockWindows={onDockWindows || (() => { })}
+          hasOpenWindows={openAppTypes.size > 0}
+          openWindowCount={openAppTypes.size}
+        />
+        <TerminalToggle
+          isMinimized={terminalMode === 'collapsed'}
+          onToggle={handleToggle}
+        />
+      </div>
+
+      <div
+        ref={setNodeRef}
+        className={`terminal-content${isDockActive ? ' dock-active' : ''}`}
+      >
+        <SortableContext
+          items={appOrder}
+          strategy={verticalListSortingStrategy}
+        >
+          {apps
+            .filter((appConfig) => {
+              const isPendingDelete = pendingDeleteAppId === appConfig.id;
+              const isWindowOpen = openAppTypes.has(appConfig.id);
+              return !isPendingDelete && !isWindowOpen;
+            })
+            .map((appConfig) => (
+              <SortableItem
+                key={appConfig.id}
+                id={appConfig.id}
+                onAppClick={() => onAppClick?.(appConfig.id, appConfig.name)}
+              >
+                {renderApp(appConfig)}
+              </SortableItem>
+            ))
+          }
+        </SortableContext>
+      </div>
+
+
+      <div className="terminal-scanlines"></div>
+    </div>
   );
 };
 

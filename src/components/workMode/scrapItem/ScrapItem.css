@@ -4,8 +4,7 @@
   height: 3.2vw; /* Increased from 2.4vw - using vw to maintain square aspect ratio */
   cursor: grab;
   user-select: none;
-  /* Position at assembly line level */
-  bottom: 24vh; /* Moved up from 20vh to position above the assembly line */
+  /* Bottom is controlled by WorkScreen inline styles; no default here */
   /* Movement handled by rAF; transitions disabled to avoid whip */
 }
 

@@ -179,7 +179,8 @@ function App() {
       appOrder,
       openAppTypes: new Set(windows.map(w => w.appType)),
       onDockWindows: dockAllWindows,
-      appPropsMap
+      appPropsMap,
+      shouldCollapse: gameMode === 'workMode'
     },
     adminToolbar: {
       credits,

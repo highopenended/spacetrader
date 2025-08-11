@@ -180,7 +180,8 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
       .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
       .map((scrap) => {
       const airborne = getAirborneState(scrap.id);
-      const bottomVh = airborne?.isAirborne ? 24 + Math.max(0, airborne.yVh) : 24;
+      const baseBottomVh = SCRAP_BASELINE_BOTTOM_VH;
+      const bottomVh = airborne?.isAirborne ? baseBottomVh + Math.max(0, airborne.yVh) : baseBottomVh;
       const item: ScrapWithStyle = {
         ...scrap,
         style: {

@@ -7,7 +7,7 @@
  */
 
 // Baseline height (vh) for the assembly line; scrap sits at this bottom value when grounded (matches .scrap-item bottom in CSS)
-export const SCRAP_BASELINE_BOTTOM_VH = 24;
+export const SCRAP_BASELINE_BOTTOM_VH = 26;
 
 // Gravity in vh/s^2 (negative => downward). Tuned for snappy but weighty falls
 export const GRAVITY_VH_PER_S2 = -250;
@@ -19,7 +19,7 @@ export const MAX_DOWNWARD_SPEED_VH_PER_S = -600;
 export const MAX_HORIZONTAL_SPEED_VW_PER_S = 40;
 
 // Global throw strength scaling (~20% reduction) for better control/feel
-export const MOMENTUM_SCALE = 0.8;
+export const MOMENTUM_SCALE = 0.5;
 
 // Momentum capture thresholds (drag hook): preserve momentum only if release
 // occurs within this window after last meaningful motion (ms)
