@@ -51,10 +51,17 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
   } = useScrapPhysics();
 
   // Drag handling for scrap items
-  const { getDraggableProps, getDragStyle } = useScrapDrag({
+  const [beingCollectedIds, setBeingCollectedIds] = useState<Set<string>>(new Set());
+  const { getDraggableProps, getDragStyle, draggedScrapId } = useScrapDrag({
     onDrop: ({ scrapId, releasePositionPx, releaseVelocityPxPerSec, elementSizePx }) => {
       // If released inside bin, collect and credit
       if (isPointInside(releasePositionPx.x, releasePositionPx.y)) {
+        // Hide immediately to avoid any visual snap-back
+        setBeingCollectedIds(prev => {
+          const next = new Set(prev);
+          next.add(scrapId);
+          return next;
+        });
         setSpawnState(prev => {
           const { spawnState: newState, collectedScrap } = collectScrap(scrapId, prev);
           if (collectedScrap && updateCredits) {
@@ -63,30 +70,32 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
           }
           return newState;
         });
+        // Clear immediately after state update completes
+        queueMicrotask(() => {
+          setBeingCollectedIds(prev => {
+            const next = new Set(prev);
+            next.delete(scrapId);
+            return next;
+          });
+        });
         setCollectedCount(prev => prev + 1);
         return;
       }
 
-      // Else, launch airborne and keep X where released
-      const bottomPx = Math.max(0, window.innerHeight - releasePositionPx.y);
+      // Else, launch airborne and keep visual position consistent with drag center
+      // Keep exactly the same anchoring as drag (left+bottom without transforms)
+      const vwPerPx = 1 / (window.innerWidth / 100);
+      const leftPx = Math.max(0, releasePositionPx.x - (elementSizePx?.width || 0) / 2);
+      const bottomPx = Math.max(0, window.innerHeight - (releasePositionPx.y + (elementSizePx?.height || 0) / 2));
+      const newXvw = Math.max(0, Math.min(100, leftPx * vwPerPx));
       const yAboveBaselineVh = Math.max(0, vhFromPx(bottomPx) - SCRAP_BASELINE_BOTTOM_VH);
-      // Use the element center under cursor for X
-      const newXvw = Math.max(0, Math.min(100, (releasePositionPx.x / (window.innerWidth / 100))));
 
       setSpawnState(prev => ({
         ...prev,
         activeScrap: prev.activeScrap.map(s => (s.id === scrapId ? { ...s, x: newXvw } : s))
       }));
 
-      // Include horizontal momentum by slightly adjusting x over the first physics step
-      // Convert horizontal velocity px/s to vw/s and nudge X immediately for throw feel (scaled)
-      const vwPerPx = 1 / (window.innerWidth / 100);
-      const vxVwPerSec = releaseVelocityPxPerSec.vx * vwPerPx * 0.8;
-      const initialNudgeVw = vxVwPerSec * 0.016; // ~one frame worth
-      setSpawnState(prev => ({
-        ...prev,
-        activeScrap: prev.activeScrap.map(s => (s.id === scrapId ? { ...s, x: Math.max(0, Math.min(100, s.x + initialNudgeVw)) } : s))
-      }));
+      // Momentum is handled in physics; no extra nudge to avoid double application
 
       launchAirborneFromRelease(scrapId, releaseVelocityPxPerSec, yAboveBaselineVh);
     }
@@ -107,6 +116,11 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
       const adjusted = {
         ...updated,
         activeScrap: updated.activeScrap.map(scrap => {
+          if (scrap.id === draggedScrapId) {
+            // Freeze dragged scrap entirely (no conveyor movement or off-screen)
+            const prevX = prevXMap.get(scrap.id) ?? scrap.x;
+            return { ...scrap, x: prevX, isOffScreen: false };
+          }
           if (isAirborne(scrap.id)) {
             // Apply horizontal momentum while airborne
             const prevX = prevXMap.get(scrap.id) ?? scrap.x;
@@ -120,7 +134,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
       };
       return adjusted;
     });
-  }, [isAirborne, getHorizontalVelocity]);
+  }, [isAirborne, getHorizontalVelocity, draggedScrapId]);
 
   // Cleanup collected scrap periodically
   const cleanupScrap = useCallback(() => {
@@ -164,14 +178,16 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
   const scrapItems = useMemo(() => {
     type ScrapWithStyle = ActiveScrapObject & { style: React.CSSProperties };
     const items: ScrapWithStyle[] = spawnState.activeScrap
-      .filter(scrap => !scrap.isCollected)
+      .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
       .map((scrap) => {
       const airborne = getAirborneState(scrap.id);
       const bottomVh = airborne?.isAirborne ? 24 + Math.max(0, airborne.yVh) : 24;
       const item: ScrapWithStyle = {
         ...scrap,
         style: {
-          transform: `translateX(${scrap.x}vw) translateY(-50%)`,
+          // Anchoring model: left (vw) + bottom (vh), transform: none
+          left: `${scrap.x}vw`,
+          transform: 'none',
           bottom: `${bottomVh}vh`
         }
       };

@@ -6,9 +6,15 @@
  * - Tracks cursor position and computes release velocity
  * - Exposes props for draggable elements and a style helper when dragging
  * - Calls an onDrop callback with release position and velocity
+ *
+ * Anchoring model (critical for no-jump drops):
+ * - We position the dragged element using left (px) and bottom (px) with transform: none
+ * - Rendering in WorkScreen also uses left/bottom with transform: none
+ * - On drop, we convert the centered cursor to left/bottom consistently so there is no anchor switch
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { MOMENTUM_VALID_WINDOW_MS, VELOCITY_MIN_THRESHOLD_PX_PER_S } from '../constants/physicsConstants';
 
 export interface ScrapDragDropInfo {
   scrapId: string;
@@ -43,8 +49,11 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
   const lastEventTimeRef = useRef<number>(0);
   const lastPointerRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const velocityPxPerSecRef = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
-  const holdOffsetRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
   const elementSizeRef = useRef<{ width: number; height: number }>({ width: 0, height: 0 });
+
+  // Momentum recency filter (keep momentum only if release is soon after last significant movement)
+  const lastActiveVelocityRef = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
+  const lastActiveTimeRef = useRef<number>(0);
 
   const isThrottledRef = useRef(false);
 
@@ -52,13 +61,10 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     setDraggedScrapId(scrapId);
     setCursorPositionPx({ x: startClientX, y: startClientY });
 
-    // Compute offset from element top-left to pointer for better anchor feel
     if (targetEl) {
       const rect = targetEl.getBoundingClientRect();
-      holdOffsetRef.current = { dx: rect.width / 2, dy: rect.height / 2 }; // center under cursor
       elementSizeRef.current = { width: rect.width, height: rect.height };
     } else {
-      holdOffsetRef.current = { dx: 12, dy: 12 };
       elementSizeRef.current = { width: 24, height: 24 };
     }
 
@@ -75,7 +81,11 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     }
 
     const releasePositionPx = cursorPositionPx;
-    const releaseVelocityPxPerSec = velocityPxPerSecRef.current;
+    // Use last significant movement only if within recent time window; else zero out momentum
+    const now = performance.now();
+    const timeSinceActive = now - lastActiveTimeRef.current;
+    const useMomentum = timeSinceActive <= MOMENTUM_VALID_WINDOW_MS;
+    const releaseVelocityPxPerSec = useMomentum ? lastActiveVelocityRef.current : { vx: 0, vy: 0 };
     const scrapId = draggedScrapId;
 
     setDraggedScrapId(null);
@@ -106,6 +116,11 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     // Update velocity in px/s
     if (dt > 0) {
       velocityPxPerSecRef.current = { vx: dx / dt, vy: dy / dt };
+      const speed = Math.hypot(velocityPxPerSecRef.current.vx, velocityPxPerSecRef.current.vy);
+      if (speed >= VELOCITY_MIN_THRESHOLD_PX_PER_S) {
+        lastActiveVelocityRef.current = velocityPxPerSecRef.current;
+        lastActiveTimeRef.current = now;
+      }
     }
 
     lastEventTimeRef.current = now;
@@ -164,12 +179,15 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
 
   const getDragStyle = useCallback((scrapId: string): React.CSSProperties | undefined => {
     if (!isDragging(scrapId) || !cursorPositionPx) return undefined;
-    const { dx, dy } = holdOffsetRef.current;
+    const width = elementSizeRef.current.width || 0;
+    const height = elementSizeRef.current.height || 0;
+    const leftPx = Math.max(0, cursorPositionPx.x - width / 2);
+    const bottomPx = Math.max(0, (window.innerHeight - (cursorPositionPx.y + height / 2)));
     return {
       position: 'fixed',
-      left: `${Math.max(0, cursorPositionPx.x)}px`,
-      top: `${Math.max(0, cursorPositionPx.y)}px`,
-      transform: 'translate(-50%, -50%)',
+      left: `${leftPx}px`,
+      bottom: `${bottomPx}px`,
+      transform: 'none',
       zIndex: 1000,
       pointerEvents: 'none',
       transition: 'none'
