@@ -14,6 +14,8 @@ import ScrapBin from '../scrapBin/ScrapBin';
 import WorkTimer from '../workTimer/WorkTimer';
 import ScrapItem from '../scrapItem/ScrapItem';
 import './WorkScreen.css';
+import { setAnchors, clear as clearAnchors } from '../../visualOverlayManager/anchors/AnchorsStore';
+import { Anchor } from '../../visualOverlayManager/anchors/types';
 import { useDropZoneBounds } from '../../../hooks/useDropZoneBounds';
 import { useScrapPhysics } from '../../../hooks/useScrapPhysics';
 import { useScrapDrag } from '../../../hooks/useScrapDrag';
@@ -140,6 +142,41 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
     setSpawnState(prevState => cleanupCollectedScrap(prevState));
   }, []);
 
+  // Helper: compute actual on-screen position for a scrap id, including drag overrides
+  const getRenderedPosition = useCallback((scrap: ActiveScrapObject) => {
+    // Defaults from physics/baseline
+    let xVw = scrap.x;
+    const airborne = getAirborneState(scrap.id);
+    const baseBottomVh = SCRAP_BASELINE_BOTTOM_VH;
+    let bottomVh = airborne?.isAirborne ? baseBottomVh + Math.max(0, airborne.yVh) : baseBottomVh;
+
+    // If dragging, override from drag style (may be px or vw/vh)
+    const dragStyle = getDragStyle(scrap.id);
+    if (dragStyle) {
+      const vwPerPx = 100 / window.innerWidth;
+      const vhPerPx = 100 / window.innerHeight;
+
+      const left = dragStyle.left as unknown as string | number | undefined;
+      const bottom = dragStyle.bottom as unknown as string | number | undefined;
+
+      if (typeof left === 'string') {
+        if (left.endsWith('vw')) xVw = parseFloat(left);
+        else if (left.endsWith('px')) xVw = parseFloat(left) * vwPerPx;
+      } else if (typeof left === 'number') {
+        xVw = left * vwPerPx;
+      }
+
+      if (typeof bottom === 'string') {
+        if (bottom.endsWith('vh')) bottomVh = parseFloat(bottom);
+        else if (bottom.endsWith('px')) bottomVh = parseFloat(bottom) * vhPerPx;
+      } else if (typeof bottom === 'number') {
+        bottomVh = bottom * vhPerPx;
+      }
+    }
+
+    return { xVw, bottomVh };
+  }, [getAirborneState, getDragStyle]);
+
   const gameLoop = useCallback((currentTime: number) => {
     const deltaTime = currentTime - lastFrameTimeRef.current;
     const dtSeconds = Math.max(0, deltaTime / 1000);
@@ -170,6 +207,8 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
       if (animationFrameRef.current !== null) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      // Clear anchors when leaving work screen
+      clearAnchors();
     };
   }, [gameLoop]);
 
@@ -199,6 +238,44 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
     });
     return items;
   }, [spawnState.activeScrap, getAirborneState, getDragStyle]);
+
+  // Publish anchors for overlays when Dumpster Vision is active
+  useEffect(() => {
+    const anchors: Anchor[] = spawnState.activeScrap
+      .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
+      .map((scrap) => {
+        const { xVw, bottomVh } = getRenderedPosition(scrap);
+        const label = `ID:${scrap.id.slice(-3)}  X:${xVw.toFixed(1)}  Y:${bottomVh.toFixed(1)}`;
+        return {
+          id: scrap.id,
+          xVw,
+          bottomVh,
+          label,
+        } as Anchor;
+      });
+    setAnchors(anchors);
+  }, [spawnState.activeScrap, beingCollectedIds, getRenderedPosition]);
+
+  // While dragging, update anchors every frame using live drag style
+  useEffect(() => {
+    if (!draggedScrapId) return;
+    let rafId: number | null = null;
+    const tick = () => {
+      const anchors: Anchor[] = spawnState.activeScrap
+        .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
+        .map((scrap) => {
+          const { xVw, bottomVh } = getRenderedPosition(scrap);
+          const label = `ID:${scrap.id.slice(-3)}  X:${xVw.toFixed(1)}  Y:${bottomVh.toFixed(1)}`;
+          return { id: scrap.id, xVw, bottomVh, label } as Anchor;
+        });
+      setAnchors(anchors);
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [draggedScrapId, spawnState.activeScrap, beingCollectedIds, getRenderedPosition]);
 
   return (
     <div className="work-screen">
