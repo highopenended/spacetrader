@@ -13,12 +13,12 @@ const DumpsterVisionAppWindow: React.FC<DumpsterVisionAppWindowProps> = ({
 }) => {
   // DumpsterVision uses quick bar flags for enablement now
   const { quickBarFlags, setQuickBarFlag, quickBarConfig } = (windowProps as any);
-  const isEnabled = quickBarFlags?.dumpsterVisionEnabled ?? true;
+  const isEnabled = quickBarFlags?.isActiveDumpsterVision ?? true;
   const keyLetter = quickBarConfig?.dumpsterVision?.shortcutKey || 'X';
 
   const toggleEnabled = () => {
     if (!setQuickBarFlag) return;
-    setQuickBarFlag('dumpsterVisionEnabled', !isEnabled);
+    setQuickBarFlag('isActiveDumpsterVision', !isEnabled);
   };
 
   return (

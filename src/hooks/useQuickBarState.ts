@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { QuickBarFlags, QuickBarConfig } from '../types/quickBarState';
 
 const initialFlags: QuickBarFlags = {
-  dumpsterVisionEnabled: true,
+  isActiveDumpsterVision: false,
 };
 
 export const useQuickBarState = () => {
@@ -19,7 +19,7 @@ export const useQuickBarState = () => {
       label: 'Dumpster Vision',
       shortcutKey: 'X',
       showInQuickBar: true,
-      toggleFlagKey: 'dumpsterVisionEnabled',
+      toggleFlagKey: 'isActiveDumpsterVision',
       requiresAppId: 'dumpsterVision',
     },
   }), []);

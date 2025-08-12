@@ -1,7 +1,7 @@
 import { AppType } from './scrAppListState';
 
 export interface QuickBarFlags {
-  dumpsterVisionEnabled: boolean;
+  isActiveDumpsterVision: boolean;
 }
 
 export interface QuickKeyConfig {

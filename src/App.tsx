@@ -38,6 +38,7 @@ import DataReadout from './components/DataReadout';
 import QuickKeysBar from './components/quickKeys/QuickKeysBar';
 import KeyboardManager from './components/KeyboardManager';
 import QuickBarManager from './components/QuickBarManager';
+import VisualOverlayManager from './components/visualOverlayManager/VisualOverlayManager';
 import { useQuickBarState } from './hooks/useQuickBarState';
 
 function App() {  
@@ -253,6 +254,7 @@ function App() {
           <GameBackground backgroundId={gameBackground} />
           <KeyboardManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
           <QuickBarManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
+          <VisualOverlayManager quickBarFlags={quickBarFlags} />
           <DataReadout {...componentProps.dataReadout} />
           <QuickKeysBar installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
           <TerminalScreen {...componentProps.terminalScreen} />
