@@ -47,7 +47,13 @@ interface WindowController {
 // Interface for window configuration
 interface WindowConfig {
   component: React.ComponentType<any>;
-  getProps: (window: WindowData, windowController: WindowController, windowManager: WindowManagerContext, toggleData?: { toggleStates: any; setToggleState: any }) => any;
+  getProps: (
+    window: WindowData,
+    windowController: WindowController,
+    windowManager: WindowManagerContext,
+    toggleData?: { toggleStates: any; setToggleState: any },
+    quickBarData?: { quickBarFlags: any; setQuickBarFlag: any; quickBarConfig: any }
+  ) => any;
 }
 
 /**
@@ -83,8 +89,11 @@ const buildCommonProps = (
 export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
   purgeZone: {
     component: PurgeZoneAppWindow,
-    getProps: (window, gameState, windowManager, toggleData) => ({
-      ...buildCommonProps(window, gameState, windowManager, toggleData)
+    getProps: (window, gameState, windowManager, toggleData, quickBarData) => ({
+      ...buildCommonProps(window, gameState, windowManager, toggleData),
+      quickBarFlags: quickBarData?.quickBarFlags,
+      setQuickBarFlag: quickBarData?.setQuickBarFlag,
+      quickBarConfig: quickBarData?.quickBarConfig
     })
   },
 
@@ -137,8 +146,11 @@ export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
   },
   dumpsterVision: {
     component: DumpsterVisionAppWindow,
-    getProps: (window, windowController, windowManager, toggleData) => ({
-      ...buildCommonProps(window, windowController, windowManager, toggleData)
+    getProps: (window, windowController, windowManager, toggleData, quickBarData) => ({
+      ...buildCommonProps(window, windowController, windowManager, toggleData),
+      quickBarFlags: quickBarData?.quickBarFlags,
+      setQuickBarFlag: quickBarData?.setQuickBarFlag,
+      quickBarConfig: quickBarData?.quickBarConfig
     })
   }
 };
@@ -151,13 +163,14 @@ export const renderWindow = (
   window: WindowData, 
   windowController: WindowController, 
   windowManager: WindowManagerContext,
-  toggleData?: { toggleStates: any; setToggleState: any }
+  toggleData?: { toggleStates: any; setToggleState: any },
+  quickBarData?: { quickBarFlags: any; setQuickBarFlag: any; quickBarConfig: any }
 ): React.ReactElement => {
   const config = WINDOW_REGISTRY[window.appType];
   
   if (config) {
     const WindowComponent = config.component;
-    const props = config.getProps(window, windowController, windowManager, toggleData);
+    const props = config.getProps(window, windowController, windowManager, toggleData, quickBarData);
     return React.createElement(WindowComponent, props);
   }
   

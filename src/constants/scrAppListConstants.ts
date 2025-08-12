@@ -94,13 +94,7 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     component: DumpsterVisionApp,
     deletable: true,
     description: 'Dumpster scanning interface',
-    tiers: STANDARD_TIERS,
-    
-    // Quick key metadata
-    shortcutKey: 'X',
-    showInQuickBar: true,
-    quickKeyLabel: 'Dumpster Vision',
-    quickToggleStateKey: 'keyEnabled_DumpsterVision'
+    tiers: STANDARD_TIERS
   },
 
   // Future apps (not implemented yet)

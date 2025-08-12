@@ -1,24 +1,23 @@
 import React from 'react';
 import { InstalledApp } from '../types/scrAppListState';
-import { ToggleStates } from '../types/toggleState';
-import { APP_REGISTRY } from '../constants/scrAppListConstants';
+import { QuickBarConfig, QuickBarFlags } from '../types/quickBarState';
 
 interface KeyboardManagerProps {
   installedApps: InstalledApp[];
-  toggleStates: ToggleStates;
-  setToggleState: (key: keyof ToggleStates, value: boolean) => void;
+  quickBarFlags: QuickBarFlags;
+  setQuickBarFlag: (key: keyof QuickBarFlags, value: boolean) => void;
+  quickBarConfig: QuickBarConfig;
 }
 
-const KeyboardManager: React.FC<KeyboardManagerProps> = ({ installedApps, toggleStates, setToggleState }) => {
+const KeyboardManager: React.FC<KeyboardManagerProps> = ({ installedApps, quickBarFlags, setQuickBarFlag, quickBarConfig }) => {
   React.useEffect(() => {
     // Build a quick lookup of key -> toggleKey for installed apps
-    const keyToToggleKey = new Map<string, keyof ToggleStates>();
-
-    installedApps.forEach(app => {
-      const def = APP_REGISTRY[app.id];
-      if (!def || !def.showInQuickBar || !def.shortcutKey || !def.quickToggleStateKey) return;
-      const key = String(def.shortcutKey).toUpperCase();
-      keyToToggleKey.set(key, def.quickToggleStateKey);
+    const keyToToggleKey = new Map<string, keyof QuickBarFlags>();
+    Object.values(quickBarConfig).forEach(cfg => {
+      if (!cfg.showInQuickBar) return;
+      if (cfg.requiresAppId && !installedApps.some(app => app.id === cfg.requiresAppId)) return;
+      if (!cfg.shortcutKey || !cfg.toggleFlagKey) return;
+      keyToToggleKey.set(String(cfg.shortcutKey).toUpperCase(), cfg.toggleFlagKey);
     });
 
     const shouldIgnoreTarget = (target: EventTarget | null) => {
@@ -37,15 +36,15 @@ const KeyboardManager: React.FC<KeyboardManagerProps> = ({ installedApps, toggle
       const toggleKey = keyToToggleKey.get(pressed);
       if (!toggleKey) return;
 
-      const current = Boolean(toggleStates[toggleKey]);
-      setToggleState(toggleKey, !current);
+      const current = Boolean(quickBarFlags[toggleKey]);
+      setQuickBarFlag(toggleKey, !current);
     };
 
     window.addEventListener('keydown', onKeyDown);
     return () => {
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [installedApps, toggleStates, setToggleState]);
+  }, [installedApps, quickBarFlags, setQuickBarFlag, quickBarConfig]);
 
   return null;
 };

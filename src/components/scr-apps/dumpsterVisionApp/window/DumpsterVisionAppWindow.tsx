@@ -1,7 +1,7 @@
 import React from 'react';
 import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
 import { APP_REGISTRY } from '../../../../constants/scrAppListConstants';
-import { ToggleStates } from '../../../../types/toggleState';
+import { QuickBarFlags } from '../../../../types/quickBarState';
 
 interface DumpsterVisionAppWindowProps extends BaseWindowProps {}
 
@@ -11,13 +11,14 @@ const DumpsterVisionAppWindow: React.FC<DumpsterVisionAppWindowProps> = ({
   appType,
   ...windowProps
 }) => {
-  const toggleKey = APP_REGISTRY[appType]?.quickToggleStateKey as keyof ToggleStates | undefined;
-  const isEnabled = toggleKey ? Boolean(toggleStates?.[toggleKey]) : true;
-  const keyLetter = APP_REGISTRY[appType]?.shortcutKey || 'X';
+  // DumpsterVision uses quick bar flags for enablement now
+  const { quickBarFlags, setQuickBarFlag, quickBarConfig } = (windowProps as any);
+  const isEnabled = quickBarFlags?.dumpsterVisionEnabled ?? true;
+  const keyLetter = quickBarConfig?.dumpsterVision?.shortcutKey || 'X';
 
   const toggleEnabled = () => {
-    if (!toggleKey) return;
-    setToggleState?.(toggleKey, !isEnabled);
+    if (!setQuickBarFlag) return;
+    setQuickBarFlag('dumpsterVisionEnabled', !isEnabled);
   };
 
   return (

@@ -37,6 +37,8 @@ import { getAppPropsMap } from './utils/appPropsBuilder';
 import DataReadout from './components/DataReadout';
 import QuickKeysBar from './components/quickKeys/QuickKeysBar';
 import KeyboardManager from './components/KeyboardManager';
+import QuickBarManager from './components/QuickBarManager';
+import { useQuickBarState } from './hooks/useQuickBarState';
 
 function App() {  
   const {
@@ -97,6 +99,9 @@ function App() {
     decodeToggleState
   } = useToggleState();
 
+  // Quick Bar state
+  const { quickBarFlags, setQuickBarFlag, quickBarConfig } = useQuickBarState();
+
   // Create save/load functions with all encode/decode functions
   const {
     saveToLocalCache,
@@ -147,6 +152,12 @@ function App() {
       setToggleState
     };
 
+    const quickBarData = {
+      quickBarFlags,
+      setQuickBarFlag,
+      quickBarConfig
+    };
+
     const windowManager = {
       closeWindow,
       updateWindowPosition,
@@ -154,7 +165,7 @@ function App() {
       bringToFront
     };
 
-    return renderWindow(window, windowController, windowManager, toggleData);
+    return renderWindow(window, windowController, windowManager, toggleData, quickBarData);
   };
 
   // Build app props map for TerminalScreen
@@ -240,9 +251,10 @@ function App() {
       >
         <div className="App">
           <GameBackground backgroundId={gameBackground} />
-          <KeyboardManager installedApps={installedApps} toggleStates={toggleStates} setToggleState={setToggleState} />
+          <KeyboardManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
+          <QuickBarManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
           <DataReadout {...componentProps.dataReadout} />
-          <QuickKeysBar toggleStates={toggleStates} installedApps={installedApps} setToggleState={setToggleState} />
+          <QuickKeysBar installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
           <TerminalScreen {...componentProps.terminalScreen} />
           <AdminToolbar {...componentProps.adminToolbar} />
           <UIPopupComponent />

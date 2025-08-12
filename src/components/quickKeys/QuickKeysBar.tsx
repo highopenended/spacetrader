@@ -1,12 +1,13 @@
 import React from 'react';
 import { ToggleStates } from '../../types/toggleState';
 import { InstalledApp } from '../../types/scrAppListState';
-import { APP_REGISTRY } from '../../constants/scrAppListConstants';
+import { QuickBarConfig, QuickBarFlags } from '../../types/quickBarState';
 
 interface QuickKeysBarProps {
-  toggleStates: ToggleStates;
   installedApps: InstalledApp[];
-  setToggleState: (key: keyof ToggleStates, value: boolean) => void;
+  quickBarFlags: QuickBarFlags;
+  setQuickBarFlag: (key: keyof QuickBarFlags, value: boolean) => void;
+  quickBarConfig: QuickBarConfig;
 }
 
 const Keycap: React.FC<{ label: string; letter: string; glow?: boolean; onClick?: () => void }> = ({ label, letter, glow = false, onClick }) => {
@@ -55,17 +56,16 @@ const Keycap: React.FC<{ label: string; letter: string; glow?: boolean; onClick?
   );
 };
 
-const QuickKeysBar: React.FC<QuickKeysBarProps> = ({ toggleStates, installedApps, setToggleState }) => {
-  // Build quick items from registry metadata (always show when installed + configured)
-  const quickItems = installedApps
-    .map(app => APP_REGISTRY[app.id])
-    .filter((def): def is NonNullable<typeof def> => Boolean(def))
-    .filter(def => def.showInQuickBar && Boolean(def.shortcutKey))
-    .map(def => ({
-      id: def.id,
-      keyLetter: def.shortcutKey as string,
-      label: def.quickKeyLabel || def.name,
-      toggleKey: def.quickToggleStateKey
+const QuickKeysBar: React.FC<QuickKeysBarProps> = ({ installedApps, quickBarFlags, setQuickBarFlag, quickBarConfig }) => {
+  // Build quick items from quickBarConfig, respect requiresAppId
+  const quickItems = Object.values(quickBarConfig)
+    .filter(cfg => cfg.showInQuickBar)
+    .filter(cfg => !cfg.requiresAppId || installedApps.some(app => app.id === cfg.requiresAppId))
+    .map(cfg => ({
+      id: cfg.id,
+      keyLetter: cfg.shortcutKey,
+      label: cfg.label,
+      toggleKey: cfg.toggleFlagKey
     }));
 
   if (quickItems.length === 0) return null;
@@ -93,9 +93,9 @@ const QuickKeysBar: React.FC<QuickKeysBarProps> = ({ toggleStates, installedApps
         }}
       >
         {quickItems.map(item => {
-          const isOn = item.toggleKey ? Boolean(toggleStates[item.toggleKey]) : true;
+          const isOn = item.toggleKey ? Boolean(quickBarFlags[item.toggleKey]) : true;
           const handleClick = item.toggleKey
-            ? () => setToggleState(item.toggleKey!, !isOn)
+            ? () => setQuickBarFlag(item.toggleKey!, !isOn)
             : undefined;
           return (
             <Keycap
