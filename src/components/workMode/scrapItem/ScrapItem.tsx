@@ -19,7 +19,7 @@ const ScrapItem: React.FC<ScrapItemProps> = ({ scrap, style, draggableProps }) =
   ]);
   
   return (
-    <div className="scrap-item" style={style} {...draggableProps}>
+    <div className="scrap-item" data-scrap-id={scrap.id} style={style} {...draggableProps}>
       <div className="scrap-content">{appearance}</div>
     </div>
   );

@@ -6,6 +6,7 @@
 - Apps are wrapped with SortableItem for drag-and-drop functionality
 - Apps use ScrAppItem as the base wrapper component
 - **NEW**: App props are built in App.tsx and passed to TerminalScreen via appPropsMap
+- **NEW**: Unified drag system (managed by DragManager + useUnifiedDrag) supports reordering, deletion (Purge Zone), and undocking to open as a window
 
 ## File Structure
 ```
@@ -175,6 +176,18 @@ const renderApp = (appConfig: any) => {
 }
 ```
 
+### Unified Drag + Dock/Undock Behavior
+
+- App list items are draggable via `SortableItem` (dnd-kit). They carry `data.type = 'app-drag-node'`.
+- Terminal area is a droppable target with id `terminal-dock-zone`.
+- Purge Zone window is a droppable target with id `purge-zone-window`.
+- Reordering happens on drag end over another app; deletion confirmation appears if dropped on Purge Zone and the app is deletable.
+- Undock feature: dropping an app outside the terminal and not over any drop zone opens the app as a window at the drop location.
+
+Notes:
+- Drag orchestration lives in `DragManager` using `useUnifiedDrag` and `DragContext` for shared visual state.
+- Visual overlays use a small ghost for app drag and a tiny 12px red indicator for window deletion drags.
+
 ## Special App Types
 
 ### Core Apps
@@ -231,6 +244,7 @@ return (
 - **App.tsx**: Orchestrates game state and builds app props using `getAppPropsMap`
 - **TerminalScreen**: Pure UI component that receives pre-built props via `appPropsMap`
 - **appPropsBuilder.ts**: Centralized utility for building individual app props and props maps
+- **DragManager/useUnifiedDrag**: Single source of truth for all drag types (app reordering, app deletion, window docking/deletion, app undock → open window)
 
 ### NEW: Clean Separation of Concerns
 - **App.tsx**: Game state management, prop building, component orchestration
@@ -241,3 +255,4 @@ return (
 - App props are built once in App.tsx instead of on every render
 - No repeated calls to `getAppProps` for each app
 - TerminalScreen focuses purely on rendering 
+ - Drag logic consolidated into `DragManager` for consistent behavior across app list and windows

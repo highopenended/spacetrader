@@ -1,46 +1,42 @@
-# Getting Started with Create React App
+# SpaceTrader (SCR) — Minimalist 80s Sci‑Fi Incremental
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Gritty, analog, terminal‑driven incremental game. Primary UI is a terminal list of compact apps; apps open into draggable/resizable windows. Color palette: blacks, whites, greys with terminal greens.
 
-## Available Scripts
+## Architecture Overview
 
-In the project directory, you can run:
+- UI shell: `src/App.tsx`
+- Terminal apps: `src/components/scr-apps/{appName}/listItem`
+- Windows: `src/components/scr-apps/{appName}/window`
+- Base components: `ScrAppItem`, `SortableItem`, `ScrAppWindow`
+- State hooks (single-instance pattern): `useGameState`, `useWindowState`, `useToggleState`, `useQuickBarState`
+- Drag orchestration: `DragManager` + `useUnifiedDrag` + `DragContext`
+- Props building: `utils/appPropsBuilder.ts`
 
-### `npm start`
+## Unified Drag System
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- App list drag: reorder, delete via Purge Zone, undock to open as window
+- Window drag: position via custom handler, delete via Purge Zone using @dnd-kit drag node
+- Droppable targets: `terminal-dock-zone`, `purge-zone-window`
+- Visuals: app ghost overlay; 12px red indicator for window purge drags
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+Key files:
+- `src/components/DragManager.tsx`
+- `src/hooks/useUnifiedDrag.ts`
+- `src/contexts/DragContext.tsx`
+- `src/components/scr-apps/scrAppWindow/ScrAppWindow.tsx`
 
-### `npm test`
+## App and Window Patterns
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- See `app-item-structure-pattern`
+- See `app-window-structure-pattern`
 
-### `npm run build`
+## Theming
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Follow `src/styles/globals.css`
+- Minimalist; avoid new custom CSS when existing classes suffice; never use `!important`
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Dev Notes
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- Single-instance hooks live in `App.tsx`; pass data via props
+- Windows are rendered via `windowRegistry.renderWindow`
+- Avoid duplicate logic; prefer centralized utilities and constants

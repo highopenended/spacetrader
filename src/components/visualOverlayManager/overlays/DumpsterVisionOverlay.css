@@ -1,0 +1,183 @@
+.dv-crt {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	/* Subtle terminal-green wash */
+	background:
+		linear-gradient(rgba(0, 255, 128, 0.06), rgba(0, 255, 128, 0.06));
+	/* Very soft phosphor bloom at edges via box-shadow on container */
+	box-shadow:
+		inset 0 0 120px rgba(0, 255, 128, 0.05),
+		inset 0 0 280px rgba(0, 0, 0, 0.5);
+	/* Slight global tint + contrast to sell CRT */
+	filter: contrast(1.02) saturate(1.05) hue-rotate(100deg);
+}
+
+/* Horizontal scanlines via repeating gradient overlay */
+.dv-crt::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: repeating-linear-gradient(
+		to bottom,
+		rgba(0, 0, 0, 0.0) 0px,
+		rgba(0, 0, 0, 0.0) 2px,
+		rgba(0, 0, 0, 0.18) 3px
+	);
+	opacity: 0.7;
+}
+
+/* Vignette and faint curvature hint */
+.dv-crt::after {
+	content: '';
+	position: absolute;
+	inset: -2vh; /* extend slightly for curvature fade */
+	pointer-events: none;
+	background:
+		radial-gradient(100% 80% at 50% 50%, rgba(0,0,0,0) 65%, rgba(0,0,0,0.35) 100%);
+	/* Very light barrel-curvature suggestion */
+	transform: perspective(800px) scale(1.002) rotateX(0.35deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.dv-crt::before { opacity: 0.55; }
+}
+
+/* Boot sequence */
+.dv-booting.dv-crt {
+	animation: dv-bloom 900ms ease-out both;
+}
+
+.dv-boot-flash {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: radial-gradient(60% 50% at 50% 50%, rgba(159,211,255,0.35), rgba(159,211,255,0) 60%);
+	animation: dv-flash 220ms ease-out both;
+}
+
+.dv-boot-beam {
+	position: absolute;
+	left: 0; right: 0; top: 0; height: 10vh;
+	background: linear-gradient(to bottom, rgba(159,211,255,0.28), rgba(159,211,255,0));
+	filter: blur(1px);
+	animation: dv-beam 600ms ease-out 100ms both;
+}
+
+.dv-boot-text {
+	position: absolute;
+	left: 50%; top: 40%; transform: translate(-50%, -50%);
+	color: #9fd3ff;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+	font-size: 14px;
+	letter-spacing: 1px;
+	text-shadow: 0 0 8px rgba(159,211,255,0.6);
+	animation: dv-boot-text-flicker 1200ms ease-out 200ms both;
+}
+
+@keyframes dv-bloom {
+	0%   { opacity: 0; filter: brightness(0.6) contrast(1.1) saturate(1.2) hue-rotate(100deg); }
+	35%  { opacity: 1; filter: brightness(1.3) contrast(1.2) saturate(1.25) hue-rotate(100deg); }
+	100% { opacity: 1; filter: brightness(1.0) contrast(1.05) saturate(1.05) hue-rotate(100deg); }
+}
+
+@keyframes dv-flash {
+	0% { opacity: 0; }
+	10% { opacity: 1; }
+	100% { opacity: 0; }
+}
+
+@keyframes dv-beam {
+	0%   { transform: translateY(-20vh); opacity: 0; }
+	15%  { opacity: 1; }
+	85%  { opacity: 1; }
+	100% { transform: translateY(80vh); opacity: 0; }
+}
+
+@keyframes dv-boot-text-flicker {
+	0%, 20%, 40%, 60% { opacity: 0; }
+	10%, 30%, 50%, 80% { opacity: 1; }
+	100% { opacity: 0; }
+}
+
+/* Boot loader bar under the text */
+.dv-boot-loader {
+	position: absolute;
+	left: 50%; top: calc(40% + 24px);
+	transform: translateX(-50%);
+	width: 28vw; max-width: 420px;
+	height: 8px;
+	background: rgba(159,211,255,0.12);
+	border: 1px solid rgba(159,211,255,0.25);
+	box-shadow: inset 0 0 0 1px rgba(159,211,255,0.08);
+	overflow: hidden;
+	animation:
+		dv-boot-loader-appear 300ms ease-out 200ms both,
+		dv-boot-loader-hide 50ms steps(1, start) 1300ms forwards;
+}
+
+.dv-boot-loader-bar {
+	height: 100%;
+	width: 0;
+	background: linear-gradient(90deg, rgba(159,211,255,0.0), rgba(159,211,255,0.55) 20%, rgba(159,211,255,0.85) 60%, rgba(159,211,255,0.35));
+	animation: dv-boot-loader-fill 1000ms ease-in-out 300ms forwards;
+}
+
+@keyframes dv-boot-loader-appear {
+	from { opacity: 0; transform: translateX(-50%) translateY(2px); }
+	to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes dv-boot-loader-fill {
+	0% { width: 0; filter: brightness(1.15); }
+	60% { width: 75%; }
+	100% { width: 100%; filter: brightness(1.0); }
+}
+
+@keyframes dv-boot-loader-hide {
+	from { opacity: 1; }
+	to   { opacity: 0; }
+}
+
+/* Label intro after boot */
+@keyframes dv-label-in {
+	0%   { opacity: 0; filter: blur(1px) brightness(1.2); transform: translateY(2px); }
+	70%  { opacity: 1; filter: blur(0.2px) brightness(1.05); transform: translateY(0); }
+	100% { opacity: 1; filter: none; }
+}
+
+/* Welcome message after loader fills */
+.dv-boot-welcome {
+	position: absolute;
+	left: 50%; top: calc(40% + 24px + 20px);
+	transform: translateX(-50%);
+	color: #9fd3ff;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+	font-size: 12px;
+	letter-spacing: 1px;
+	text-shadow: 0 0 6px rgba(159,211,255,0.5);
+	opacity: 0;
+	animation:
+		dv-boot-welcome-in 700ms ease-out 1250ms forwards,
+		dv-boot-welcome-hold 1400ms linear 1950ms forwards,
+		dv-boot-welcome-out 400ms ease-in 3350ms forwards;
+}
+
+@keyframes dv-boot-welcome-in {
+	0% { opacity: 0; transform: translateX(-50%) translateY(2px); }
+	30% { opacity: 1; transform: translateX(-50%) translateY(0); }
+	100% { opacity: 1; }
+}
+
+@keyframes dv-boot-welcome-hold {
+	from { opacity: 1; }
+	to { opacity: 1; }
+}
+
+@keyframes dv-boot-welcome-out {
+	from { opacity: 1; }
+	to { opacity: 0; }
+}
+
+

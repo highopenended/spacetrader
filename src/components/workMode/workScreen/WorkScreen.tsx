@@ -20,6 +20,8 @@ import { useDropZoneBounds } from '../../../hooks/useDropZoneBounds';
 import { useScrapPhysics } from '../../../hooks/useScrapPhysics';
 import { useScrapDrag } from '../../../hooks/useScrapDrag';
 import { SCRAP_BASELINE_BOTTOM_VH, vhFromPx } from '../../../constants/physicsConstants';
+import { MutatorRegistry } from '../../../constants/mutatorRegistry';
+import { ScrapRegistry } from '../../../constants/scrapRegistry';
 
 interface WorkScreenProps {
   updateCredits?: (amount: number) => void;
@@ -39,6 +41,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
   // Scrap spawning state
   const [spawnState, setSpawnState] = useState<ScrapSpawnState>(initializeScrapSpawnState());
   const [collectedCount, setCollectedCount] = useState<number>(0);
+  const [scrapSize, setScrapSize] = useState<{ widthVw: number; heightVh: number } | null>(null);
 
   // Drop-zone (ScrapBin) bounds
   const { dropZoneRef, isPointInside } = useDropZoneBounds();
@@ -141,6 +144,51 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
   const cleanupScrap = useCallback(() => {
     setSpawnState(prevState => cleanupCollectedScrap(prevState));
   }, []);
+
+  // Measure scrap element size (dynamic) and cache in vw/vh units
+  useEffect(() => {
+    const measure = () => {
+      const el = document.querySelector('.scrap-item') as HTMLElement | null;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        const widthVw = rect.width * (100 / window.innerWidth);
+        const heightVh = rect.height * (100 / window.innerHeight);
+        setScrapSize(prev => {
+          if (!prev || Math.abs(prev.widthVw - widthVw) > 0.01 || Math.abs(prev.heightVh - heightVh) > 0.01) {
+            return { widthVw, heightVh };
+          }
+          return prev;
+        });
+      }
+    };
+    // Initial tries (immediate and next frame)
+    measure();
+    const raf = requestAnimationFrame(measure);
+    const onResize = () => measure();
+    window.addEventListener('resize', onResize);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
+
+  // If we haven't measured yet, try again when scraps appear
+  useEffect(() => {
+    if (scrapSize) return;
+    if (spawnState.activeScrap.length === 0) return;
+    const raf = requestAnimationFrame(() => {
+      const el = document.querySelector('.scrap-item') as HTMLElement | null;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        const widthVw = rect.width * (100 / window.innerWidth);
+        const heightVh = rect.height * (100 / window.innerHeight);
+        setScrapSize({ widthVw, heightVh });
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [scrapSize, spawnState.activeScrap.length]);
 
   // Helper: compute actual on-screen position for a scrap id, including drag overrides
   const getRenderedPosition = useCallback((scrap: ActiveScrapObject) => {
@@ -245,16 +293,28 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
       .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
       .map((scrap) => {
         const { xVw, bottomVh } = getRenderedPosition(scrap);
-        const label = `ID:${scrap.id.slice(-3)}  X:${xVw.toFixed(1)}  Y:${bottomVh.toFixed(1)}`;
+        const typeEntry = ScrapRegistry[scrap.typeId as keyof typeof ScrapRegistry];
+        const typeLabel = `${typeEntry?.appearance ? `${typeEntry.appearance} ` : ''}${typeEntry?.label ?? scrap.typeId}`;
+        const mutatorLinesArr = scrap.mutators
+          .map(id => {
+            const m = MutatorRegistry[id as keyof typeof MutatorRegistry];
+            return m ? `${m.appearance} ${m.label}` : id;
+          });
+        const label = [typeLabel, ...mutatorLinesArr].join('\n');
+        // Compute scrap center for connectors
+        const cxVw = xVw + (scrapSize?.widthVw ?? 0) / 2;
+        const cyVh = bottomVh + (scrapSize?.heightVh ?? 0) / 2;
         return {
           id: scrap.id,
-          xVw,
-          bottomVh,
+          xVw: xVw + (scrapSize?.widthVw ?? 0) + 0.5, // slight hud offset right
+          bottomVh: bottomVh + (scrapSize?.heightVh ?? 0) + 0.4, // slight hud offset up
           label,
+          cxVw,
+          cyVh,
         } as Anchor;
       });
     setAnchors(anchors);
-  }, [spawnState.activeScrap, beingCollectedIds, getRenderedPosition]);
+  }, [spawnState.activeScrap, beingCollectedIds, getRenderedPosition, scrapSize]);
 
   // While dragging, update anchors every frame using live drag style
   useEffect(() => {
@@ -265,8 +325,24 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
         .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
         .map((scrap) => {
           const { xVw, bottomVh } = getRenderedPosition(scrap);
-          const label = `ID:${scrap.id.slice(-3)}  X:${xVw.toFixed(1)}  Y:${bottomVh.toFixed(1)}`;
-          return { id: scrap.id, xVw, bottomVh, label } as Anchor;
+          const typeEntry = ScrapRegistry[scrap.typeId as keyof typeof ScrapRegistry];
+          const typeLabel = `${typeEntry?.appearance ? `${typeEntry.appearance} ` : ''}${typeEntry?.label ?? scrap.typeId}`;
+          const mutatorLinesArr = scrap.mutators
+            .map(id => {
+              const m = MutatorRegistry[id as keyof typeof MutatorRegistry];
+              return m ? `${m.appearance} ${m.label}` : id;
+            });
+          const label = [typeLabel, ...mutatorLinesArr].join('\n');
+          const cxVw = xVw + (scrapSize?.widthVw ?? 0) / 2;
+          const cyVh = bottomVh + (scrapSize?.heightVh ?? 0) / 2;
+          return {
+            id: scrap.id,
+            xVw: xVw + (scrapSize?.widthVw ?? 0) + 0.5,
+            bottomVh: bottomVh + (scrapSize?.heightVh ?? 0) + 0.4,
+            label,
+            cxVw,
+            cyVh
+          } as Anchor;
         });
       setAnchors(anchors);
       rafId = requestAnimationFrame(tick);
@@ -275,7 +351,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [draggedScrapId, spawnState.activeScrap, beingCollectedIds, getRenderedPosition]);
+  }, [draggedScrapId, spawnState.activeScrap, beingCollectedIds, getRenderedPosition, scrapSize]);
 
   return (
     <div className="work-screen">
