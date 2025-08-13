@@ -116,18 +116,31 @@ const DumpsterVisionOverlay: React.FC = () => {
             borderRadius: 2,
             padding: '3px 6px',
             lineHeight: 1.25,
+            display: 'inline-flex',
+            flexDirection: 'column',
             animation: animateLabels ? `dv-label-in 300ms ease-out ${(idx % 5) * 30}ms both` : undefined,
           }}
           aria-hidden
         >
-          {a.label.split('\n').map((line, idx) => (
-            <div
-              key={idx}
-              style={idx === 0 ? { fontWeight: 700, textDecoration: 'underline', textUnderlineOffset: 2 } : undefined}
-            >
-              {line}
-            </div>
-          ))}
+          {(a.label.split('\n')).map((line, idx, arr) => {
+            const isHeader = idx === 0;
+            const isFirstMutator = idx === 1 && arr.length > 1;
+            const style: React.CSSProperties | undefined = isHeader
+              ? {
+                  fontWeight: 700,
+                  width: '100%',
+                  textAlign: 'center' as const,
+                  borderBottom: '1px solid rgba(144,255,144,0.35)'
+                }
+              : isFirstMutator
+                ? { marginTop: 4 }
+                : undefined;
+            return (
+              <div key={idx} style={style}>
+                {line}
+              </div>
+            );
+          })}
         </div>
       ))}
 

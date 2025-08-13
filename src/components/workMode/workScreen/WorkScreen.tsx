@@ -294,7 +294,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
       .map((scrap) => {
         const { xVw, bottomVh } = getRenderedPosition(scrap);
         const typeEntry = ScrapRegistry[scrap.typeId as keyof typeof ScrapRegistry];
-        const typeLabel = `${typeEntry?.appearance ? `${typeEntry.appearance} ` : ''}${typeEntry?.label ?? scrap.typeId}`;
+        const typeLabel = `${typeEntry?.label ?? scrap.typeId}`;
         const mutatorLinesArr = scrap.mutators
           .map(id => {
             const m = MutatorRegistry[id as keyof typeof MutatorRegistry];
@@ -326,7 +326,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
         .map((scrap) => {
           const { xVw, bottomVh } = getRenderedPosition(scrap);
           const typeEntry = ScrapRegistry[scrap.typeId as keyof typeof ScrapRegistry];
-          const typeLabel = `${typeEntry?.appearance ? `${typeEntry.appearance} ` : ''}${typeEntry?.label ?? scrap.typeId}`;
+          const typeLabel = `${typeEntry?.label ?? scrap.typeId}`;
           const mutatorLinesArr = scrap.mutators
             .map(id => {
               const m = MutatorRegistry[id as keyof typeof MutatorRegistry];
