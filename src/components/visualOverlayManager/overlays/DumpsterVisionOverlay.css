@@ -49,6 +49,11 @@
 	animation: dv-bloom 900ms ease-out both;
 }
 
+/* Shutdown sequence */
+.dv-shutdown.dv-crt {
+	animation: dv-powerdown 700ms ease-in forwards;
+}
+
 .dv-boot-flash {
 	position: absolute;
 	inset: 0;
@@ -138,6 +143,14 @@
 @keyframes dv-boot-loader-hide {
 	from { opacity: 1; }
 	to   { opacity: 0; }
+}
+
+@keyframes dv-powerdown {
+	0% { opacity: 1; filter: contrast(1.02) saturate(1.05) hue-rotate(100deg); }
+	20% { opacity: 1; filter: brightness(1.1) contrast(1.1); }
+	60% { opacity: 0.6; transform: scaleY(0.08); }
+	85% { opacity: 0.35; transform: scaleY(0.02); }
+	100% { opacity: 0; transform: scaleY(0); }
 }
 
 /* Label intro after boot */

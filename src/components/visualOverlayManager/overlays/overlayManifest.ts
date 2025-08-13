@@ -4,7 +4,7 @@ import DumpsterVisionOverlay from './DumpsterVisionOverlay';
 
 export interface VisualOverlayEntry {
   id: string;
-  Component: React.ComponentType;
+  Component: React.ComponentType<{ isExiting?: boolean }>;
   isActive: (flags: QuickBarFlags) => boolean;
   zIndex?: number;
 }

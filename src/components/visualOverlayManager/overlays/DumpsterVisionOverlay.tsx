@@ -3,7 +3,7 @@ import './DumpsterVisionOverlay.css';
 import { subscribe, getAnchors } from '../anchors/AnchorsStore';
 import { Anchor } from '../anchors/types';
 
-const DumpsterVisionOverlay: React.FC = () => {
+const DumpsterVisionOverlay: React.FC<{ isExiting?: boolean }> = ({ isExiting }) => {
   const [anchors, setAnchorsState] = React.useState<Anchor[]>(() => getAnchors());
   const [isBooting, setIsBooting] = React.useState<boolean>(true);
   const [animateLabels, setAnimateLabels] = React.useState<boolean>(false);
@@ -73,7 +73,7 @@ const DumpsterVisionOverlay: React.FC = () => {
       }}
     >
       {/* Base CRT layer: scanlines + vignette + subtle green tint */}
-      <div className={`dv-crt ${isBooting ? 'dv-booting' : 'dv-active'}`} aria-hidden />
+      <div className={`dv-crt ${isBooting ? 'dv-booting' : isExiting ? 'dv-shutdown' : 'dv-active'}`} aria-hidden />
 
       {/* Boot overlays (shown only during startup) */}
       {isBooting && (
@@ -89,7 +89,7 @@ const DumpsterVisionOverlay: React.FC = () => {
           </div>
         </>
       )}
-      {!isBooting && smoothedAnchors.map((a, idx) => (
+      {!isBooting && !isExiting && smoothedAnchors.map((a, idx) => (
         <div
           key={a.id}
           ref={(el) => {
@@ -145,7 +145,7 @@ const DumpsterVisionOverlay: React.FC = () => {
       ))}
 
       {/* Dynamic connector lines from scrap center to nearest label edge */}
-      {!isBooting && smoothedAnchors.map((a) => {
+      {!isBooting && !isExiting && smoothedAnchors.map((a) => {
         if (a.cxVw == null || a.cyVh == null) return null;
         return (
           <ConnectorLine key={`${a.id}-line`} anchor={a} getLabelEl={() => labelRefs.current.get(a.id) || null} />
