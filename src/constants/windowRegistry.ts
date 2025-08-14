@@ -33,8 +33,6 @@ interface WindowController {
   installApp: (appId: string, order?: number) => void;
   encodeGameState: () => any;
   decodeGameState: (state: any) => boolean;
-  getAppTierData: (appType: string) => any;
-  changeAppTier: (appType: string, tier: number) => void;
   encodeWindowState: () => any;
   decodeWindowState: (state: any) => boolean;
   saveToLocalCache: () => boolean;
@@ -78,8 +76,6 @@ const buildCommonProps = (
   onSizeChange: (size: { width: number; height: number }) => windowManager.updateWindowSize(window.appType, size),
   onBringToFront: () => windowManager.bringToFront(window.id),
   updateCredits: windowController.updateCredits,
-  getAppTierData: windowController.getAppTierData,
-  changeAppTier: windowController.changeAppTier,
   toggleStates: toggleData?.toggleStates,
   setToggleState: toggleData?.setToggleState,
   minSize: APP_WINDOW_MIN_SIZES[window.appType] || WINDOW_DEFAULTS.MIN_SIZE,

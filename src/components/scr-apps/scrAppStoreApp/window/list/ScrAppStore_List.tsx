@@ -33,7 +33,7 @@ const ScrAppStore_List: React.FC<ScrAppStore_ListProps> = ({
     
     return Object.values(APP_REGISTRY).map(app => ({
       ...app,
-      purchasePrice: app.tiers?.[0]?.flatUpgradeCost || 0,
+      purchasePrice: app.purchaseCost || 0,
       isPurchased: installedAppIds.includes(app.id)
     }));
   }, [installedApps]);

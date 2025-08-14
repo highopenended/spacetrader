@@ -11,16 +11,8 @@ import ScrAppStore from '../components/scr-apps/scrAppStoreApp/listItem/ScrAppSt
 import PurgeZoneApp from '../components/scr-apps/purgeZoneApp/listItem/PurgeZoneAppItem';
 import ChronoTrackApp from '../components/scr-apps/chronoTrackApp/listItem/ChronoTrackAppItem';
 import CacheSyncApp from '../components/scr-apps/cacheSyncApp/listItem/CacheSyncAppItem';
-import { AppDefinition, AppType, AppTier } from '../types/scrAppListState';
+import { AppDefinition, AppType } from '../types/scrAppListState';
 import DumpsterVisionApp from '../components/scr-apps/dumpsterVisionApp/listItem/DumpsterVisionAppItem';
-
-// Standard tier costs for basic utility apps
-const STANDARD_TIERS: AppTier[] = [
-  { tier: 1, flatUpgradeCost: 100, flatDowngradeCost: 100, monthlyCost: 10, information: 'Basic functionality with standard features' },
-  { tier: 2, flatUpgradeCost: 200, flatDowngradeCost: 200, monthlyCost: 20, information: 'Enhanced capabilities and improved interface' },
-  { tier: 3, flatUpgradeCost: 300, flatDowngradeCost: 300, monthlyCost: 30, information: 'Advanced features with automation systems' },
-  { tier: 4, flatUpgradeCost: 400, flatDowngradeCost: 400, monthlyCost: 40, information: 'Premium tier with full feature suite' }
-];
 
 // Master registry of ALL possible apps (current + future)
 export const APP_REGISTRY: Record<string, AppDefinition> = {
@@ -31,7 +23,8 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     component: CreditsApp,
     deletable: false,
     description: 'Track your current credit balance',
-    tiers: STANDARD_TIERS,
+    purchaseCost: 100,
+    maintenanceCost: 10,
     defaultToggles: {
       creditsReadoutEnabled: true
     }
@@ -42,7 +35,8 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     component: ScrAppStore,
     deletable: false,
     description: 'Install and manage applications',
-    tiers: STANDARD_TIERS
+    purchaseCost: 100,
+    maintenanceCost: 10
   },
   
   // Standard apps (deletable, purchasable)
@@ -52,7 +46,8 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     component: JobTitleApp,
     deletable: true,
     description: 'View your current career progression',
-    tiers: STANDARD_TIERS,
+    purchaseCost: 100,
+    maintenanceCost: 10,
     defaultToggles: {
       jobTitleReadoutEnabled: true
     }
@@ -64,7 +59,8 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     component: PurgeZoneApp,
     deletable: true,
     description: 'Purge zone management interface',
-    tiers: STANDARD_TIERS
+    purchaseCost: 100,
+    maintenanceCost: 10
   },
   chronoTrack: {
     id: 'chronoTrack',
@@ -72,7 +68,8 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     component: ChronoTrackApp,
     deletable: true,
     description: 'Unified time and age tracking interface',
-    tiers: STANDARD_TIERS,
+    purchaseCost: 100,
+    maintenanceCost: 10,
     defaultToggles: {
       dateReadoutEnabled: true
     }
@@ -83,9 +80,8 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     component: CacheSyncApp,
     deletable: true,
     description: 'Save and load game progress',
-    tiers: [
-      { tier: 1, flatUpgradeCost: 0, flatDowngradeCost: 0, monthlyCost: 0, information: 'Save and load functionality' }
-    ]
+    purchaseCost: 0,
+    maintenanceCost: 0
   },
 
   dumpsterVision: {
@@ -94,7 +90,8 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     component: DumpsterVisionApp,
     deletable: true,
     description: 'Dumpster scanning interface',
-    tiers: STANDARD_TIERS
+    purchaseCost: 100,
+    maintenanceCost: 10
   },
 
   // Future apps (not implemented yet)
@@ -105,12 +102,8 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     deletable: true,
     description: 'Scan nearby cargo opportunities',
     unlockRequirements: ['bayBoss'],
-    tiers: [
-      { tier: 1, flatUpgradeCost: 500, flatDowngradeCost: 100, monthlyCost: 50, information: 'Basic cargo scanning capabilities' },
-      { tier: 2, flatUpgradeCost: 700, flatDowngradeCost: 200, monthlyCost: 70, information: 'Enhanced scanning range and detail' },
-      { tier: 3, flatUpgradeCost: 900, flatDowngradeCost: 300, monthlyCost: 90, information: 'Advanced cargo analysis and prediction' },
-      { tier: 4, flatUpgradeCost: 1200, flatDowngradeCost: 400, monthlyCost: 120, information: 'Military-grade deep space scanning' }
-    ]
+    purchaseCost: 500,
+    maintenanceCost: 50
   },
   navMap: {
     id: 'navMap',
@@ -119,12 +112,8 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     deletable: true,
     description: 'Enhanced navigation capabilities',
     unlockRequirements: ['scrapCaptain'],
-    tiers: [
-      { tier: 1, flatUpgradeCost: 750, flatDowngradeCost: 100, monthlyCost: 75, information: 'Basic sector navigation mapping' },
-      { tier: 2, flatUpgradeCost: 950, flatDowngradeCost: 200, monthlyCost: 95, information: 'Multi-sector route planning' },
-      { tier: 3, flatUpgradeCost: 1200, flatDowngradeCost: 300, monthlyCost: 120, information: 'Hazard detection and avoidance' },
-      { tier: 4, flatUpgradeCost: 1500, flatDowngradeCost: 400, monthlyCost: 150, information: 'Quantum jump gate network access' }
-    ]
+    purchaseCost: 750,
+    maintenanceCost: 75
   }
 };
 

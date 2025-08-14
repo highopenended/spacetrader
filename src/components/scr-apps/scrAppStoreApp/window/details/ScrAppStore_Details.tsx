@@ -20,7 +20,7 @@ const ScrAppStore_Details: React.FC<ScrAppStore_DetailsProps> = ({
   // Get selected app details
   const selectedApp = selectedAppId ? APP_REGISTRY[selectedAppId] : null;
   const isPurchased = selectedAppId ? installedApps.some(app => app.id === selectedAppId) : false;
-  const purchasePrice = selectedApp?.tiers?.[0]?.flatUpgradeCost || 0;
+  const purchasePrice = selectedApp?.purchaseCost || 0;
   const canAfford = credits >= purchasePrice;
 
   const handlePurchase = () => {
@@ -63,7 +63,7 @@ const ScrAppStore_Details: React.FC<ScrAppStore_DetailsProps> = ({
 
         <div className="info-section">
           <div className="info-label">Monthly Maintenance</div>
-          <div className="info-value">₵{selectedApp.tiers?.[0]?.monthlyCost || 0}/cycle</div>
+          <div className="info-value">₵{selectedApp.maintenanceCost || 0}/cycle</div>
         </div>
 
         {selectedApp.unlockRequirements && (

@@ -16,3 +16,9 @@ export interface QuickKeyConfig {
 export type QuickBarConfig = Record<string, QuickKeyConfig>;
 
 
+
+
+
+
+
+

@@ -8,14 +8,6 @@
 import React from 'react';
 import { ToggleStates } from './toggleState';
 
-export interface AppTier {
-  tier: number;
-  flatUpgradeCost: number;
-  flatDowngradeCost: number;
-  monthlyCost: number;
-  information: string;
-}
-
 export interface AppDefinition {
   id: string;
   name: string;
@@ -23,7 +15,8 @@ export interface AppDefinition {
   deletable: boolean;
   description: string;
   unlockRequirements?: string[]; // Future: requirements to unlock this app
-  tiers: AppTier[]; // Array of upgrade tiers with costs
+  purchaseCost: number; // One-time purchase cost
+  maintenanceCost: number; // Recurring cost per ledger cycle
   defaultToggles?: Record<string, boolean>; // Default toggle states when app is installed
 }
 
@@ -32,7 +25,6 @@ export interface InstalledApp {
   order: number;
   purchased: boolean;
   installedAt: number; // timestamp
-  currentTier: number; // NEW: Current upgrade tier (1-4)
 }
 
 export interface DragState {

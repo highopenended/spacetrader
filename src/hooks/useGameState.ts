@@ -93,18 +93,17 @@ export const useGameState = () => {
       
       const advancedTime = advanceGameTime(newTime);
       
-      // Check if ledger cycle advanced (new month) - handle monthly costs
+      // Check if ledger cycle advanced (new month) - handle maintenance costs
       let newCredits = prev.credits;
       if (advancedTime.ledgerCycle !== prev.gameTime.ledgerCycle) {
-        const monthlyCost = prev.installedApps.reduce((total, app) => {
+        const maintenanceCost = prev.installedApps.reduce((total, app) => {
           const appDefinition = APP_REGISTRY[app.id];
-          if (appDefinition && appDefinition.tiers) {
-            const tierData = appDefinition.tiers.find(tier => tier.tier === app.currentTier);
-            return total + (tierData?.monthlyCost || 0);
+          if (appDefinition) {
+            return total + (appDefinition.maintenanceCost || 0);
           }
           return total;
         }, 0);
-        newCredits -= monthlyCost;
+        newCredits -= maintenanceCost;
       }
       
       return {
@@ -141,16 +140,15 @@ export const useGameState = () => {
       const appDefinition = APP_REGISTRY[appId];
       if (!appDefinition) return prev; // App doesn't exist
 
-      // Calculate purchase cost internally (same logic as UI components)
-      const purchaseCost = appDefinition.tiers?.[0]?.flatUpgradeCost || 0;
+      // Calculate purchase cost using new field
+      const purchaseCost = appDefinition.purchaseCost || 0;
       if (prev.credits < purchaseCost) return prev; // Can't afford
 
       const newApp: InstalledApp = {
         id: appId,
         order: position ?? prev.installedApps.length + 1,
         purchased: true,
-        installedAt: Date.now(),
-        currentTier: 1
+        installedAt: Date.now()
       };
 
       if (position !== undefined) {
@@ -197,16 +195,6 @@ export const useGameState = () => {
     }));
   }, []);
 
-  const changeAppTier = useCallback((appId: string, newTier: number) => {
-    setGameState(prev => ({
-      ...prev,
-      installedApps: prev.installedApps.map(app => 
-        app.id === appId 
-          ? { ...app, currentTier: newTier }
-          : app
-      )
-    }));
-  }, []);
 
   // ===== COMPUTED VALUES =====
   const sortedInstalledApps = useMemo(
@@ -235,14 +223,6 @@ export const useGameState = () => {
     );
   }, [gameState.installedApps]);
 
-  const getAppTierData = useCallback((appId: string) => {
-    const appDefinition = APP_REGISTRY[appId];
-    const installedApp = gameState.installedApps.find(app => app.id === appId);
-    return {
-      tiers: appDefinition?.tiers || [],
-      currentTier: installedApp?.currentTier || 1
-    };
-  }, [gameState.installedApps]);
 
   const reorderApps = useCallback((newApps: InstalledApp[]) => {
     setGameState(prev => ({
@@ -399,8 +379,7 @@ export const useGameState = () => {
     installAppOrder,
     resetToDefaults,
     getAvailableApps,
-    changeAppTier,
-    getAppTierData,
+    
     
     // Save/Load
     encodeGameState,

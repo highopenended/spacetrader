@@ -61,7 +61,6 @@ export const INITIAL_GAME_STATE = {
     order: index + 1,
     purchased: true,
     installedAt: Date.now(),
-    currentTier: 1
   })),
   playerState: INITIAL_PLAYER_STATE,
   scrapObjects: [], // Start with no scrap objects

@@ -79,7 +79,8 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     cost: 0,
     deletable: true, // false for core apps
     description: 'Brief description',
-    tiers: STANDARD_TIERS
+    purchaseCost: 0,
+    maintenanceCost: 0
   }
 };
 ```

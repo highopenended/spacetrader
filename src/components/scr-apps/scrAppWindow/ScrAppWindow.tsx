@@ -61,8 +61,6 @@ export interface BaseWindowProps {
   onWidthChange?: (width: number) => void;
   onBringToFront?: () => void;
   updateCredits?: (amount: number) => void; // For credit transactions
-  getAppTierData?: (appId: string) => any; // For tier management
-  changeAppTier?: (appId: string, tier: number) => void; // For tier changes
   toggleStates?: any; // For DataReadout visibility controls
   setToggleState?: (key: string, value: boolean) => void; // For updating toggle states
 }
@@ -87,15 +85,11 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   onWidthChange,
   onBringToFront,
   updateCredits,
-  getAppTierData,
-  changeAppTier,
 }) => {
   const [currentSize, setCurrentSize] = useState(size);
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
-  const [showUpgradeInfo, setShowUpgradeInfo] = useState(false);
-  const [savedSize, setSavedSize] = useState(size); // Save original size when switching to upgrade info
-  const [upgradeInfoSize, setUpgradeInfoSize] = useState({ width: 300, height: 200 }); // Default upgrade info size
+  
 
   // Use shared drag handler for window dragging with viewport constraints
   const { elementRef: windowRef, position: currentPosition, isDragging, handleMouseDown: dragMouseDown, setPosition } = useDragHandler_Windows({
@@ -107,8 +101,6 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     footerHeight: 0 // No footer anymore
   });
 
-  // Get tier data for this app
-  const tierData = getAppTierData?.(appType);
   const appRegistry = APP_REGISTRY[appType];
 
   // WINDOW DRAG SYSTEM: @dnd-kit draggable for window drag operations
@@ -169,56 +161,6 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     onClose();
   }, [onClose]);
 
-  const handleUpgradeInfoToggle = useCallback(() => {
-    if (!showUpgradeInfo) {
-      // Switching to upgrade info - save current size and resize if needed
-      setSavedSize(currentSize);
-      
-      // Only expand if current size is smaller than upgrade info size
-      const needsExpansion = currentSize.width < upgradeInfoSize.width || currentSize.height < upgradeInfoSize.height;
-      
-      if (needsExpansion) {
-        const newSize = {
-          width: Math.max(currentSize.width, upgradeInfoSize.width),
-          height: Math.max(currentSize.height, upgradeInfoSize.height)
-        };
-        setCurrentSize(newSize);
-        onSizeChange?.(newSize);
-        onWidthChange?.(newSize.width);
-      }
-    } else {
-      // Switching back to normal content - restore saved size
-      setCurrentSize(savedSize);
-      onSizeChange?.(savedSize);
-      onWidthChange?.(savedSize.width);
-    }
-    
-    setShowUpgradeInfo(prev => !prev);
-  }, [showUpgradeInfo, currentSize, savedSize, upgradeInfoSize, onSizeChange, onWidthChange]);
-
-  const handleUpgrade = useCallback(() => {
-    const nextTier = tierData?.currentTier + 1;
-    const nextTierData = appRegistry?.tiers.find(t => t.tier === nextTier);
-    
-    if (nextTierData && updateCredits) {
-      // Deduct upgrade cost
-      updateCredits(-nextTierData.flatUpgradeCost);
-      changeAppTier?.(appType, nextTier);
-    }
-  }, [appType, tierData?.currentTier, appRegistry, changeAppTier, updateCredits]);
-
-  const handleDowngrade = useCallback(() => {
-    const prevTier = tierData?.currentTier - 1;
-    const prevTierData = appRegistry?.tiers.find(t => t.tier === prevTier);
-    const currentTierData = appRegistry?.tiers.find(t => t.tier === tierData?.currentTier);
-    
-    if (prevTierData && prevTier >= 1 && currentTierData && updateCredits) {
-      // Deduct downgrade cost
-      updateCredits(-currentTierData.flatDowngradeCost);
-      changeAppTier?.(appType, prevTier);
-    }
-  }, [appType, tierData?.currentTier, appRegistry, changeAppTier, updateCredits]);
-
   useEffect(() => {
     if (isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -237,24 +179,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     }
   }, [currentSize.width, isResizing, onWidthChange]);
 
-  // Update saved size when window is manually resized
-  useEffect(() => {
-    if (!showUpgradeInfo) {
-      setSavedSize(currentSize);
-    }
-  }, [currentSize, showUpgradeInfo]);
-
-  const currentTier = tierData?.currentTier;
-  const nextTier = currentTier + 1;
-  const prevTier = currentTier - 1;
-  const currentTierData = appRegistry?.tiers.find(t => t.tier === currentTier);
-  const nextTierData = appRegistry?.tiers.find(t => t.tier === nextTier);
-  const prevTierData = appRegistry?.tiers.find(t => t.tier === prevTier);
-  const canUpgrade = nextTierData !== undefined;
-  const canDowngrade = prevTierData !== undefined && prevTier >= 1;
-  
-  // Check if app has only one tier (no upgrades available)
-  const hasMultipleTiers = appRegistry?.tiers && appRegistry.tiers.length > 1;
+  // No upgrade info mode
 
   // CLEAN: Use drop zone effects hook to handle all conditional styling
   // Pull drag-over state from context (source of truth), fallback to props if provided
@@ -272,68 +197,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
     setPurgeNodeDragRef(node);
   }, [setPurgeNodeDragRef]);
 
-  // Render upgrade info content
-  const renderUpgradeInfo = () => (
-    <div className="window-content-padded">
-      <div className="window-column-layout">
-        <div className="tier-info-line">
-          App Tier: {currentTier}
-        </div>
-        <div className="monthly-info">
-          Monthly: ₵{currentTierData?.monthlyCost || 0}/cycle
-        </div>
-        <div className="tier-description">
-          {canUpgrade ? nextTierData.information : currentTierData?.information || 'No information available'}
-        </div>
-        
-        {/* Single tier app - show message instead of buttons */}
-        {!hasMultipleTiers ? (
-          <div className="no-upgrades-message">
-            APP CONTAINS NO UPGRADES
-          </div>
-        ) : (
-          <div className="footer-buttons">
-            <div className="button-group">
-              {canDowngrade && (
-                <div className="button-cost-text">
-                  ₵{currentTierData?.flatDowngradeCost || 0}
-                </div>
-              )}
-              {canDowngrade ? (
-                <button 
-                  className="downgrade-button" 
-                  onClick={handleDowngrade}
-                  style={dropZoneEffects.buttonStyles}
-                >
-                  Downgrade
-                </button>
-              ) : (
-                <div className="status-message">ALREADY LOWEST TIER</div>
-              )}
-            </div>
-            <div className="button-group">
-              {canUpgrade && (
-                <div className="button-cost-text">
-                  ₵{nextTierData?.flatUpgradeCost || 0}
-                </div>
-              )}
-              {canUpgrade ? (
-                <button 
-                  className="upgrade-button" 
-                  onClick={handleUpgrade}
-                  style={dropZoneEffects.buttonStyles}
-                >
-                  Upgrade
-                </button>
-              ) : (
-                <div className="status-message">ALREADY MAX TIER</div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  // No upgrade info content
 
   return (
     <div 
@@ -368,17 +232,6 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
           {title}
         </div>
         <button 
-          className="window-upgrade-info-button"
-          onClick={(e) => {
-            e.stopPropagation(); // Prevent triggering drag
-            handleUpgradeInfoToggle();
-          }}
-          title={showUpgradeInfo ? "Show App Content" : "Show Upgrade Info"}
-          style={dropZoneEffects.buttonStyles}
-        >
-          {showUpgradeInfo ? "◀" : "▶"}
-        </button>
-        <button 
           className="window-minimize-button"
           onClick={(e) => {
             e.stopPropagation(); // Prevent triggering drag
@@ -398,12 +251,12 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
         </div>
       )}
       
-      {/* Section 2: App Content or Upgrade Info */}
+      {/* Section 2: App Content */}
       <div 
         className="window-content"
         style={dropZoneEffects.contentStyles}
       >
-        {showUpgradeInfo ? renderUpgradeInfo() : children}
+        {children}
       </div>
       
       {/* DOCK OVERLAY: Show dock message when held over terminal */}

@@ -72,9 +72,7 @@ function App() {
     beginWorkSession,
     setGameBackground,
     encodeGameState,
-    decodeGameState,
-    getAppTierData,
-    changeAppTier
+    decodeGameState
   } = useGameState();
 
   const {
@@ -137,8 +135,6 @@ function App() {
       installApp,
       encodeGameState,
       decodeGameState,
-      getAppTierData,
-      changeAppTier,
       encodeWindowState,
       decodeWindowState,
       saveToLocalCache,
