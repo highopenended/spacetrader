@@ -11,7 +11,7 @@
     0 0 20px rgba(0, 0, 0, 0.8),
     inset 0 0 20px rgba(255, 255, 255, 0.05);
   font-family: 'Courier New', monospace;
-  z-index: 1000;
+  /* z-index moved to inline style via Z_LAYERS.TERMINAL_BASE */
   overflow: hidden;
   transform: perspective(1000px) rotateX(1deg);
   transform-origin: center center;
@@ -209,7 +209,7 @@
     rgba(255, 255, 255, 0.02) 4px
   );
   pointer-events: none;
-  z-index: 5;
+  /* z-index moved to inline style via Z_LAYERS.TERMINAL_SCANLINES */
   animation: scanlines-flicker 3s linear infinite;
 }
 

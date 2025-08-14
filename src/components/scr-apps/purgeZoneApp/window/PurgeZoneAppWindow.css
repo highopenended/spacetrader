@@ -25,6 +25,7 @@
   transition: all 0.2s ease;
   min-height: 80px;
   user-select: none;
+  z-index: 1100;
 }
 
 .purge-zone-drop-area:hover {

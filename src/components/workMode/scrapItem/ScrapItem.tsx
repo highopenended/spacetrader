@@ -13,9 +13,8 @@ interface ScrapItemProps {
 
 const ScrapItem: React.FC<ScrapItemProps> = ({ scrap, style, draggableProps }) => {
   // Memoize appearance calculation to prevent recalculation on every render
-  const appearance = useMemo(() => getScrapAppearance(scrap), [
-    scrap.typeId,
-    scrap.mutators.join(',') // Convert array to string for comparison
+  const appearance = useMemo(() => getScrapAppearance(scrap, false), [
+    scrap.typeId
   ]);
   
   return (

@@ -2,10 +2,12 @@ import React, { useState, useCallback } from 'react';
 import './TerminalScreen.css';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
+import { DOM_IDS } from '../../constants/domIds';
 import SortableItem from '../scr-apps/SortableItem';
 import DockWindowsButton from './DockWindowsButton';
 import TerminalToggle from './TerminalToggle';
 import { useDragContext } from '../../contexts/DragContext';
+import { Z_LAYERS } from '../../constants/zLayers';
 
 interface TerminalScreenProps {
   credits: number;
@@ -23,9 +25,6 @@ interface TerminalScreenProps {
 }
 
 const TerminalScreen: React.FC<TerminalScreenProps> = ({
-  credits,
-  gameTime,
-  gamePhase,
   isOnline = true,
   onAppClick,
   apps,
@@ -44,10 +43,10 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
 
   // WINDOW DOCKING SYSTEM: Make terminal droppable for window docking
   const { setNodeRef } = useDroppable({
-    id: 'terminal-dock-zone',
+    id: DOM_IDS.TERMINAL_DOCK,
   });
 
-  const isDockActive = overId === 'terminal-dock-zone';
+  const isDockActive = overId === DOM_IDS.TERMINAL_DOCK;
 
 
 
@@ -94,7 +93,7 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   return (
     <div
       className={`terminal-screen ${terminalMode}`}
-      style={{ height: getTerminalHeight() }}
+      style={{ height: getTerminalHeight(), zIndex: Z_LAYERS.TERMINAL_BASE }}
     >
       <div className="terminal-header">
         <div className="terminal-title">
@@ -147,7 +146,7 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
       </div>
 
 
-      <div className="terminal-scanlines"></div>
+      <div className="terminal-scanlines" style={{ zIndex: Z_LAYERS.TERMINAL_SCANLINES }}></div>
     </div>
   );
 };

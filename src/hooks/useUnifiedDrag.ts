@@ -11,6 +11,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { DOM_IDS } from '../constants/domIds';
 import { useSensor, PointerSensor } from '@dnd-kit/core';
 import { rectIntersection } from '@dnd-kit/core';
 import { UniqueIdentifier } from '@dnd-kit/core';
@@ -109,16 +110,16 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
     // Block PurgeZone window from detecting itself
     if (args.active?.data?.current?.type === 'window-drag-node' && 
         args.active?.data?.current?.appType === 'purgeZone') {
-      const filteredCollisions = collisions.filter(c => c.id !== 'purge-zone-window');
-      const terminalDock = filteredCollisions.find(c => c.id === 'terminal-dock-zone');
+      const filteredCollisions = collisions.filter(c => c.id !== DOM_IDS.PURGE_ZONE);
+      const terminalDock = filteredCollisions.find(c => c.id === DOM_IDS.TERMINAL_DOCK);
       if (terminalDock) return [terminalDock];
       return filteredCollisions;
     }
     
     // Window drag priority
     if (args.active?.data?.current?.type === 'window-drag-node') {
-      const purgeZone = collisions.find(c => c.id === 'purge-zone-window');
-      const terminalDock = collisions.find(c => c.id === 'terminal-dock-zone');
+      const purgeZone = collisions.find(c => c.id === DOM_IDS.PURGE_ZONE);
+      const terminalDock = collisions.find(c => c.id === DOM_IDS.TERMINAL_DOCK);
       
       if (purgeZone) return [purgeZone];
       if (terminalDock) return [terminalDock];
@@ -194,9 +195,9 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
 
   const handleDragOver = useCallback((event: any) => {
     const newOverId = event.over?.id ?? null;
-    const isOverTerminal = (newOverId === 'terminal-dock-zone' || 
+    const isOverTerminal = (newOverId === DOM_IDS.TERMINAL_DOCK || 
                           (newOverId && event.active?.data?.current?.type === 'app-drag-node')) &&
-                          newOverId !== 'purge-zone-window';
+                          newOverId !== DOM_IDS.PURGE_ZONE;
     
     setOverId(newOverId);
     setIsOverTerminalDropZone(isOverTerminal);
@@ -312,9 +313,9 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
     }
     
     // Handle drop targets
-    if (over.id === 'purge-zone-window') {
+    if (over.id === DOM_IDS.PURGE_ZONE) {
       handlePurgeDrop(active);
-    } else if (over.id === 'terminal-dock-zone') {
+    } else if (over.id === DOM_IDS.TERMINAL_DOCK) {
       handleTerminalDrop(active);
     } else if (active.data?.current?.type === 'app-drag-node') {
       handleAppReorder(active.id, over.id);

@@ -291,19 +291,22 @@ export const calculateScrapValue = (scrap: ScrapObject): number => {
 
 /**
  * Get the display appearance for a scrap object
- * Combines base appearance with mutator overlays
+ * By default combines base appearance with mutator overlays.
+ * Pass includeMutators = false to return only the base scrap type symbol.
  */
-export const getScrapAppearance = (scrap: ScrapObject): string => {
+export const getScrapAppearance = (scrap: ScrapObject, includeMutators: boolean = true): string => {
   const scrapType = ScrapRegistry[scrap.typeId as keyof typeof ScrapRegistry];
   if (!scrapType) return '❓';
   
   let appearance = scrapType.appearance;
   
-  // Add mutator appearance overlays
-  for (const mutatorId of scrap.mutators) {
-    const mutator = MutatorRegistry[mutatorId as keyof typeof MutatorRegistry];
-    if (mutator) {
-      appearance += mutator.appearance;
+  // Add mutator appearance overlays when requested
+  if (includeMutators) {
+    for (const mutatorId of scrap.mutators) {
+      const mutator = MutatorRegistry[mutatorId as keyof typeof MutatorRegistry];
+      if (mutator) {
+        appearance += mutator.appearance;
+      }
     }
   }
   

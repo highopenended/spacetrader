@@ -14,6 +14,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Z_LAYERS } from '../constants/zLayers';
 import { MOMENTUM_VALID_WINDOW_MS, VELOCITY_MIN_THRESHOLD_PX_PER_S } from '../constants/physicsConstants';
 
 export interface ScrapDragDropInfo {
@@ -188,7 +189,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       left: `${leftPx}px`,
       bottom: `${bottomPx}px`,
       transform: 'none',
-      zIndex: 1000,
+      zIndex: Z_LAYERS.SCRAP_DRAG,
       pointerEvents: 'none',
       transition: 'none'
     };

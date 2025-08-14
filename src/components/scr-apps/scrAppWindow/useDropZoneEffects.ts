@@ -6,6 +6,7 @@
  */
 
 import { useMemo } from 'react';
+import { DOM_IDS } from '../../../constants/domIds';
 
 interface DropZoneEffects {
   isOverPurgeZone: boolean;
@@ -24,8 +25,8 @@ export const useWindowDropZoneEffects = (
   draggedAppType: string | null,
   appType: string
 ): DropZoneEffects => {
-  const isOverPurgeZone = overId === 'purge-zone-window' && draggedAppType === appType;
-  const isOverTerminalDock = overId === 'terminal-dock-zone' && draggedAppType === appType;
+  const isOverPurgeZone = overId === DOM_IDS.PURGE_ZONE && draggedAppType === appType;
+  const isOverTerminalDock = overId === DOM_IDS.TERMINAL_DOCK && draggedAppType === appType;
 
   const effects = useMemo((): DropZoneEffects => {
     // Base styles (no effects)

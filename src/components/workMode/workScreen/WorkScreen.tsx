@@ -17,10 +17,12 @@ import './WorkScreen.css';
 import { setAnchors, clear as clearAnchors } from '../../visualOverlayManager/anchors/AnchorsStore';
 import { Anchor } from '../../visualOverlayManager/anchors/types';
 import { useDropZoneBounds } from '../../../hooks/useDropZoneBounds';
+import { useScrapDropTargets } from '../../../hooks/useScrapDropTargets';
 import { useScrapPhysics } from '../../../hooks/useScrapPhysics';
 import { useScrapDrag } from '../../../hooks/useScrapDrag';
 import { SCRAP_BASELINE_BOTTOM_VH, vhFromPx } from '../../../constants/physicsConstants';
 import { MutatorRegistry } from '../../../constants/mutatorRegistry';
+import { DOM_IDS } from '../../../constants/domIds';
 import { ScrapRegistry } from '../../../constants/scrapRegistry';
 
 interface WorkScreenProps {
@@ -43,8 +45,8 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
   const [collectedCount, setCollectedCount] = useState<number>(0);
   const [scrapSize, setScrapSize] = useState<{ widthVw: number; heightVh: number } | null>(null);
 
-  // Drop-zone (ScrapBin) bounds
-  const { dropZoneRef, isPointInside } = useDropZoneBounds();
+  // Centralized scrap drop targets (purge zone + bin)
+  const { binRef: dropZoneRef, resolveScrapDropTarget } = useScrapDropTargets();
 
   // Physics-lite airborne handling
   const {
@@ -59,8 +61,30 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
   const [beingCollectedIds, setBeingCollectedIds] = useState<Set<string>>(new Set());
   const { getDraggableProps, getDragStyle, draggedScrapId } = useScrapDrag({
     onDrop: ({ scrapId, releasePositionPx, releaseVelocityPxPerSec, elementSizePx }) => {
-      // If released inside bin, collect and credit
-      if (isPointInside(releasePositionPx.x, releasePositionPx.y)) {
+			// Resolve drop target centrally
+			const target = resolveScrapDropTarget(releasePositionPx);
+			if (target === 'purgeZone') {
+				// Hide immediately to avoid any visual snap-back
+				setBeingCollectedIds(prev => {
+					const next = new Set(prev);
+					next.add(scrapId);
+					return next;
+				});
+				setSpawnState(prev => {
+					const { spawnState: newState } = collectScrap(scrapId, prev);
+					return newState;
+				});
+				queueMicrotask(() => {
+					setBeingCollectedIds(prev => {
+						const next = new Set(prev);
+						next.delete(scrapId);
+						return next;
+					});
+				});
+				return;
+			}
+			// If released inside bin, collect and credit
+			if (target === 'bin') {
         // Hide immediately to avoid any visual snap-back
         setBeingCollectedIds(prev => {
           const next = new Set(prev);
@@ -105,6 +129,39 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
       launchAirborneFromRelease(scrapId, releaseVelocityPxPerSec, yAboveBaselineVh);
     }
   });
+
+  // Drive purge-zone visual effects during scrap drag using the same resolver
+  useEffect(() => {
+    if (!draggedScrapId) {
+      const el = document.getElementById(DOM_IDS.PURGE_ZONE);
+      if (el) el.classList.remove('active');
+      return;
+    }
+    let rafId: number | null = null;
+    const tick = () => {
+      const el = document.getElementById(DOM_IDS.PURGE_ZONE);
+      if (el) {
+        const dragStyle = getDragStyle(draggedScrapId);
+        // Compute current cursor center from style; fallback to no effect
+        if (dragStyle && typeof dragStyle.left === 'string' && typeof dragStyle.bottom === 'string') {
+          const leftPx = parseFloat(dragStyle.left);
+          const bottomPx = parseFloat(dragStyle.bottom);
+          const x = leftPx + (window.innerWidth * 0.018); // approx half of 3.6vw square
+          const y = window.innerHeight - bottomPx - (window.innerHeight * 0.018);
+          const target = resolveScrapDropTarget({ x, y });
+          if (target === 'purgeZone') el.classList.add('active');
+          else el.classList.remove('active');
+        }
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      const el = document.getElementById(DOM_IDS.PURGE_ZONE);
+      if (el) el.classList.remove('active');
+    };
+  }, [draggedScrapId, getDragStyle, resolveScrapDropTarget]);
 
   // Scrap spawning logic
   const checkScrapSpawning = useCallback((currentTime: number) => {
