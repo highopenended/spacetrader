@@ -2,7 +2,6 @@ import React from 'react';
 import './JobTitleAppItem.css';
 import ScrApp from '../../ScrAppItem';
 import { GamePhase } from '../../../../types/gameState';
-import { getJobTitle } from '../../../../utils/gameStateUtils';
 
 interface JobTitleAppProps {
   gamePhase: GamePhase;

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { UIState, UIActions, UIContextValue, UIPopup } from '../types/uiState';
-import Popup_Confirm from '../components/ui/Popup_Confirm';
+import PopupConfirm from '../components/ui/Popup_Confirm';
 
 // Create context
 const UIContext = createContext<UIContextValue | undefined>(undefined);
@@ -99,7 +99,7 @@ export const UIPopupComponent: React.FC = () => {
   };
 
   return (
-    <Popup_Confirm
+    <PopupConfirm
       title={popup.title}
       message={popup.message}
       confirmText={popup.confirmText}

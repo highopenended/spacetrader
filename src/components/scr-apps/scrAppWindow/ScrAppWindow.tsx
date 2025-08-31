@@ -38,7 +38,7 @@
  * 5. Deletion removes both window AND app from terminal list
  */
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import './ScrAppWindow.css';
 import { WINDOW_DEFAULTS } from '../../../constants/windowConstants';
 import { APP_REGISTRY } from '../../../constants/appListConstants';
@@ -92,7 +92,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   
 
   // Use shared drag handler for window dragging with viewport constraints
-  const { elementRef: windowRef, position: currentPosition, isDragging, handleMouseDown: dragMouseDown, setPosition } = useDragHandler_Windows({
+  const { elementRef: windowRef, position: currentPosition, isDragging, handleMouseDown: dragMouseDown } = useDragHandler_Windows({
     initialPosition: position,
     onPositionChange,
     onBringToFront, // Bring window to front when drag starts
@@ -109,8 +109,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   const { 
     attributes: purgeNodeDragAttributes, 
     listeners: purgeNodeDragListeners, 
-    setNodeRef: setPurgeNodeDragRef,
-    isDragging: isPurgeNodeDragging
+    setNodeRef: setPurgeNodeDragRef
   } = useDraggable({
     id: `window-drag-${windowId}`, // Prefix to distinguish from app list items
     data: { 
@@ -195,7 +194,7 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   const combinedWindowRef = useCallback((node: HTMLDivElement | null) => {
     windowRef.current = node;
     setPurgeNodeDragRef(node);
-  }, [setPurgeNodeDragRef]);
+  }, [windowRef, setPurgeNodeDragRef]);
 
   // No upgrade info content
 

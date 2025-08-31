@@ -45,6 +45,7 @@ const initialGameState: GameState = {
 
 export const useGameState = () => {
   const [gameState, setGameState] = useState<GameState>(initialGameState);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const workSessionRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -86,6 +87,7 @@ export const useGameState = () => {
   }, []);
 
   // ===== TIME MANAGEMENT =====
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const advanceTime = useCallback(() => {
     setGameState(prev => {
       const newTime = { ...prev.gameTime };

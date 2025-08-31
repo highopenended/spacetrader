@@ -28,7 +28,6 @@ const SortableItem: React.FC<SortableItemProps> = ({
     listeners,
     setNodeRef,
     transform,
-    transition,
     isDragging,
   } = useSortable({ 
     id,

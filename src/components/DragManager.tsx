@@ -34,7 +34,6 @@ const DragManager: React.FC<DragManagerProps> = ({
     dragState,
     overId,
     isOverTerminalDropZone,
-    pendingDelete,
     sensors,
     customCollisionDetection,
     handleDragStart,

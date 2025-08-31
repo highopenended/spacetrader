@@ -16,7 +16,6 @@ import ScrapItem from '../scrapItem/ScrapItem';
 import './WorkScreen.css';
 import { setAnchors, clear as clearAnchors } from '../../visualOverlayManager/anchors/AnchorsStore';
 import { Anchor } from '../../visualOverlayManager/anchors/types';
-import { useDropZoneBounds } from '../../../hooks/useDropZoneBounds';
 import { useScrapDropTargets } from '../../../hooks/useScrapDropTargets';
 import { useScrapPhysics } from '../../../hooks/useScrapPhysics';
 import { useScrapDrag } from '../../../hooks/useScrapDrag';
@@ -342,7 +341,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
       return item;
     });
     return items;
-  }, [spawnState.activeScrap, getAirborneState, getDragStyle]);
+  }, [spawnState.activeScrap, beingCollectedIds, getAirborneState, getDragStyle]);
 
   // Publish anchors for overlays when Dumpster Vision is active
   useEffect(() => {

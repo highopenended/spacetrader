@@ -68,7 +68,6 @@ function App() {
     reorderApps,
     installAppOrder,
     getAvailableApps,
-    resetToDefaults,
     resetGameState,
     beginWorkSession,
     setGameBackground,
@@ -115,13 +114,13 @@ function App() {
   } = useSaveLoad(credits, updateCredits, encodeGameState, decodeGameState, encodeWindowState, decodeWindowState, encodeToggleState, decodeToggleState);
 
   // Create reset function that coordinates all state resets
-  const handleResetGame = () => {
+  const handleResetGame = React.useCallback(() => {
     resetGame({
       resetGameState,
       resetWindowState,
       resetToggleState
     });
-  };
+  }, [resetGameState, resetWindowState, resetToggleState]);
 
 
 

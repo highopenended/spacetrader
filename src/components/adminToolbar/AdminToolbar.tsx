@@ -94,7 +94,7 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
     if (constrainedPosition.x !== position.x || constrainedPosition.y !== position.y) {
       setPosition(constrainedPosition);
     }
-  }, [isMinimized]); // Re-check when minimize state changes
+  }, [isMinimized, position, setPosition, toolbarRef]); // Re-check when minimize state changes
 
   const addGrind = () => {
     const updateTime = (producer: (t: GameTime) => GameTime) => setGameTime(producer(gameTime));

@@ -8,11 +8,11 @@
  * Used by: App.tsx and potentially other components that need window management
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { WindowData } from '../types/windowState';
 import { WINDOW_DEFAULTS, APP_WINDOW_DEFAULTS } from '../constants/windowConstants';
 import { APP_REGISTRY } from '../constants/appListConstants';
-import { clampPositionToBounds, getViewportBounds, isPositionOutOfBounds } from '../utils/viewportConstraints';
+import { clampPositionToBounds, isPositionOutOfBounds } from '../utils/viewportConstraints';
 
 export const useWindowState = () => {
   const [windows, setWindows] = useState<WindowData[]>([]);

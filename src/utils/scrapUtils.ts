@@ -5,8 +5,7 @@
  * These utilities handle the business logic for the scrap collection system.
  */
 
-import { ScrapObject, ScrapType } from '../types/scrapTypes';
-import { ScrapMutator } from '../types/mutatorTypes';
+import { ScrapObject } from '../types/scrapTypes';
 import { ScrapRegistry, ScrapTypeId } from '../constants/scrapRegistry';
 import { MutatorRegistry, MutatorId } from '../constants/mutatorRegistry';
 
