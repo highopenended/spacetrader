@@ -11,8 +11,8 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { GameTime, GamePhase, GameMode } from '../types/gameState';
 import { advanceGameTime, getNextGamePhase } from '../utils/gameStateUtils';
 import { INITIAL_GAME_STATE } from '../constants/gameConstants';
-import { APP_REGISTRY } from '../constants/scrAppListConstants';
-import { AppDefinition, InstalledApp } from '../types/scrAppListState';
+import { APP_REGISTRY } from '../constants/appListConstants';
+import { AppDefinition, InstalledApp } from '../types/appListState';
 
 interface GameState {
   // Core game data

@@ -1,7 +1,7 @@
 import React from 'react';
 import { DragOverlay, DndContext } from '@dnd-kit/core';
 import { useUnifiedDrag } from '../hooks/useUnifiedDrag';
-import { InstalledApp } from '../types/scrAppListState';
+import { InstalledApp } from '../types/appListState';
 import { DragContextProvider } from '../contexts/DragContext';
 
 interface DragManagerProps {

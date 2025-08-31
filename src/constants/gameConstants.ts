@@ -26,7 +26,7 @@
  */
 
 import { GameTime, GamePhase, GameMode, PlayerState } from '../types/gameState';
-import { DEFAULT_INSTALLED_APPS } from './scrAppListConstants';
+import { DEFAULT_INSTALLED_APPS } from './appListConstants';
 
 // Initial game state constants
 export const INITIAL_CREDITS = 10000;

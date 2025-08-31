@@ -67,7 +67,7 @@ export default AgeApp;
 
 ## App Registration
 
-### Constants Registration (scrAppListConstants.ts)
+### Constants Registration (appListConstants.ts)
 ```tsx
 export const APP_REGISTRY: Record<string, AppDefinition> = {
   appName: {

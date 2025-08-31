@@ -1,6 +1,6 @@
 import React from 'react';
 import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
-import { APP_REGISTRY } from '../../../../constants/scrAppListConstants';
+import { APP_REGISTRY } from '../../../../constants/appListConstants';
 import { QuickBarFlags } from '../../../../types/quickBarState';
 import UpgradeList from '../../scrAppWindow/UpgradeList';
 

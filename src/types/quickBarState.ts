@@ -1,4 +1,4 @@
-import { AppType } from './scrAppListState';
+import { AppType } from './appListState';
 
 export interface QuickBarFlags {
   isActiveDumpsterVision: boolean;

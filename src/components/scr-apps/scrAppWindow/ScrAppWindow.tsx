@@ -41,7 +41,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import './ScrAppWindow.css';
 import { WINDOW_DEFAULTS } from '../../../constants/windowConstants';
-import { APP_REGISTRY } from '../../../constants/scrAppListConstants';
+import { APP_REGISTRY } from '../../../constants/appListConstants';
 import { useDragHandler_Windows } from '../../../hooks/useDragHandler_Windows';
 import { useDraggable } from '@dnd-kit/core';
 import { useWindowDropZoneEffects } from './useDropZoneEffects';

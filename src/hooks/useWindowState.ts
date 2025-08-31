@@ -11,7 +11,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { WindowData } from '../types/windowState';
 import { WINDOW_DEFAULTS, APP_WINDOW_DEFAULTS } from '../constants/windowConstants';
-import { APP_REGISTRY } from '../constants/scrAppListConstants';
+import { APP_REGISTRY } from '../constants/appListConstants';
 import { clampPositionToBounds, getViewportBounds, isPositionOutOfBounds } from '../utils/viewportConstraints';
 
 export const useWindowState = () => {

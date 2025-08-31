@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import './ScrAppStore_List.css';
 import { GamePhase } from '../../../../../types/gameState';
-import { AppDefinition } from '../../../../../types/scrAppListState';
-import { APP_REGISTRY } from '../../../../../constants/scrAppListConstants';
+import { AppDefinition } from '../../../../../types/appListState';
+import { APP_REGISTRY } from '../../../../../constants/appListConstants';
 
 type SortState = 'none' | 'asc' | 'desc';
 

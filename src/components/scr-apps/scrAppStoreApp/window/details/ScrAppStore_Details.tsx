@@ -1,6 +1,6 @@
 import React from 'react';
 import './ScrAppStore_Details.css';
-import { APP_REGISTRY } from '../../../../../constants/scrAppListConstants';
+import { APP_REGISTRY } from '../../../../../constants/appListConstants';
 
 interface ScrAppStore_DetailsProps {
   selectedAppId: string | null;

@@ -6,7 +6,6 @@
  */
 
 import React from 'react';
-import { ToggleStates } from './toggleState';
 
 export interface AppDefinition {
   id: string;

@@ -20,7 +20,7 @@ import { ToggleStates } from '../types/toggleState';
 import { getAnnumReckoningName, getLedgerCycleName, getGrindName } from '../utils/gameStateUtils';
 import { getJobTitle } from '../utils/gameStateUtils';
 import { GameTime, GamePhase, GameMode } from '../types/gameState';
-import { InstalledApp } from '../types/scrAppListState';
+import { InstalledApp } from '../types/appListState';
 import './DataReadout.css';
 
 interface DataReadoutProps {

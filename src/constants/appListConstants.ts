@@ -11,7 +11,7 @@ import ScrAppStore from '../components/scr-apps/scrAppStoreApp/listItem/ScrAppSt
 import PurgeZoneApp from '../components/scr-apps/purgeZoneApp/listItem/PurgeZoneAppItem';
 import ChronoTrackApp from '../components/scr-apps/chronoTrackApp/listItem/ChronoTrackAppItem';
 import CacheSyncApp from '../components/scr-apps/cacheSyncApp/listItem/CacheSyncAppItem';
-import { AppDefinition, AppType } from '../types/scrAppListState';
+import { AppDefinition, AppType } from '../types/appListState';
 import DumpsterVisionApp from '../components/scr-apps/dumpsterVisionApp/listItem/DumpsterVisionAppItem';
 
 // Master registry of ALL possible apps (current + future)

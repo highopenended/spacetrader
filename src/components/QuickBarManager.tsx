@@ -1,5 +1,5 @@
 import React from 'react';
-import { InstalledApp } from '../types/scrAppListState';
+import { InstalledApp } from '../types/appListState';
 import { QuickBarFlags, QuickBarConfig } from '../types/quickBarState';
 
 interface QuickBarManagerProps {

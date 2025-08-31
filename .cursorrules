@@ -67,13 +67,13 @@ const AppNameAppWindow: React.FC<AppNameAppWindowProps> = ({
 ## App Registration
 
 ### Constants File
-- Register new apps in `src/constants/scrAppListConstants.ts`
+- Register new apps in `src/constants/appListConstants.ts`
 - Add to `APP_REGISTRY` with metadata:
   - `id`, `name`, `title`, `component`, `category`, `cost`, `deletable`, `description`
 - Add to `DEFAULT_INSTALLED_APPS` if it should start installed
 
 ### Type Definitions
-- Add new app types to `src/types/scrAppListState.ts`
+- Add new app types to `src/types/appListState.ts`
 - Extend `AppType` union type for new apps
 
 ## Styling Conventions
