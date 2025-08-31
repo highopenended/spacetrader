@@ -2,6 +2,7 @@ import React from 'react';
 import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
 import { APP_REGISTRY } from '../../../../constants/scrAppListConstants';
 import { QuickBarFlags } from '../../../../types/quickBarState';
+import UpgradeList from '../../scrAppWindow/UpgradeList';
 
 interface DumpsterVisionAppWindowProps extends BaseWindowProps {}
 
@@ -20,6 +21,10 @@ const DumpsterVisionAppWindow: React.FC<DumpsterVisionAppWindowProps> = ({
     if (!setQuickBarFlag) return;
     setQuickBarFlag('isActiveDumpsterVision', !isEnabled);
   };
+
+  // Upgrades plumbing
+  const { upgradeData } = (windowProps as any) || {};
+  const upgradesForApp = upgradeData?.getUpgradesForApp ? upgradeData.getUpgradesForApp(appType) : [];
 
   return (
     <ScrAppWindow
@@ -70,6 +75,18 @@ const DumpsterVisionAppWindow: React.FC<DumpsterVisionAppWindowProps> = ({
                 {keyLetter}
               </text>
             </svg>
+          </div>
+
+          {/* Upgrades Section */}
+          <div style={{ marginTop: 8 }}>
+            <div className="detail-label" style={{ marginBottom: 4 }}>UPGRADES</div>
+            <UpgradeList
+              upgrades={upgradesForApp}
+              isPurchased={upgradeData?.isPurchased || (() => false)}
+              canPurchase={upgradeData?.canPurchase || (() => false)}
+              purchase={upgradeData?.purchase || (() => false)}
+              refund={upgradeData?.refund || (() => false)}
+            />
           </div>
         </div>
       </div>

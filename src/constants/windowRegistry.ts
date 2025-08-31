@@ -50,7 +50,8 @@ interface WindowConfig {
     windowController: WindowController,
     windowManager: WindowManagerContext,
     toggleData?: { toggleStates: any; setToggleState: any },
-    quickBarData?: { quickBarFlags: any; setQuickBarFlag: any; quickBarConfig: any }
+    quickBarData?: { quickBarFlags: any; setQuickBarFlag: any; quickBarConfig: any },
+    upgradeData?: { isPurchased: (id: string) => boolean; canPurchase: (id: string) => boolean; purchase: (id: string) => boolean; refund: (id: string) => boolean; getUpgradesForApp: (appId: string) => any[] }
   ) => any;
 }
 
@@ -142,11 +143,12 @@ export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
   },
   dumpsterVision: {
     component: DumpsterVisionAppWindow,
-    getProps: (window, windowController, windowManager, toggleData, quickBarData) => ({
+    getProps: (window, windowController, windowManager, toggleData, quickBarData, upgradeData) => ({
       ...buildCommonProps(window, windowController, windowManager, toggleData),
       quickBarFlags: quickBarData?.quickBarFlags,
       setQuickBarFlag: quickBarData?.setQuickBarFlag,
-      quickBarConfig: quickBarData?.quickBarConfig
+      quickBarConfig: quickBarData?.quickBarConfig,
+      upgradeData
     })
   }
 };
@@ -160,13 +162,14 @@ export const renderWindow = (
   windowController: WindowController, 
   windowManager: WindowManagerContext,
   toggleData?: { toggleStates: any; setToggleState: any },
-  quickBarData?: { quickBarFlags: any; setQuickBarFlag: any; quickBarConfig: any }
+  quickBarData?: { quickBarFlags: any; setQuickBarFlag: any; quickBarConfig: any },
+  upgradeData?: { isPurchased: (id: string) => boolean; canPurchase: (id: string) => boolean; purchase: (id: string) => boolean; refund: (id: string) => boolean; getUpgradesForApp: (appId: string) => any[] }
 ): React.ReactElement => {
   const config = WINDOW_REGISTRY[window.appType];
   
   if (config) {
     const WindowComponent = config.component;
-    const props = config.getProps(window, windowController, windowManager, toggleData, quickBarData);
+    const props = config.getProps(window, windowController, windowManager, toggleData, quickBarData, upgradeData);
     return React.createElement(WindowComponent, props);
   }
   

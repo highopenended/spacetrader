@@ -1,0 +1,74 @@
+.upgrade-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  background: linear-gradient(180deg, rgba(18, 18, 18, 0.95) 0%, rgba(28, 28, 28, 0.95) 100%);
+  border: 1px solid #3a3a3a;
+  border-radius: 2px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.upgrade-price {
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid #444;
+  border-radius: 2px;
+  color: #bbb;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.upgrade-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.upgrade-btn {
+  padding: 6px 10px;
+  letter-spacing: 1px;
+  border-radius: 2px;
+  background: #0f0f0f;
+  border: 1px solid #4a4;
+  color: #9f9;
+  text-shadow: 0 0 6px rgba(144, 255, 144, 0.4);
+  cursor: pointer;
+}
+
+.upgrade-btn:disabled {
+  background: #141414;
+  border-color: #444;
+  color: #888;
+  text-shadow: none;
+  cursor: default;
+}
+
+.upgrade-btn--remove {
+  background: #111;
+  border: 1px solid #555;
+  color: #ccc;
+}
+
+.upgrade-btn--installed {
+  background: #151515;
+  border: 1px solid #444;
+  color: #aaa;
+}
+
+/* Compact price note shown under the button */
+.upgrade-price-note {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1;
+  color: #9f9;
+  text-shadow: 0 0 4px rgba(144, 255, 144, 0.35);
+}
+
+.upgrade-price-note.is-unaffordable {
+  color: #888;
+  text-shadow: none;
+}
+
+

@@ -11,6 +11,8 @@ export interface QuickKeyConfig {
   showInQuickBar: boolean;
   toggleFlagKey?: keyof QuickBarFlags;
   requiresAppId?: AppType; // if present, only show when this app is installed
+  /** Optional upgrade requirement to show this quick key */
+  requiresUpgradeId?: string;
 }
 
 export type QuickBarConfig = Record<string, QuickKeyConfig>;

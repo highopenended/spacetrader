@@ -40,6 +40,7 @@ import KeyboardManager from './components/KeyboardManager';
 import QuickBarManager from './components/QuickBarManager';
 import VisualOverlayManager from './components/visualOverlayManager/VisualOverlayManager';
 import { useQuickBarState } from './hooks/useQuickBarState';
+import { useUpgradesState } from './hooks/useUpgradesState';
 
 function App() {  
   const {
@@ -100,6 +101,9 @@ function App() {
 
   // Quick Bar state
   const { quickBarFlags, setQuickBarFlag, quickBarConfig } = useQuickBarState();
+
+  // Upgrades state (single instance)
+  const upgrades = useUpgradesState(credits, updateCredits);
 
   // Create save/load functions with all encode/decode functions
   const {
@@ -162,7 +166,15 @@ function App() {
       bringToFront
     };
 
-    return renderWindow(window, windowController, windowManager, toggleData, quickBarData);
+    const upgradeData = {
+      isPurchased: upgrades.isPurchased,
+      canPurchase: upgrades.canPurchase,
+      purchase: upgrades.purchase,
+      refund: upgrades.refund,
+      getUpgradesForApp: upgrades.getUpgradesForApp
+    };
+
+    return renderWindow(window, windowController, windowManager, toggleData, quickBarData, upgradeData);
   };
 
   // Build app props map for TerminalScreen
@@ -249,10 +261,10 @@ function App() {
         <div className="App">
           <GameBackground backgroundId={gameBackground} />
           <KeyboardManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
-          <QuickBarManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
+          <QuickBarManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} isUpgradePurchased={upgrades.isPurchased} />
           <VisualOverlayManager quickBarFlags={quickBarFlags} />
           <DataReadout {...componentProps.dataReadout} />
-          <QuickKeysBar installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
+          <QuickKeysBar installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} isUpgradePurchased={upgrades.isPurchased} />
           <TerminalScreen {...componentProps.terminalScreen} />
           <AdminToolbar {...componentProps.adminToolbar} />
           <UIPopupComponent />

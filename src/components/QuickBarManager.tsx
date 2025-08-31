@@ -7,9 +7,10 @@ interface QuickBarManagerProps {
   quickBarFlags: QuickBarFlags;
   setQuickBarFlag: (key: keyof QuickBarFlags, value: boolean) => void;
   quickBarConfig: QuickBarConfig;
+  isUpgradePurchased?: (id: string) => boolean;
 }
 
-const QuickBarManager: React.FC<QuickBarManagerProps> = ({ installedApps, quickBarFlags, setQuickBarFlag, quickBarConfig }) => {
+const QuickBarManager: React.FC<QuickBarManagerProps> = ({ installedApps, quickBarFlags, setQuickBarFlag, quickBarConfig, isUpgradePurchased }) => {
   React.useEffect(() => {
     // Auto-disable flags when their required app is not installed
     Object.values(quickBarConfig).forEach(cfg => {

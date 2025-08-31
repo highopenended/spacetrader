@@ -21,6 +21,7 @@ export const useQuickBarState = () => {
       showInQuickBar: true,
       toggleFlagKey: 'isActiveDumpsterVision',
       requiresAppId: 'dumpsterVision',
+      requiresUpgradeId: 'dumpsterVision.addQuickKey',
     },
   }), []);
 
