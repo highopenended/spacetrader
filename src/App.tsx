@@ -43,6 +43,7 @@ import GameOptionsGear from './components/gameOptions/gameOptionsGear/GameOption
 import GameOptionsMenu from './components/gameOptions/gameOptionsMenu/GameOptionsMenu';
 import { useQuickBarState } from './hooks/useQuickBarState';
 import { useUpgradesState } from './hooks/useUpgradesState';
+import { useProfileState } from './hooks/useProfileState';
 
 function App() {  
   const {
@@ -106,6 +107,16 @@ function App() {
   // Upgrades state (single instance)
   const upgrades = useUpgradesState(credits, updateCredits);
 
+  // Profile state (single instance)
+  const {
+    profileState,
+    setProfileName,
+    addEndingAchieved,
+    resetProfile,
+    encodeProfileState,
+    decodeProfileState
+  } = useProfileState();
+
   // Create save/load functions with all encode/decode functions
   const {
     saveToLocalCache,
@@ -113,7 +124,7 @@ function App() {
     exportToFile,
     importFromFile,
     SAVE_COST
-  } = useSaveLoad(credits, updateCredits, encodeGameState, decodeGameState, encodeWindowState, decodeWindowState, encodeToggleState, decodeToggleState);
+  } = useSaveLoad(credits, updateCredits, encodeGameState, decodeGameState, encodeWindowState, decodeWindowState, encodeToggleState, decodeToggleState, encodeProfileState, decodeProfileState);
 
   // Create reset function that coordinates all state resets
   const handleResetGame = React.useCallback(() => {
@@ -122,6 +133,7 @@ function App() {
       resetWindowState,
       resetToggleState
     });
+    // Note: Profile state is NOT reset when resetting game
   }, [resetGameState, resetWindowState, resetToggleState]);
 
   // Options menu state
@@ -286,7 +298,7 @@ function App() {
 
           {gameMode === 'workMode' && <WorkScreen updateCredits={updateCredits} />}
           
-          {isOptionsMenuOpen && <GameOptionsMenu onClose={handleOptionsClose} />}
+          {isOptionsMenuOpen && <GameOptionsMenu onClose={handleOptionsClose} profileState={profileState} />}
         </div>
       </DragManager>
     </UIProvider>

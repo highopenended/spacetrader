@@ -25,7 +25,9 @@ export const useSaveLoad = (
   encodeWindowState: () => any,
   decodeWindowState: (state: any) => boolean,
   encodeToggleState: () => any,
-  decodeToggleState: (state: any) => boolean
+  decodeToggleState: (state: any) => boolean,
+  encodeProfileState: () => any,
+  decodeProfileState: (state: any) => boolean
 ) => {
   // Credit costs for save operations only
   const SAVE_COST = 50;
@@ -40,7 +42,8 @@ export const useSaveLoad = (
     const saveData = {
       gameState: encodeGameState(),
       windowState: encodeWindowState(),
-      toggleState: encodeToggleState()
+      toggleState: encodeToggleState(),
+      profileState: encodeProfileState()
     };
 
     const success = saveGameToLocalStorage(saveData);
@@ -49,7 +52,7 @@ export const useSaveLoad = (
       console.log(`Game saved to local cache. Cost: ${SAVE_COST} credits`);
     }
     return success;
-  }, [credits, encodeGameState, encodeWindowState, encodeToggleState, updateCredits]);
+  }, [credits, encodeGameState, encodeWindowState, encodeToggleState, encodeProfileState, updateCredits]);
 
   // Load from local cache
   const loadFromLocalCache = useCallback(() => {
@@ -80,9 +83,16 @@ export const useSaveLoad = (
       return false;
     }
 
+    // Decode profile state
+    const profileSuccess = decodeProfileState(loadedData.profileState);
+    if (!profileSuccess) {
+      console.error('Failed to decode profile state');
+      return false;
+    }
+
     console.log('Game loaded from local cache');
     return true;
-  }, [decodeGameState, decodeWindowState, decodeToggleState]);
+  }, [decodeGameState, decodeWindowState, decodeToggleState, decodeProfileState]);
 
   // Export to file
   const exportToFile = useCallback(() => {
@@ -94,7 +104,8 @@ export const useSaveLoad = (
     const saveData = {
       gameState: encodeGameState(),
       windowState: encodeWindowState(),
-      toggleState: encodeToggleState()
+      toggleState: encodeToggleState(),
+      profileState: encodeProfileState()
     };
 
     const success = exportGameToFile(saveData);
@@ -103,7 +114,7 @@ export const useSaveLoad = (
       console.log(`Game exported to file. Cost: ${SAVE_COST} credits`);
     }
     return success;
-  }, [credits, encodeGameState, encodeWindowState, encodeToggleState, updateCredits]);
+  }, [credits, encodeGameState, encodeWindowState, encodeToggleState, encodeProfileState, updateCredits]);
 
   // Import from file
   const importFromFile = useCallback(async (file: File) => {
@@ -134,9 +145,16 @@ export const useSaveLoad = (
       return false;
     }
 
+    // Decode profile state
+    const profileSuccess = decodeProfileState(loadedData.profileState);
+    if (!profileSuccess) {
+      console.error('Failed to decode profile state from file');
+      return false;
+    }
+
     console.log('Game imported from file');
     return true;
-  }, [decodeGameState, decodeWindowState, decodeToggleState]);
+  }, [decodeGameState, decodeWindowState, decodeToggleState, decodeProfileState]);
 
   return {
     saveToLocalCache,

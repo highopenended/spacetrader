@@ -137,3 +137,22 @@
   border-color: #888;
   color: #ddd;
 }
+
+/* Delete Button - Red styling for destructive action */
+.delete-btn {
+  background: linear-gradient(135deg, #2a1818 0%, #3a2020 100%);
+  border-color: #b44;
+  color: #e05a5a;
+}
+
+.delete-btn:hover {
+  background: linear-gradient(135deg, #3a2020 0%, #4a2828 100%);
+  border-color: #c55;
+  color: #ff6b6b;
+}
+
+.delete-btn:active {
+  background: linear-gradient(135deg, #221515 0%, #331818 100%);
+  border-color: #a33;
+  color: #d04444;
+}

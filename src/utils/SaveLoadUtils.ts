@@ -10,6 +10,7 @@ interface SaveData {
   gameState: any; // Encoded game state from useGameState
   windowState: any; // Encoded window state from useWindowState
   toggleState: any; // Encoded toggle state from useToggleState
+  profileState: any; // Encoded profile state from useProfileState
   timestamp: number;
   saveDate: string;
 }
@@ -27,6 +28,7 @@ export const saveGameToLocalStorage = (saveData: any): boolean => {
       gameState: saveData.gameState,
       windowState: saveData.windowState,
       toggleState: saveData.toggleState,
+      profileState: saveData.profileState,
       timestamp: Date.now(),
       saveDate: new Date().toISOString()
     };
@@ -66,6 +68,7 @@ export const exportGameToFile = (saveData: any): boolean => {
       gameState: saveData.gameState,
       windowState: saveData.windowState,
       toggleState: saveData.toggleState,
+      profileState: saveData.profileState,
       timestamp: Date.now(),
       saveDate: new Date().toISOString()
     };
@@ -74,7 +77,10 @@ export const exportGameToFile = (saveData: any): boolean => {
     
     const link = document.createElement('a');
     link.href = URL.createObjectURL(dataBlob);
-    link.download = `spacetrader-save-${Date.now()}.scrap`;
+    // Generate filename with profile name (sanitize for filesystem)
+    const profileName = fullSaveData.profileState?.profileName || 'DEFAULTUSER';
+    const sanitizedProfileName = profileName.replace(/[^a-zA-Z0-9]/g, '_');
+    link.download = `${sanitizedProfileName}_Save_${Date.now()}.scrap`;
     link.click();
     
     setTimeout(() => URL.revokeObjectURL(link.href), 100);

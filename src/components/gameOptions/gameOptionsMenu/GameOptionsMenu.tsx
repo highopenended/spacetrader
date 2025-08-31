@@ -6,13 +6,15 @@
  */
 
 import React, { useEffect } from 'react';
+import { ProfileState } from '../../../types/profileState';
 import './GameOptionsMenu.css';
 
 interface GameOptionsMenuProps {
   onClose: () => void;
+  profileState: ProfileState;
 }
 
-const GameOptionsMenu: React.FC<GameOptionsMenuProps> = ({ onClose }) => {
+const GameOptionsMenu: React.FC<GameOptionsMenuProps> = ({ onClose, profileState }) => {
   // Block ALL input events to create true modal behavior
   useEffect(() => {
     const handleEventCapture = (e: Event) => {
@@ -74,11 +76,11 @@ const GameOptionsMenu: React.FC<GameOptionsMenuProps> = ({ onClose }) => {
           <div className="profile-info-row">
             <div className="profile-info-item">
               <span className="info-label">Profile:</span>
-              <span className="info-value">DEFAULT</span>
+              <span className="info-value">{profileState.profileName}</span>
             </div>
             <div className="profile-info-item">
               <span className="info-label">Endings Achieved:</span>
-              <span className="info-value">0</span>
+              <span className="info-value">{profileState.endingsAchieved.length}</span>
             </div>
           </div>
           
@@ -86,7 +88,7 @@ const GameOptionsMenu: React.FC<GameOptionsMenuProps> = ({ onClose }) => {
             <button className="options-btn" onClick={handleChangeProfile}>
               Change Profile
             </button>
-            <button className="options-btn" onClick={handleDeleteProfile}>
+            <button className="options-btn delete-btn" onClick={handleDeleteProfile}>
               Delete Profile
             </button>
           </div>
