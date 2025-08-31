@@ -81,12 +81,22 @@ function App() {
   // Upgrades state (single instance) - needs credits from useGameState
   const upgrades = useUpgradesState(credits, updateCredits);
 
-  // Enhanced uninstallApp that clears upgrades
+  // Quick Bar state
+  const { quickBarFlags, setQuickBarFlag, quickBarConfig } = useQuickBarState();
+
+  // Enhanced uninstallApp that clears upgrades and turns off related features
   const uninstallAppWithUpgradeClearing = React.useCallback((appId: string) => {
-    // Clear upgrades first, then uninstall app
+    // Clear upgrades first
     upgrades.clearUpgradesForApp(appId);
+    
+    // Turn off Dumpster Vision if that app is being uninstalled
+    if (appId === 'dumpsterVision') {
+      setQuickBarFlag('isActiveDumpsterVision', false);
+    }
+    
+    // Then uninstall app
     uninstallApp(appId);
-  }, [upgrades, uninstallApp]);
+  }, [upgrades, uninstallApp, setQuickBarFlag]);
 
   const {
     windows,
@@ -110,9 +120,6 @@ function App() {
     encodeToggleState,
     decodeToggleState
   } = useToggleState();
-
-  // Quick Bar state
-  const { quickBarFlags, setQuickBarFlag, quickBarConfig } = useQuickBarState();
 
   // Profile state (single instance)
   const {
