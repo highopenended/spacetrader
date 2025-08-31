@@ -39,6 +39,8 @@ import QuickKeysBar from './components/quickKeys/QuickKeysBar';
 import KeyboardManager from './components/KeyboardManager';
 import QuickBarManager from './components/QuickBarManager';
 import VisualOverlayManager from './components/visualOverlayManager/VisualOverlayManager';
+import GameOptionsGear from './components/gameOptions/gameOptionsGear/GameOptionsGear';
+import GameOptionsMenu from './components/gameOptions/gameOptionsMenu/GameOptionsMenu';
 import { useQuickBarState } from './hooks/useQuickBarState';
 import { useUpgradesState } from './hooks/useUpgradesState';
 
@@ -121,6 +123,18 @@ function App() {
       resetToggleState
     });
   }, [resetGameState, resetWindowState, resetToggleState]);
+
+  // Options menu state
+  const [isOptionsMenuOpen, setIsOptionsMenuOpen] = React.useState(false);
+
+  // Options menu handlers
+  const handleOptionsClick = React.useCallback(() => {
+    setIsOptionsMenuOpen(true);
+  }, []);
+
+  const handleOptionsClose = React.useCallback(() => {
+    setIsOptionsMenuOpen(false);
+  }, []);
 
 
 
@@ -262,6 +276,7 @@ function App() {
           <KeyboardManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
           <QuickBarManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} isUpgradePurchased={upgrades.isPurchased} />
           <VisualOverlayManager quickBarFlags={quickBarFlags} />
+          <GameOptionsGear onClick={handleOptionsClick} />
           <DataReadout {...componentProps.dataReadout} />
           <QuickKeysBar installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} isUpgradePurchased={upgrades.isPurchased} />
           <TerminalScreen {...componentProps.terminalScreen} />
@@ -270,6 +285,8 @@ function App() {
           {windows.map(renderWindowComponent)}
 
           {gameMode === 'workMode' && <WorkScreen updateCredits={updateCredits} />}
+          
+          {isOptionsMenuOpen && <GameOptionsMenu onClose={handleOptionsClose} />}
         </div>
       </DragManager>
     </UIProvider>

@@ -1,6 +1,6 @@
 .data-readout {
   position: fixed;
-  top: 20px;
+  top: 68px; /* Moved down to make room for options gear */
   left: 20px;
   z-index: 100;
   user-select: none;
