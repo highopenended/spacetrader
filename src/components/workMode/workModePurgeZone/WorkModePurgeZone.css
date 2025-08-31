@@ -1,0 +1,11 @@
+/* Work Mode Purge Zone CSS */
+
+.work-mode-purge-zone {
+  position: fixed;
+  bottom: 2vh; /* Same as ScrapBin */
+  left: calc(50% - 12vw); /* Positioned to the left of centered ScrapBin (8vw wide + 4vw offset) */
+  width: 4vw; /* Smaller than window version */
+  height: 4vw; /* Square aspect ratio */
+  z-index: 101; /* Same as ScrapBin */
+  user-select: none;
+}

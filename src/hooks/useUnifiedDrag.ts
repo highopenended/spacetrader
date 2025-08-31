@@ -107,10 +107,12 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
   const customCollisionDetection = useCallback((args: any) => {
     const collisions = rectIntersection(args);
     
-    // Block PurgeZone window from detecting itself
+    // Block PurgeZone window from detecting its own window purge zone (but allow work mode purge zone)
     if (args.active?.data?.current?.type === 'window-drag-node' && 
         args.active?.data?.current?.appType === 'purgeZone') {
-      const filteredCollisions = collisions.filter(c => c.id !== DOM_IDS.PURGE_ZONE);
+      const filteredCollisions = collisions.filter(c => 
+        c.id !== DOM_IDS.PURGE_ZONE_WINDOW
+      );
       const terminalDock = filteredCollisions.find(c => c.id === DOM_IDS.TERMINAL_DOCK);
       if (terminalDock) return [terminalDock];
       return filteredCollisions;
@@ -118,7 +120,9 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
     
     // Window drag priority
     if (args.active?.data?.current?.type === 'window-drag-node') {
-      const purgeZone = collisions.find(c => c.id === DOM_IDS.PURGE_ZONE);
+      const purgeZone = collisions.find(c => 
+        c.id === DOM_IDS.PURGE_ZONE_WINDOW || c.id === DOM_IDS.PURGE_ZONE_WORKMODE
+      );
       const terminalDock = collisions.find(c => c.id === DOM_IDS.TERMINAL_DOCK);
       
       if (purgeZone) return [purgeZone];
@@ -197,7 +201,8 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
     const newOverId = event.over?.id ?? null;
     const isOverTerminal = (newOverId === DOM_IDS.TERMINAL_DOCK || 
                           (newOverId && event.active?.data?.current?.type === 'app-drag-node')) &&
-                          newOverId !== DOM_IDS.PURGE_ZONE;
+                          newOverId !== DOM_IDS.PURGE_ZONE_WINDOW && 
+                          newOverId !== DOM_IDS.PURGE_ZONE_WORKMODE;
     
     setOverId(newOverId);
     setIsOverTerminalDropZone(isOverTerminal);
@@ -237,11 +242,11 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
     setPendingDelete({ appId: null, prevOrder: [] });
   }, [installAppOrder]);
 
-  const handlePurgeDrop = useCallback((active: any) => {
+  const handlePurgeDrop = useCallback((active: any, over: any) => {
     if (active.data?.current?.type === 'window-drag-node') {
       const { appType, deletable, windowTitle } = active.data.current;
       
-      if (appType === 'purgeZone') return; // Prevent self-targeting
+      if (over?.id === DOM_IDS.PURGE_ZONE_WINDOW) return; // Prevent dropping into window purge zone
       
       if (deletable) {
         setPendingDelete({ appId: appType, prevOrder: appOrder });
@@ -313,8 +318,8 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
     }
     
     // Handle drop targets
-    if (over.id === DOM_IDS.PURGE_ZONE) {
-      handlePurgeDrop(active);
+    if (over.id === DOM_IDS.PURGE_ZONE_WINDOW || over.id === DOM_IDS.PURGE_ZONE_WORKMODE) {
+      handlePurgeDrop(active, over);
     } else if (over.id === DOM_IDS.TERMINAL_DOCK) {
       handleTerminalDrop(active);
     } else if (active.data?.current?.type === 'app-drag-node') {

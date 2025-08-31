@@ -59,6 +59,20 @@ export const useUpgradesState = (
     return true;
   }, [purchased, updateCredits]);
 
+  const clearUpgradesForApp = useCallback((appId: string): void => {
+    // Find all upgrades for this app and remove them from purchased state
+    const upgradesForApp = Object.values(UPGRADE_REGISTRY).filter(u => u.appId === appId);
+    if (upgradesForApp.length === 0) return;
+    
+    setPurchased(prev => {
+      const updated = { ...prev };
+      upgradesForApp.forEach(upgrade => {
+        delete updated[upgrade.id];
+      });
+      return updated;
+    });
+  }, []);
+
   const api = useMemo(() => ({
     purchased,
     isPurchased,
@@ -67,7 +81,8 @@ export const useUpgradesState = (
     canPurchase,
     purchase,
     refund,
-  }), [purchased, isPurchased, getDefinition, getUpgradesForApp, canPurchase, purchase, refund]);
+    clearUpgradesForApp,
+  }), [purchased, isPurchased, getDefinition, getUpgradesForApp, canPurchase, purchase, refund, clearUpgradesForApp]);
 
   return api;
 };

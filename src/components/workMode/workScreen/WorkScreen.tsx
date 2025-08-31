@@ -23,12 +23,15 @@ import { SCRAP_BASELINE_BOTTOM_VH, vhFromPx } from '../../../constants/physicsCo
 import { MutatorRegistry } from '../../../constants/mutatorRegistry';
 import { DOM_IDS } from '../../../constants/domIds';
 import { ScrapRegistry } from '../../../constants/scrapRegistry';
+import WorkModePurgeZone from '../workModePurgeZone/WorkModePurgeZone';
 
 interface WorkScreenProps {
   updateCredits?: (amount: number) => void;
+  isUpgradePurchased?: (upgradeId: string) => boolean;
+  installedApps?: any[];
 }
 
-const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
+const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, isUpgradePurchased, installedApps }) => {
   
   // Timer management
   const lastFrameTimeRef = useRef<number>(performance.now());
@@ -132,33 +135,43 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
   // Drive purge-zone visual effects during scrap drag using the same resolver
   useEffect(() => {
     if (!draggedScrapId) {
-      const el = document.getElementById(DOM_IDS.PURGE_ZONE);
-      if (el) el.classList.remove('active');
+      // Clear active state from both purge zones
+      const windowEl = document.getElementById(DOM_IDS.PURGE_ZONE_WINDOW);
+      const workmodeEl = document.getElementById(DOM_IDS.PURGE_ZONE_WORKMODE);
+      if (windowEl) windowEl.classList.remove('active');
+      if (workmodeEl) workmodeEl.classList.remove('active');
       return;
     }
     let rafId: number | null = null;
     const tick = () => {
-      const el = document.getElementById(DOM_IDS.PURGE_ZONE);
-      if (el) {
-        const dragStyle = getDragStyle(draggedScrapId);
-        // Compute current cursor center from style; fallback to no effect
-        if (dragStyle && typeof dragStyle.left === 'string' && typeof dragStyle.bottom === 'string') {
-          const leftPx = parseFloat(dragStyle.left);
-          const bottomPx = parseFloat(dragStyle.bottom);
-          const x = leftPx + (window.innerWidth * 0.018); // approx half of 3.6vw square
-          const y = window.innerHeight - bottomPx - (window.innerHeight * 0.018);
-          const target = resolveScrapDropTarget({ x, y });
-          if (target === 'purgeZone') el.classList.add('active');
-          else el.classList.remove('active');
+      const windowEl = document.getElementById(DOM_IDS.PURGE_ZONE_WINDOW);
+      const workmodeEl = document.getElementById(DOM_IDS.PURGE_ZONE_WORKMODE);
+      
+      // Update both purge zones if they exist
+      [windowEl, workmodeEl].forEach(el => {
+        if (el) {
+          const dragStyle = getDragStyle(draggedScrapId);
+          // Compute current cursor center from style; fallback to no effect
+          if (dragStyle && typeof dragStyle.left === 'string' && typeof dragStyle.bottom === 'string') {
+            const leftPx = parseFloat(dragStyle.left);
+            const bottomPx = parseFloat(dragStyle.bottom);
+            const x = leftPx + (window.innerWidth * 0.018); // approx half of 3.6vw square
+            const y = window.innerHeight - bottomPx - (window.innerHeight * 0.018);
+            const target = resolveScrapDropTarget({ x, y });
+            if (target === 'purgeZone') el.classList.add('active');
+            else el.classList.remove('active');
+          }
         }
-      }
+      });
       rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
-      const el = document.getElementById(DOM_IDS.PURGE_ZONE);
-      if (el) el.classList.remove('active');
+      const windowEl = document.getElementById(DOM_IDS.PURGE_ZONE_WINDOW);
+      const workmodeEl = document.getElementById(DOM_IDS.PURGE_ZONE_WORKMODE);
+      if (windowEl) windowEl.classList.remove('active');
+      if (workmodeEl) workmodeEl.classList.remove('active');
     };
   }, [draggedScrapId, getDragStyle, resolveScrapDropTarget]);
 
@@ -409,11 +422,19 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits }) => {
     };
   }, [draggedScrapId, spawnState.activeScrap, beingCollectedIds, getRenderedPosition, scrapSize]);
 
+  // Check if work mode purge zone should be shown (upgrade purchased AND purgeZone app installed)
+  const isPurgeZoneInstalled = installedApps?.some(app => app.id === 'purgeZone') ?? false;
+  const isUpgradePurchased_WorkMode = isUpgradePurchased?.('purgeZone.workModePurgeZone') ?? false;
+  const showWorkModePurgeZone = isPurgeZoneInstalled && isUpgradePurchased_WorkMode;
+
   return (
     <div className="work-screen">
       <WorkTimer elapsedSeconds={elapsedSeconds} frameCount={frameCount} collectedCount={collectedCount} />
       <AssemblyLine />
       <ScrapBin ref={dropZoneRef} />
+      
+      {/* Conditional work mode purge zone */}
+      {showWorkModePurgeZone && <WorkModePurgeZone />}
       
       {/* Render active scrap objects */}
       {scrapItems.map((item) => (

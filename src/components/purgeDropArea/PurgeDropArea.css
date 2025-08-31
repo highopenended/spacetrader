@@ -1,0 +1,141 @@
+/* Purge Drop Area - Reusable Component CSS */
+
+.purge-drop-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #666;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #1a0a0a 0%, #2d1010 100%);
+  box-shadow: 0 0 12px 2px #a00a, 0 0 0 2px #a002 inset;
+  position: relative;
+  transition: all 0.2s ease;
+  user-select: none;
+  z-index: 1100;
+}
+
+.purge-drop-area:hover {
+  border-color: #a22;
+  background: linear-gradient(135deg, #2a1010 0%, #3a1818 100%);
+}
+
+.purge-drop-area.active {
+  background: 
+    linear-gradient(135deg, #1a0000 0%, #330000 50%, #1a0000 100%),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(255, 0, 0, 0.1) 2px,
+      rgba(255, 0, 0, 0.1) 4px
+    ) !important;
+  border: 2px solid #ff0000 !important;
+  box-shadow: 
+    0 0 10px rgba(255, 0, 0, 0.6),
+    inset 0 0 20px rgba(255, 0, 0, 0.1) !important;
+  animation: terminal-corruption 0.18s infinite, surge-cycle 6s infinite;
+  filter: contrast(1.08) brightness(1.04);
+}
+
+.purge-drop-area.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      rgba(255, 0, 0, 0.03) 1px,
+      transparent 2px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      rgba(255, 0, 0, 0.03) 1px,
+      transparent 2px
+    );
+  pointer-events: none;
+  z-index: 5;
+  animation: static-noise 0.25s infinite, surge-static-cycle 6s infinite;
+}
+
+.purge-drop-area-text {
+  color: #ccc;
+  font-size: var(--font-size-small);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: bold;
+  text-align: center;
+  z-index: 10;
+  position: relative;
+  user-select: none;
+}
+
+.purge-drop-area.active .purge-drop-area-text {
+  color: #ff0000;
+  text-shadow:
+    0 0 2px #ff0000,
+    0 0 6px #ff0000,
+    0 0 12px #ff0000;
+  animation: text-flicker 0.18s infinite;
+}
+
+/* Terminal corruption animation */
+@keyframes terminal-corruption {
+  0%, 100% { 
+    filter: contrast(1.08) brightness(1.04) hue-rotate(0deg);
+    transform: translateX(0px);
+  }
+  25% { 
+    filter: contrast(1.12) brightness(1.08) hue-rotate(1deg);
+    transform: translateX(-0.5px);
+  }
+  50% { 
+    filter: contrast(1.06) brightness(1.02) hue-rotate(-1deg);
+    transform: translateX(0.5px);
+  }
+  75% { 
+    filter: contrast(1.10) brightness(1.06) hue-rotate(0.5deg);
+    transform: translateX(-0.25px);
+  }
+}
+
+/* Surge cycle animation */
+@keyframes surge-cycle {
+  0%, 92% { opacity: 1; filter: none; }
+  93% { opacity: 0.3; filter: blur(2.5px) brightness(2) contrast(2); }
+  93.25% { opacity: 0.2; filter: blur(3.5px) brightness(2.2) contrast(2.2); }
+  93.5% { opacity: 0.3; filter: blur(2.5px) brightness(2) contrast(2); }
+  93.75% { opacity: 0.15; filter: blur(4px) brightness(2.5) contrast(2.5); }
+  94%, 100% { opacity: 1; filter: none; }
+}
+
+/* Static noise animation */
+@keyframes static-noise {
+  0% { opacity: 0.8; transform: translateX(0px) translateY(0px); }
+  25% { opacity: 0.6; transform: translateX(0.5px) translateY(-0.5px); }
+  50% { opacity: 0.9; transform: translateX(-0.5px) translateY(0.5px); }
+  75% { opacity: 0.7; transform: translateX(0.5px) translateY(0px); }
+  100% { opacity: 0.8; transform: translateX(0px) translateY(0px); }
+}
+
+/* Surge static cycle */
+@keyframes surge-static-cycle {
+  0%, 92% { opacity: 1; filter: none; }
+  93% { opacity: 0.3; filter: blur(2.5px) brightness(2) contrast(2); }
+  93.25% { opacity: 0.2; filter: blur(3.5px) brightness(2.2) contrast(2.2); }
+  93.5% { opacity: 0.3; filter: blur(2.5px) brightness(2) contrast(2); }
+  93.75% { opacity: 0.15; filter: blur(4px) brightness(2.5) contrast(2.5); }
+  94%, 100% { opacity: 1; filter: none; }
+}
+
+/* Text flicker animation */
+@keyframes text-flicker {
+  0%, 100% { opacity: 1; }
+  25% { opacity: 0.8; }
+  50% { opacity: 0.9; }
+  75% { opacity: 0.7; }
+}

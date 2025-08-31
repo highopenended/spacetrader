@@ -11,18 +11,7 @@ interface QuickBarManagerProps {
 }
 
 const QuickBarManager: React.FC<QuickBarManagerProps> = ({ installedApps, quickBarFlags, setQuickBarFlag, quickBarConfig, isUpgradePurchased }) => {
-  React.useEffect(() => {
-    // Auto-disable flags when their required app is not installed
-    Object.values(quickBarConfig).forEach(cfg => {
-      if (!cfg.toggleFlagKey) return;
-      if (cfg.requiresAppId && !installedApps.some(a => a.id === cfg.requiresAppId)) {
-        if (quickBarFlags[cfg.toggleFlagKey]) {
-          setQuickBarFlag(cfg.toggleFlagKey, false);
-        }
-      }
-    });
-  }, [installedApps, quickBarConfig, quickBarFlags, setQuickBarFlag]);
-
+  // No effects needed - QuickKeysBar and KeyboardManager handle conditional rendering
   return null;
 };
 

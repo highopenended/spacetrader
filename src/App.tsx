@@ -78,6 +78,16 @@ function App() {
     decodeGameState
   } = useGameState();
 
+  // Upgrades state (single instance) - needs credits from useGameState
+  const upgrades = useUpgradesState(credits, updateCredits);
+
+  // Enhanced uninstallApp that clears upgrades
+  const uninstallAppWithUpgradeClearing = React.useCallback((appId: string) => {
+    // Clear upgrades first, then uninstall app
+    upgrades.clearUpgradesForApp(appId);
+    uninstallApp(appId);
+  }, [upgrades, uninstallApp]);
+
   const {
     windows,
     updateWindowPosition,
@@ -103,9 +113,6 @@ function App() {
 
   // Quick Bar state
   const { quickBarFlags, setQuickBarFlag, quickBarConfig } = useQuickBarState();
-
-  // Upgrades state (single instance)
-  const upgrades = useUpgradesState(credits, updateCredits);
 
   // Profile state (single instance)
   const {
@@ -278,14 +285,14 @@ function App() {
         appOrder={appOrder}
         appPropsMap={appPropsMap}
         reorderApps={reorderApps}
-        uninstallApp={uninstallApp}
+        uninstallApp={uninstallAppWithUpgradeClearing}
         closeWindowsByAppType={closeWindowsByAppType}
         installAppOrder={installAppOrder}
         openOrCloseWindow={openOrCloseWindow}
       >
         <div className="App">
           <GameBackground backgroundId={gameBackground} />
-          <KeyboardManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
+          <KeyboardManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} isUpgradePurchased={upgrades.isPurchased} />
           <QuickBarManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} isUpgradePurchased={upgrades.isPurchased} />
           <VisualOverlayManager quickBarFlags={quickBarFlags} />
           <GameOptionsGear onClick={handleOptionsClick} />
@@ -296,7 +303,7 @@ function App() {
           <UIPopupComponent />
           {windows.map(renderWindowComponent)}
 
-          {gameMode === 'workMode' && <WorkScreen updateCredits={updateCredits} />}
+          {gameMode === 'workMode' && <WorkScreen updateCredits={updateCredits} isUpgradePurchased={upgrades.isPurchased} installedApps={installedApps} />}
           
           {isOptionsMenuOpen && <GameOptionsMenu onClose={handleOptionsClose} profileState={profileState} />}
         </div>

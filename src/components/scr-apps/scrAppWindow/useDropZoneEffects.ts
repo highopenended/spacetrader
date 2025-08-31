@@ -25,7 +25,7 @@ export const useWindowDropZoneEffects = (
   draggedAppType: string | null,
   appType: string
 ): DropZoneEffects => {
-  const isOverPurgeZone = overId === DOM_IDS.PURGE_ZONE && draggedAppType === appType;
+  const isOverPurgeZone = (overId === DOM_IDS.PURGE_ZONE_WINDOW || overId === DOM_IDS.PURGE_ZONE_WORKMODE) && draggedAppType === appType;
   const isOverTerminalDock = overId === DOM_IDS.TERMINAL_DOCK && draggedAppType === appType;
 
   const effects = useMemo((): DropZoneEffects => {

@@ -86,11 +86,12 @@ const buildCommonProps = (
 export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
   purgeZone: {
     component: PurgeZoneAppWindow,
-    getProps: (window, gameState, windowManager, toggleData, quickBarData) => ({
-      ...buildCommonProps(window, gameState, windowManager, toggleData),
+    getProps: (window, windowController, windowManager, toggleData, quickBarData, upgradeData) => ({
+      ...buildCommonProps(window, windowController, windowManager, toggleData),
       quickBarFlags: quickBarData?.quickBarFlags,
       setQuickBarFlag: quickBarData?.setQuickBarFlag,
-      quickBarConfig: quickBarData?.quickBarConfig
+      quickBarConfig: quickBarData?.quickBarConfig,
+      upgradeData
     })
   },
 

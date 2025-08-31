@@ -7,7 +7,8 @@
  */
 
 export const DOM_IDS = {
-  PURGE_ZONE: 'purge-zone-window',
+  PURGE_ZONE_WINDOW: 'purge-zone-window',
+  PURGE_ZONE_WORKMODE: 'purge-zone-workmode',
   TERMINAL_DOCK: 'terminal-dock-zone'
 } as const;
 

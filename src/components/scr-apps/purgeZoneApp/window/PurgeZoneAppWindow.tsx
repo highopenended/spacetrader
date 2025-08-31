@@ -1,30 +1,41 @@
 import React from 'react';
-import { useDroppable } from '@dnd-kit/core';
 import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
-import { useDragContext } from '../../../../contexts/DragContext';
+import UpgradeList from '../../scrAppWindow/UpgradeList';
+import PurgeDropArea from '../../../purgeDropArea/PurgeDropArea';
 import './PurgeZoneAppWindow.css';
 import { DOM_IDS } from '../../../../constants/domIds';
 
 const PurgeZoneAppWindow: React.FC<BaseWindowProps> = ({
+  appType,
   ...windowProps
 }) => {
-  const { setNodeRef } = useDroppable({
-    id: DOM_IDS.PURGE_ZONE,
-  });
-
-  const { overId } = useDragContext();
-  const isActive = overId === DOM_IDS.PURGE_ZONE;
+  // Upgrades plumbing
+  const { upgradeData } = (windowProps as any) || {};
+  const upgradesForApp = upgradeData?.getUpgradesForApp ? upgradeData.getUpgradesForApp(appType) : [];
 
   const content = (
     <div className="purge-zone-content window-column-layout">
-      <div
-        ref={setNodeRef}
-        id={DOM_IDS.PURGE_ZONE}
-        className={`purge-zone-drop-area${isActive ? ' active' : ''}`}
-      >
-        <div className="purge-zone-text">
-          {isActive ? 'PURGE?' : 'DROP TO PURGE'}
-        </div>
+      <PurgeDropArea
+        domId={DOM_IDS.PURGE_ZONE_WINDOW}
+        containerStyle={{
+          flex: 1,
+          width: '100%',
+          height: '100%',
+          margin: '2px',
+          minHeight: '80px'
+        }}
+      />
+      
+      {/* Upgrades Section */}
+      <div style={{ marginTop: 8 }}>
+        <div className="detail-label" style={{ marginBottom: 4 }}>UPGRADES</div>
+        <UpgradeList
+          upgrades={upgradesForApp}
+          isPurchased={upgradeData?.isPurchased || (() => false)}
+          canPurchase={upgradeData?.canPurchase || (() => false)}
+          purchase={upgradeData?.purchase || (() => false)}
+          refund={upgradeData?.refund || (() => false)}
+        />
       </div>
     </div>
   );
@@ -32,6 +43,7 @@ const PurgeZoneAppWindow: React.FC<BaseWindowProps> = ({
   return (
     <ScrAppWindow
       title="Purge Zone"
+      appType={appType}
       {...windowProps}
     >
       {content}

@@ -18,6 +18,16 @@ export const UPGRADE_REGISTRY: UpgradeRegistry = {
     cost: 100,
     refundable: true,
   },
+
+  // Purge Zone: Work Mode Purge Zone
+  'purgeZone.workModePurgeZone': {
+    id: 'purgeZone.workModePurgeZone',
+    appId: 'purgeZone',
+    label: 'WORK MODE PURGE ZONE',
+    description: 'Adds a small purge zone beside the Scrap Bin during work sessions.',
+    cost: 5000,
+    refundable: true,
+  },
 };
 
 

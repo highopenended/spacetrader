@@ -17,10 +17,23 @@ export const useScrapDropTargets = () => {
   const { dropZoneRef: binRef, isPointInside: isPointInsideBin } = useDropZoneBounds();
 
   const resolveScrapDropTarget = useCallback((pointPx: { x: number; y: number }): ScrapDropTarget => {
-    // Check purge zone first (higher priority)
-    const purgeZoneEl = document.getElementById(DOM_IDS.PURGE_ZONE);
-    if (purgeZoneEl) {
-      const rect = purgeZoneEl.getBoundingClientRect();
+    // Check purge zones first (higher priority) - work mode, then window
+    const workModePurgeZoneEl = document.getElementById(DOM_IDS.PURGE_ZONE_WORKMODE);
+    if (workModePurgeZoneEl) {
+      const rect = workModePurgeZoneEl.getBoundingClientRect();
+      if (
+        pointPx.x >= rect.left &&
+        pointPx.x <= rect.right &&
+        pointPx.y >= rect.top &&
+        pointPx.y <= rect.bottom
+      ) {
+        return 'purgeZone';
+      }
+    }
+
+    const windowPurgeZoneEl = document.getElementById(DOM_IDS.PURGE_ZONE_WINDOW);
+    if (windowPurgeZoneEl) {
+      const rect = windowPurgeZoneEl.getBoundingClientRect();
       if (
         pointPx.x >= rect.left &&
         pointPx.x <= rect.right &&
