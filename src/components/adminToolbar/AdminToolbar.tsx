@@ -20,6 +20,7 @@ interface AdminToolbarProps {
   resumeTime: () => void;
   resetGame: () => void;
   setGameBackground: (backgroundId: string) => void;
+  triggerEnding: (endingId: string) => void;
 }
 
 // Layout constants for consistent sizing/positioning
@@ -41,7 +42,8 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
   pauseTime,
   resumeTime,
   resetGame,
-  setGameBackground
+  setGameBackground,
+  triggerEnding
 }) => {
   const [isMinimized, setIsMinimized] = useState(true);
   
@@ -137,6 +139,16 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
   ];
 
   const backgroundOptions = ['default', ...Object.keys(GameBackgroundRegistry)];
+  
+  // Test endings for the dropdown
+  const testEndingOptions = [
+    { id: '', label: 'Select ending to test...' },
+    { id: 'defaultEnding', label: 'Default Ending (Game Over)' },
+    { id: 'recursivePurge', label: 'Recursive Purge' },
+    { id: 'economicSingularity', label: 'Economic Singularity' },
+    { id: 'timeParadox', label: 'Time Paradox' },
+    { id: 'perfectAscension', label: 'Perfect Ascension' }
+  ];
 
   return (
     <div 
@@ -219,6 +231,25 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
               {backgroundOptions.map(option => (
                 <option key={option} value={option}>
                   {option.charAt(0).toUpperCase() + option.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="admin-section">
+            <h4>Test Endings</h4>
+            <select 
+              onChange={(e) => {
+                if (e.target.value) {
+                  triggerEnding(e.target.value);
+                  e.target.value = ''; // Reset selection
+                }
+              }}
+              className="ending-select"
+            >
+              {testEndingOptions.map(option => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
                 </option>
               ))}
             </select>

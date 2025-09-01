@@ -1,0 +1,49 @@
+/* Default Ending Cutscene Styles */
+
+.default-ending-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  cursor: pointer;
+}
+
+.default-ending-content {
+  text-align: center;
+  color: #fff;
+  font-family: var(--font-family-mono, monospace);
+}
+
+.default-ending-title {
+  font-size: 4rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  letter-spacing: 0.2em;
+}
+
+.default-ending-name {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #ccc;
+  text-transform: uppercase;
+}
+
+.default-ending-description {
+  font-size: 1rem;
+  margin-bottom: 3rem;
+  color: #aaa;
+  max-width: 60rem;
+  line-height: 1.5;
+}
+
+.default-ending-continue {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 2rem;
+}

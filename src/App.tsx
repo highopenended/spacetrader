@@ -44,6 +44,9 @@ import GameOptionsMenu from './components/gameOptions/gameOptionsMenu/GameOption
 import { useQuickBarState } from './hooks/useQuickBarState';
 import { useUpgradesState } from './hooks/useUpgradesState';
 import { useProfileState } from './hooks/useProfileState';
+import { useEndingsState } from './hooks/useEndingsState';
+import { ENDINGS_REGISTRY } from './constants/endingsRegistry';
+import EndingCutscene from './components/endings/EndingCutscene';
 
 function App() {  
   const {
@@ -131,6 +134,13 @@ function App() {
     decodeProfileState
   } = useProfileState();
 
+  // Endings state (single instance) - needs addEndingAchieved from profile hook
+  const {
+    endingState,
+    checkForEndingTriggers,
+    clearActiveEnding
+  } = useEndingsState(addEndingAchieved);
+
   // Create save/load functions with all encode/decode functions
   const {
     saveToLocalCache,
@@ -161,6 +171,23 @@ function App() {
   const handleOptionsClose = React.useCallback(() => {
     setIsOptionsMenuOpen(false);
   }, []);
+
+  // Admin trigger function for testing endings
+  const triggerEnding = React.useCallback((endingId: string) => {
+    const ending = ENDINGS_REGISTRY[endingId];
+    if (ending) {
+      // Create minimal trigger data for admin testing
+      const triggerData = {
+        event: 'app-purged' as const,
+        appId: endingId, // Just use the ending ID
+        isWorkModePurge: false,
+        isUpgradePurchased: upgrades.isPurchased,
+        installedApps: installedApps.map(app => app.id)
+      };
+      
+      checkForEndingTriggers(triggerData, ENDINGS_REGISTRY);
+    }
+  }, [checkForEndingTriggers, upgrades.isPurchased, installedApps]);
 
 
 
@@ -256,7 +283,8 @@ function App() {
       pauseTime,
       resumeTime,
       resetGame: handleResetGame,
-      setGameBackground
+      setGameBackground,
+      triggerEnding
     }
   }), [
     toggleStates,
@@ -281,7 +309,8 @@ function App() {
     pauseTime,
     resumeTime,
     handleResetGame,
-    setGameBackground
+    setGameBackground,
+    triggerEnding
   ]);
 
   return (
@@ -313,6 +342,14 @@ function App() {
           {gameMode === 'workMode' && <WorkScreen updateCredits={updateCredits} isUpgradePurchased={upgrades.isPurchased} installedApps={installedApps} />}
           
           {isOptionsMenuOpen && <GameOptionsMenu onClose={handleOptionsClose} profileState={profileState} />}
+          
+          {/* Ending cutscene overlay - renders on top of everything */}
+          {endingState.activeEnding && (
+            <EndingCutscene 
+              activeEnding={endingState.activeEnding}
+              onComplete={clearActiveEnding}
+            />
+          )}
         </div>
       </DragManager>
     </UIProvider>
