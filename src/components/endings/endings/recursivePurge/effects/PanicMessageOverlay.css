@@ -1,0 +1,174 @@
+/* Panic Message Overlay - Terminal-style message boxes with corruption */
+
+.panic-message-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9500;
+  overflow: hidden;
+}
+
+.panic-message-container {
+  position: absolute;
+  font-family: var(--font-family-mono, 'Courier New', monospace);
+  min-width: 300px;
+  max-width: 500px;
+  pointer-events: none;
+  user-select: none;
+  
+  /* Terminal window styling */
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #ff0000;
+  border-radius: 4px;
+  box-shadow: 
+    0 0 10px rgba(255, 0, 0, 0.5),
+    0 0 20px rgba(255, 0, 0, 0.3),
+    inset 0 0 10px rgba(255, 0, 0, 0.1);
+  
+  /* Spawn animation */
+  animation: panic-box-lifecycle 4s ease-out forwards;
+  
+  /* Corruption effects */
+  filter: contrast(1) brightness(1) blur(0px);
+  transform: translate(0, 0) rotate(0deg) scale(1);
+}
+
+.panic-message-container.corrupted {
+  /* Corruption visual effects */
+  animation: 
+    panic-box-lifecycle 4s ease-out forwards,
+    corruption-glitch 0.2s infinite;
+  
+  border-color: #ff3333;
+  box-shadow: 
+    0 0 15px rgba(255, 0, 0, 0.8),
+    0 0 30px rgba(255, 0, 0, 0.5),
+    inset 0 0 15px rgba(255, 0, 0, 0.2);
+}
+
+.panic-message-header {
+  background: rgba(255, 0, 0, 0.1);
+  border-bottom: 1px solid #ff0000;
+  padding: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.panic-message-title {
+  color: #ff0000;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.panic-message-time {
+  color: #ff6666;
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.panic-message-content {
+  padding: 1rem;
+  color: #ff0000;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+  text-shadow: 
+    0 0 5px #ff0000,
+    0 0 10px #ff0000;
+}
+
+/* Message lifecycle animation */
+@keyframes panic-box-lifecycle {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(-20px);
+    filter: blur(2px);
+  }
+  
+  10% {
+    opacity: 1;
+    transform: scale(1) translateY(0px);
+    filter: blur(0px);
+  }
+  
+  80% {
+    opacity: 1;
+    transform: scale(1) translateY(0px);
+    filter: blur(0px);
+  }
+  
+  100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+    filter: blur(1px);
+  }
+}
+
+/* Corruption glitch effect */
+@keyframes corruption-glitch {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+    filter: contrast(1) brightness(1) hue-rotate(0deg);
+    border-color: #ff0000;
+  }
+  
+  20% {
+    transform: translate(-2px, 1px) rotate(-0.5deg);
+    filter: contrast(1.2) brightness(1.1) hue-rotate(5deg);
+    border-color: #ff3333;
+  }
+  
+  40% {
+    transform: translate(1px, -1px) rotate(0.3deg);
+    filter: contrast(0.9) brightness(0.9) hue-rotate(-3deg);
+    border-color: #ff6666;
+  }
+  
+  60% {
+    transform: translate(-1px, 2px) rotate(-0.2deg);
+    filter: contrast(1.3) brightness(1.2) hue-rotate(8deg);
+    border-color: #ff1111;
+  }
+  
+  80% {
+    transform: translate(2px, 0px) rotate(0.4deg);
+    filter: contrast(0.8) brightness(0.8) hue-rotate(-5deg);
+    border-color: #ff4444;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .panic-message-container {
+    min-width: 250px;
+    max-width: 90vw;
+  }
+  
+  .panic-message-header {
+    padding: 0.4rem;
+    font-size: 0.7rem;
+  }
+  
+  .panic-message-content {
+    padding: 0.8rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .panic-message-container {
+    min-width: 200px;
+  }
+  
+  .panic-message-content {
+    font-size: 0.7rem;
+  }
+}

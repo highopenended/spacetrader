@@ -19,7 +19,7 @@ interface EndingCutsceneProps {
 
 const EndingCutscene: React.FC<EndingCutsceneProps> = ({ 
   activeEnding, 
-  onComplete 
+  onComplete
 }) => {
   const { ending } = activeEnding;
 

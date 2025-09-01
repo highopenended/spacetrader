@@ -86,6 +86,8 @@ export const useGameState = () => {
     setGameState(prev => ({ ...prev, gameBackground: backgroundId }));
   }, []);
 
+
+
   // ===== TIME MANAGEMENT =====
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const advanceTime = useCallback(() => {
