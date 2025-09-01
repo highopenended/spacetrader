@@ -1,0 +1,297 @@
+/* CRT Effects - Screen wobbles, scanlines, and static */
+
+.crt-effects {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9000; /* Below panic messages but above game content */
+  overflow: hidden;
+  /* Temporary: add visible background for debugging */
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Scanlines overlay */
+.crt-scanlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.15) 2px,
+    rgba(0, 0, 0, 0.15) 4px
+  );
+  opacity: 0.8;
+  animation: scanlines-flicker 0.1s infinite linear;
+}
+
+/* Static overlay */
+.crt-static {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 2px
+    ),
+    repeating-linear-gradient(
+      45deg,
+      transparent 0px,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 3px
+    );
+  opacity: 0.4;
+  animation: static-noise 0.05s infinite;
+}
+
+/* Screen wobble effect */
+.crt-wobble {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+/* Intensity-based wobble effects */
+.crt-effects.subtle .crt-wobble {
+  animation: wobble-subtle 3s ease-in-out infinite;
+}
+
+.crt-effects.subtle .crt-static {
+  opacity: 0.1;
+  animation: static-noise 0.1s infinite;
+}
+
+.crt-effects.moderate .crt-wobble {
+  animation: wobble-moderate 2s ease-in-out infinite;
+}
+
+.crt-effects.moderate .crt-static {
+  opacity: 0.15;
+  animation: static-noise 0.08s infinite;
+}
+
+.crt-effects.heavy .crt-wobble {
+  animation: 
+    wobble-heavy 1.5s ease-in-out infinite,
+    wobble-horizontal 0.8s ease-in-out infinite;
+}
+
+.crt-effects.heavy .crt-static {
+  opacity: 0.25;
+  animation: static-noise 0.06s infinite;
+}
+
+.crt-effects.heavy .crt-scanlines {
+  animation: 
+    scanlines-flicker 0.1s infinite linear,
+    scanlines-drift 1.2s ease-in-out infinite;
+}
+
+.crt-effects.extreme .crt-wobble {
+  animation: 
+    wobble-extreme 1s ease-in-out infinite,
+    wobble-horizontal 0.5s ease-in-out infinite,
+    wobble-chaos 0.3s ease-in-out infinite;
+}
+
+.crt-effects.extreme .crt-static {
+  opacity: 0.35;
+  animation: static-chaos 0.04s infinite;
+}
+
+.crt-effects.extreme .crt-scanlines {
+  animation: 
+    scanlines-flicker 0.08s infinite linear,
+    scanlines-drift 0.8s ease-in-out infinite,
+    scanlines-distort 0.6s ease-in-out infinite;
+}
+
+/* Wobble animations */
+@keyframes wobble-subtle {
+  0%, 100% { 
+    transform: translateY(0px);
+    filter: blur(0px);
+  }
+  50% { 
+    transform: translateY(2px);
+    filter: blur(0.3px);
+  }
+}
+
+@keyframes wobble-moderate {
+  0%, 100% { 
+    transform: translateY(0px) scale(1);
+    filter: blur(0px);
+  }
+  25% { 
+    transform: translateY(1px) scale(1.001);
+    filter: blur(0.1px);
+  }
+  75% { 
+    transform: translateY(-0.5px) scale(0.999);
+    filter: blur(0.2px);
+  }
+}
+
+@keyframes wobble-heavy {
+  0%, 100% { 
+    transform: translateY(0px) scale(1);
+    filter: blur(0px);
+  }
+  25% { 
+    transform: translateY(2px) scale(1.002);
+    filter: blur(0.2px);
+  }
+  50% { 
+    transform: translateY(-1px) scale(0.998);
+    filter: blur(0.3px);
+  }
+  75% { 
+    transform: translateY(1.5px) scale(1.001);
+    filter: blur(0.1px);
+  }
+}
+
+@keyframes wobble-extreme {
+  0%, 100% { 
+    transform: translateY(0px) scale(1);
+    filter: blur(0px);
+  }
+  20% { 
+    transform: translateY(3px) scale(1.003);
+    filter: blur(0.4px);
+  }
+  40% { 
+    transform: translateY(-2px) scale(0.997);
+    filter: blur(0.5px);
+  }
+  60% { 
+    transform: translateY(2.5px) scale(1.002);
+    filter: blur(0.3px);
+  }
+  80% { 
+    transform: translateY(-1.5px) scale(0.999);
+    filter: blur(0.4px);
+  }
+}
+
+@keyframes wobble-horizontal {
+  0%, 100% { transform: translateX(0px); }
+  25% { transform: translateX(1px); }
+  75% { transform: translateX(-1px); }
+}
+
+@keyframes wobble-chaos {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(0.1deg); }
+  50% { transform: rotate(-0.1deg); }
+  75% { transform: rotate(0.05deg); }
+}
+
+/* Scanline animations */
+@keyframes scanlines-flicker {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes scanlines-drift {
+  0%, 100% { 
+    background-position: 0px 0px;
+  }
+  50% { 
+    background-position: 0px 2px;
+  }
+}
+
+@keyframes scanlines-distort {
+  0%, 100% { 
+    transform: scaleY(1);
+  }
+  50% { 
+    transform: scaleY(1.002);
+  }
+}
+
+/* Static animations */
+@keyframes static-noise {
+  0% { 
+    background-position: 0px 0px, 0px 0px;
+    opacity: 0.2;
+  }
+  25% { 
+    background-position: 1px 1px, 2px -1px;
+    opacity: 0.15;
+  }
+  50% { 
+    background-position: -1px 2px, 1px 1px;
+    opacity: 0.25;
+  }
+  75% { 
+    background-position: 2px -1px, -1px 2px;
+    opacity: 0.18;
+  }
+  100% { 
+    background-position: 0px 1px, 1px 0px;
+    opacity: 0.2;
+  }
+}
+
+@keyframes static-chaos {
+  0% { 
+    background-position: 0px 0px, 0px 0px;
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  20% { 
+    background-position: 2px 3px, -2px 1px;
+    opacity: 0.25;
+    transform: scale(1.001);
+  }
+  40% { 
+    background-position: -1px -2px, 3px 2px;
+    opacity: 0.4;
+    transform: scale(0.999);
+  }
+  60% { 
+    background-position: 3px 1px, 1px -3px;
+    opacity: 0.3;
+    transform: scale(1.002);
+  }
+  80% { 
+    background-position: -2px 2px, -1px -1px;
+    opacity: 0.35;
+    transform: scale(0.998);
+  }
+  100% { 
+    background-position: 1px -1px, 2px 2px;
+    opacity: 0.35;
+    transform: scale(1);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .crt-scanlines {
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 1px,
+      rgba(0, 0, 0, 0.02) 1px,
+      rgba(0, 0, 0, 0.02) 2px
+    );
+  }
+}

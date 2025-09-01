@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import PanicMessageOverlay from './effects/PanicMessageOverlay';
+import CRTEffects from './effects/CRTEffects';
 import './RecursivePurgeCutscene.css';
 
 interface RecursivePurgeCutsceneProps {
@@ -25,22 +26,35 @@ const RecursivePurgeCutscene: React.FC<RecursivePurgeCutsceneProps> = ({
 }) => {
   const [panicActive, setPanicActive] = useState(false);
   const [panicIntensity, setPanicIntensity] = useState<'low' | 'medium' | 'high' | 'extreme'>('low');
+  const [crtActive, setCrtActive] = useState(false);
+  const [crtIntensity, setCrtIntensity] = useState<'subtle' | 'moderate' | 'heavy' | 'extreme'>('subtle');
   const [showEndingScreen, setShowEndingScreen] = useState(false);
 
-  // Start panic messages and gradually increase intensity
+  // Start effects and gradually increase intensity
   useEffect(() => {
-    // Start with panic messages immediately
+    // Start with both effects immediately
     setPanicActive(true);
+    setCrtActive(true);
     
-    // Gradually escalate intensity
+    // Gradually escalate intensity for both effects
     const escalationTimers = [
-      setTimeout(() => setPanicIntensity('medium'), 2800),   // 2.8s
-      setTimeout(() => setPanicIntensity('high'), 5600),     // 5.6s  
-      setTimeout(() => setPanicIntensity('extreme'), 8400),  // 8.4s
+      setTimeout(() => {
+        setPanicIntensity('medium');
+        setCrtIntensity('moderate');
+      }, 2800),   // 2.8s
+      setTimeout(() => {
+        setPanicIntensity('high');
+        setCrtIntensity('heavy');
+      }, 5600),     // 5.6s  
+      setTimeout(() => {
+        setPanicIntensity('extreme');
+        setCrtIntensity('extreme');
+      }, 8400),  // 8.4s
       setTimeout(() => {
         setPanicActive(false);
+        setCrtActive(false);
         setShowEndingScreen(true);
-      }, 11200) // 11.2s - end panic and show ending
+      }, 11200) // 11.2s - end effects and show ending
     ];
 
     return () => {
@@ -57,6 +71,12 @@ const RecursivePurgeCutscene: React.FC<RecursivePurgeCutsceneProps> = ({
 
   return (
     <>
+      {/* CRT Effects - runs in background */}
+      <CRTEffects 
+        isActive={crtActive}
+        intensity={crtIntensity}
+      />
+      
       {/* Panic Message Effect */}
       <PanicMessageOverlay 
         isActive={panicActive}
@@ -69,7 +89,7 @@ const RecursivePurgeCutscene: React.FC<RecursivePurgeCutsceneProps> = ({
           <div className="temp-content">
             <h1>{endingName}</h1>
             {endingDescription && <p>{endingDescription}</p>}
-            <p>Current: Panic messages completed</p>
+            <p>Current: Panic messages + CRT effects completed</p>
             <p>Click to continue</p>
           </div>
         </div>
