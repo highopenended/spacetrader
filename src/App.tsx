@@ -87,19 +87,7 @@ function App() {
   // Quick Bar state
   const { quickBarFlags, setQuickBarFlag, quickBarConfig } = useQuickBarState();
 
-  // Enhanced uninstallApp that clears upgrades and turns off related features
-  const uninstallAppWithUpgradeClearing = React.useCallback((appId: string) => {
-    // Clear upgrades first
-    upgrades.clearUpgradesForApp(appId);
-    
-    // Turn off Dumpster Vision if that app is being uninstalled
-    if (appId === 'dumpsterVision') {
-      setQuickBarFlag('isActiveDumpsterVision', false);
-    }
-    
-    // Then uninstall app
-    uninstallApp(appId);
-  }, [upgrades, uninstallApp, setQuickBarFlag]);
+  // Enhanced uninstallApp that clears upgrades and turns off related features (defined later after endings state)
 
   const {
     windows,
@@ -140,6 +128,36 @@ function App() {
     checkForEndingTriggers,
     clearActiveEnding
   } = useEndingsState(addEndingAchieved);
+
+  // Enhanced uninstallApp that clears upgrades and turns off related features
+  const uninstallAppWithUpgradeClearing = React.useCallback((appId: string) => {
+    // Clear upgrades first
+    upgrades.clearUpgradesForApp(appId);
+    
+    // Turn off Dumpster Vision if that app is being uninstalled
+    if (appId === 'dumpsterVision') {
+      setQuickBarFlag('isActiveDumpsterVision', false);
+    }
+    
+    // Check for recursive purge ending (purge zone deleting itself)
+    if (appId === 'purgeZone') {
+      // Trigger the recursive purge ending
+      const triggerData = {
+        event: 'app-purged' as const,
+        appId: appId,
+        isWorkModePurge: false,
+        isUpgradePurchased: upgrades.isPurchased,
+        installedApps: installedApps.map(app => app.id)
+      };
+      
+      // Trigger only the recursive purge ending
+      const recursivePurgeRegistry = { recursivePurge: ENDINGS_REGISTRY.recursivePurge };
+      checkForEndingTriggers(triggerData, recursivePurgeRegistry);
+    }
+    
+    // Then uninstall app
+    uninstallApp(appId);
+  }, [upgrades, uninstallApp, setQuickBarFlag, installedApps, checkForEndingTriggers]);
 
   // Create save/load functions with all encode/decode functions
   const {
