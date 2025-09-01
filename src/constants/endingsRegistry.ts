@@ -26,9 +26,9 @@ export const ENDINGS_REGISTRY: Record<string, EndingDefinition> = {
   recursivePurge: {
     id: 'recursivePurge',
     name: 'Recursive Purge',
-    description: 'You dropped the Purge Zone into itself, creating an infinite void collision that violates the fundamental laws of physics.',
+    description: 'You dropped the Purge Zone into itself, creating an infinite void collision that violates the fundamental laws of physics. Reality could not sustain such a paradox.',
     checkTrigger: () => true, // Placeholder - always triggers when called
-    cutsceneComponent: 'DefaultEnding'
+    cutsceneComponent: 'RecursivePurgeCutscene'
   },
 
   economicSingularity: {

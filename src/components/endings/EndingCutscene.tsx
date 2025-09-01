@@ -8,6 +8,7 @@
 import React from 'react';
 import { ActiveEnding } from '../../types/endingState';
 import { DefaultEnding } from './endings/defaultEnding';
+import { RecursivePurgeCutscene } from './endings/recursivePurge';
 
 interface EndingCutsceneProps {
   /** The active ending to display */
@@ -22,10 +23,23 @@ const EndingCutscene: React.FC<EndingCutsceneProps> = ({
 }) => {
   const { ending } = activeEnding;
 
-  // For now, all endings use the default cutscene
-  // Later we can add a switch statement to handle specific cutscene components
+  // Route to appropriate cutscene component
+  console.log('EndingCutscene: rendering ending', ending.id, 'with component', ending.cutsceneComponent);
+  
   switch (ending.cutsceneComponent) {
+    case 'RecursivePurgeCutscene':
+      console.log('EndingCutscene: Using RecursivePurgeCutscene');
+      return (
+        <RecursivePurgeCutscene 
+          onComplete={onComplete}
+          endingName={ending.name}
+          endingDescription={ending.description}
+        />
+      );
+    
+    case 'DefaultEnding':
     default:
+      console.log('EndingCutscene: Using DefaultEnding (fallback)');
       return (
         <DefaultEnding 
           onComplete={onComplete}

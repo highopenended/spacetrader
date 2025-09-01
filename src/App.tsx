@@ -174,18 +174,34 @@ function App() {
 
   // Admin trigger function for testing endings
   const triggerEnding = React.useCallback((endingId: string) => {
+    console.log('triggerEnding: called with ID', endingId);
     const ending = ENDINGS_REGISTRY[endingId];
+    console.log('triggerEnding: found ending', ending);
+    
     if (ending) {
-      // Create minimal trigger data for admin testing
+      // For admin testing, directly trigger the specific ending
+      const activeEnding = {
+        ending,
+        triggeredAt: Date.now()
+      };
+      
+      console.log('triggerEnding: setting active ending', activeEnding);
+      // Directly set the ending instead of going through the trigger system
+      const endingState = { activeEnding };
+      
+      // We need to manually call the ending state setter here
+      // For now, let's use the trigger system but with a more specific approach
       const triggerData = {
         event: 'app-purged' as const,
-        appId: endingId, // Just use the ending ID
+        appId: endingId,
         isWorkModePurge: false,
         isUpgradePurchased: upgrades.isPurchased,
         installedApps: installedApps.map(app => app.id)
       };
       
-      checkForEndingTriggers(triggerData, ENDINGS_REGISTRY);
+      // Create a single-ending registry for this test
+      const singleEndingRegistry = { [endingId]: ending };
+      checkForEndingTriggers(triggerData, singleEndingRegistry);
     }
   }, [checkForEndingTriggers, upgrades.isPurchased, installedApps]);
 
