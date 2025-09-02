@@ -115,9 +115,7 @@ function App() {
   // Profile state (single instance)
   const {
     profileState,
-    setProfileName,
     addEndingAchieved,
-    resetProfile,
     encodeProfileState,
     decodeProfileState
   } = useProfileState();
@@ -204,8 +202,7 @@ function App() {
       };
       
       console.log('triggerEnding: setting active ending', activeEnding);
-      // Directly set the ending instead of going through the trigger system
-      const endingState = { activeEnding };
+
       
       // We need to manually call the ending state setter here
       // For now, let's use the trigger system but with a more specific approach

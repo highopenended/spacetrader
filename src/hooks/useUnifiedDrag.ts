@@ -246,8 +246,6 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
     if (active.data?.current?.type === 'window-drag-node') {
       const { appType, deletable, windowTitle } = active.data.current;
       
-      if (over?.id === DOM_IDS.PURGE_ZONE_WINDOW) return; // Prevent dropping into window purge zone
-      
       if (deletable) {
         setPendingDelete({ appId: appType, prevOrder: appOrder });
         uiActions.showPopup({
@@ -261,6 +259,7 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
         });
       }
     } else {
+      
       // App list item deletion
       const appDefinition = apps.find((app: any) => app.id === active.id);
       if (appDefinition && appDefinition.deletable) {
@@ -317,11 +316,13 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
       return;
     }
     
+
     // Handle drop targets
     if (over.id === DOM_IDS.PURGE_ZONE_WINDOW || over.id === DOM_IDS.PURGE_ZONE_WORKMODE) {
       handlePurgeDrop(active, over);
     } else if (over.id === DOM_IDS.TERMINAL_DOCK) {
       handleTerminalDrop(active);
+
     } else if (active.data?.current?.type === 'app-drag-node') {
       handleAppReorder(active.id, over.id);
     }

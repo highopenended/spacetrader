@@ -116,6 +116,7 @@ export const useDragHandler_Windows = (options: DragHandlerOptions = {}) => {
   // Update position when initialPosition changes
   useEffect(() => {
     setPosition(initialPosition);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialPosition.x, initialPosition.y]);
 
   return {
