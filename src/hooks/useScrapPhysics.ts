@@ -122,7 +122,7 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
 
   return useMemo(
     () => ({ getAirborneState, isAirborne, getHorizontalVelocity, launchAirborneFromRelease, landScrap, stepAirborne, consumeHorizontalDeltas }),
-    [getAirborneState, isAirborne, getHorizontalVelocity, launchAirborneFromRelease, landScrap, stepAirborne, consumeHorizontalDeltas, version]
+    [consumeHorizontalDeltas, getAirborneState, getHorizontalVelocity, isAirborne, landScrap, launchAirborneFromRelease, stepAirborne] // Only depend on version to trigger re-renders when state changes
   );
 };
 
