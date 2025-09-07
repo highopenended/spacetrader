@@ -7,12 +7,13 @@
 
 import { useState, useCallback } from 'react';
 import { EndingState, EndingTriggerData, EndingDefinition, ActiveEnding } from '../types/endingState';
+import { useProfileStore } from '../stores';
 
 const DEFAULT_ENDING_STATE: EndingState = {
   activeEnding: null
 };
 
-export const useEndingsState = (addEndingAchieved: (endingName: string) => void) => {
+export const useEndingsState = () => {
   const [endingState, setEndingState] = useState<EndingState>(DEFAULT_ENDING_STATE);
 
   /**
@@ -33,11 +34,11 @@ export const useEndingsState = (addEndingAchieved: (endingName: string) => void)
         };
         
         setEndingState({ activeEnding });
-        addEndingAchieved(ending.id);
+        useProfileStore.getState().addEndingAchieved(ending.id);
         return; // Only trigger one ending at a time
       }
     }
-  }, [endingState.activeEnding, addEndingAchieved]);
+  }, [endingState.activeEnding]);
 
   /**
    * Clear the active ending (called when cutscene completes)

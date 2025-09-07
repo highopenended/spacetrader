@@ -6,15 +6,17 @@
  */
 
 import React, { useEffect } from 'react';
-import { ProfileState } from '../../../types/profileState';
+import { useProfileStore } from '../../../stores';
 import './GameOptionsMenu.css';
 
 interface GameOptionsMenuProps {
   onClose: () => void;
-  profileState: ProfileState;
 }
 
-const GameOptionsMenu: React.FC<GameOptionsMenuProps> = ({ onClose, profileState }) => {
+const GameOptionsMenu: React.FC<GameOptionsMenuProps> = ({ onClose }) => {
+  // Profile state from Zustand store (selective subscriptions)
+  const profileName = useProfileStore(state => state.profileName);
+  const endingsAchieved = useProfileStore(state => state.endingsAchieved);
   // Block ALL input events to create true modal behavior
   useEffect(() => {
     const handleEventCapture = (e: Event) => {
@@ -76,11 +78,11 @@ const GameOptionsMenu: React.FC<GameOptionsMenuProps> = ({ onClose, profileState
           <div className="profile-info-row">
             <div className="profile-info-item">
               <span className="info-label">Profile:</span>
-              <span className="info-value">{profileState.profileName}</span>
+              <span className="info-value">{profileName}</span>
             </div>
             <div className="profile-info-item">
               <span className="info-label">Endings Achieved:</span>
-              <span className="info-value">{profileState.endingsAchieved.length}</span>
+              <span className="info-value">{endingsAchieved.length}</span>
             </div>
           </div>
           
