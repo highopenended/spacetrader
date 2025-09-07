@@ -20,7 +20,7 @@ import TerminalScreen from './components/terminalScreen/TerminalScreen';
 import AdminToolbar from './components/adminToolbar/AdminToolbar';
 import WorkScreen from './components/workMode/workScreen/WorkScreen';
 import GameBackground from './components/gameBackgrounds/GameBackground';
-import { useGameStore, useUpgradesStore, useToggleStore, useWindowStore, useProfileStore } from './stores';
+import { useGameStore, useUpgradesStore, useToggleStore, useWindowStore, useProfileStore, useEndingsStore } from './stores';
 import { useSaveLoad } from './hooks/useSaveLoad';
 import { WindowData } from './types/windowState';
 
@@ -37,7 +37,6 @@ import VisualOverlayManager from './components/visualOverlayManager/VisualOverla
 import GameOptionsGear from './components/gameOptions/gameOptionsGear/GameOptionsGear';
 import GameOptionsMenu from './components/gameOptions/gameOptionsMenu/GameOptionsMenu';
 import { useQuickBarState } from './hooks/useQuickBarState';
-import { useEndingsState } from './hooks/useEndingsState';
 import { ENDINGS_REGISTRY } from './constants/endingsRegistry';
 import EndingCutscene from './components/endings/EndingCutscene';
 
@@ -103,12 +102,10 @@ function App() {
   const encodeProfileState = useProfileStore(state => state.encodeProfileState);
   const decodeProfileState = useProfileStore(state => state.decodeProfileState);
 
-  // Endings state (single instance)
-  const {
-    endingState,
-    checkForEndingTriggers,
-    clearActiveEnding
-  } = useEndingsState();
+  // Endings state from Zustand store (selective subscriptions)
+  const activeEnding = useEndingsStore(state => state.activeEnding);
+  const checkForEndingTriggers = useEndingsStore(state => state.checkForEndingTriggers);
+  const clearActiveEnding = useEndingsStore(state => state.clearActiveEnding);
 
   // Enhanced uninstallApp that clears upgrades and turns off related features
   const uninstallAppWithUpgradeClearing = React.useCallback((appId: string) => {
@@ -342,9 +339,9 @@ function App() {
           {isOptionsMenuOpen && <GameOptionsMenu onClose={handleOptionsClose} />}
           
           {/* Ending cutscene overlay - renders on top of everything */}
-          {endingState.activeEnding && (
+          {activeEnding && (
             <EndingCutscene 
-              activeEnding={endingState.activeEnding}
+              activeEnding={activeEnding}
               onComplete={clearActiveEnding}
             />
           )}

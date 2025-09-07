@@ -23,7 +23,7 @@
 export const resetGame = (): boolean => {
   try {
     // Reset all state in the correct order - all from Zustand stores directly
-    const { useGameStore, useWindowStore, useToggleStore, useUpgradesStore } = require('../stores');
+    const { useGameStore, useWindowStore, useToggleStore, useUpgradesStore, useEndingsStore } = require('../stores');
     
     // Reset game state
     useGameStore.getState().resetGameState();
@@ -36,6 +36,9 @@ export const resetGame = (): boolean => {
     
     // Reset upgrades state
     useUpgradesStore.getState().resetUpgrades();
+    
+    // Reset endings state
+    useEndingsStore.getState().resetEndingsState();
     
     return true;
   } catch (error) {
