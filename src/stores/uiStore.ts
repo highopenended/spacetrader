@@ -20,6 +20,9 @@ interface UIStoreState {
   
   // Popup notification state
   popup: UIPopup | null;
+  
+  // Options menu visibility
+  isOptionsMenuOpen: boolean;
 }
 
 interface UIActions {
@@ -55,6 +58,17 @@ interface UIActions {
    */
   hidePopup: () => void;
   
+  // ===== OPTIONS MENU =====
+  /**
+   * Show the game options menu
+   */
+  showOptionsMenu: () => void;
+  
+  /**
+   * Hide the game options menu
+   */
+  hideOptionsMenu: () => void;
+  
   // ===== RESET =====
   /**
    * Reset all UI state to initial values
@@ -69,7 +83,8 @@ type UIStore = UIStoreState & UIActions;
 const initialState: UIStoreState = {
   isLoading: false,
   modals: {},
-  popup: null
+  popup: null,
+  isOptionsMenuOpen: false
 };
 
 /**
@@ -117,6 +132,14 @@ export const useUIStore = create<UIStore>((set, get) => ({
   
   hidePopup: () => {
     set({ popup: null });
+  },
+  
+  showOptionsMenu: () => {
+    set({ isOptionsMenuOpen: true });
+  },
+  
+  hideOptionsMenu: () => {
+    set({ isOptionsMenuOpen: false });
   },
   
   resetUI: () => {

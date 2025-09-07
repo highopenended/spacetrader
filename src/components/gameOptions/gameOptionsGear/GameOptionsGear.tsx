@@ -6,15 +6,13 @@
  */
 
 import React from 'react';
+import { useUIStore } from '../../../stores';
 import './GameOptionsGear.css';
 
-interface GameOptionsGearProps {
-  onClick: () => void;
-}
-
-const GameOptionsGear: React.FC<GameOptionsGearProps> = ({ onClick }) => {
+const GameOptionsGear: React.FC = () => {
+  const showOptionsMenu = useUIStore(state => state.showOptionsMenu);
   return (
-    <div className="game-options-gear" onClick={onClick}>
+    <div className="game-options-gear" onClick={showOptionsMenu}>
       <div className="gear-icon">⚙</div>
     </div>
   );

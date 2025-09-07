@@ -20,7 +20,7 @@ import TerminalScreen from './components/terminalScreen/TerminalScreen';
 import AdminToolbar from './components/adminToolbar/AdminToolbar';
 import WorkScreen from './components/workMode/workScreen/WorkScreen';
 import GameBackground from './components/gameBackgrounds/GameBackground';
-import { useGameStore, useUpgradesStore, useToggleStore, useWindowStore, useProfileStore, useEndingsStore, useQuickBarStore } from './stores';
+import { useGameStore, useUpgradesStore, useToggleStore, useWindowStore, useProfileStore, useEndingsStore, useQuickBarStore, useUIStore } from './stores';
 import { useSaveLoad } from './hooks/useSaveLoad';
 import { WindowData } from './types/windowState';
 
@@ -108,6 +108,9 @@ function App() {
   const encodeQuickBarState = useQuickBarStore(state => state.encodeQuickBarState);
   const decodeQuickBarState = useQuickBarStore(state => state.decodeQuickBarState);
 
+  // UI state from Zustand store (selective subscriptions)
+  const isOptionsMenuOpen = useUIStore(state => state.isOptionsMenuOpen);
+
   // Enhanced uninstallApp that clears upgrades and turns off related features
   const uninstallAppWithUpgradeClearing = React.useCallback((appId: string) => {
     // Clear upgrades first - access upgradesStore directly
@@ -156,17 +159,6 @@ function App() {
     // Note: Profile state is NOT reset when resetting game
   }, []);
 
-  // Options menu state
-  const [isOptionsMenuOpen, setIsOptionsMenuOpen] = React.useState(false);
-
-  // Options menu handlers
-  const handleOptionsClick = React.useCallback(() => {
-    setIsOptionsMenuOpen(true);
-  }, []);
-
-  const handleOptionsClose = React.useCallback(() => {
-    setIsOptionsMenuOpen(false);
-  }, []);
 
   // Admin trigger function for testing endings
   const triggerEnding = React.useCallback((endingId: string) => {
@@ -322,7 +314,7 @@ function App() {
         <KeyboardManager installedApps={installedApps} />
         <QuickBarManager installedApps={installedApps} />
         <VisualOverlayManager />
-        <GameOptionsGear onClick={handleOptionsClick} />
+        <GameOptionsGear />
         <DataReadout {...componentProps.dataReadout} />
         <QuickKeysBar installedApps={installedApps} />
         <TerminalScreen {...componentProps.terminalScreen} />
@@ -332,7 +324,7 @@ function App() {
 
         {gameMode === 'workMode' && <WorkScreen updateCredits={updateCredits} installedApps={installedApps} />}
         
-        {isOptionsMenuOpen && <GameOptionsMenu onClose={handleOptionsClose} />}
+        {isOptionsMenuOpen && <GameOptionsMenu />}
         
         {/* Ending cutscene overlay - renders on top of everything */}
         {activeEnding && (

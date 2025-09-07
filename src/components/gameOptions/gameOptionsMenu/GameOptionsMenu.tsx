@@ -6,14 +6,11 @@
  */
 
 import React, { useEffect } from 'react';
-import { useProfileStore } from '../../../stores';
+import { useProfileStore, useUIStore } from '../../../stores';
 import './GameOptionsMenu.css';
 
-interface GameOptionsMenuProps {
-  onClose: () => void;
-}
-
-const GameOptionsMenu: React.FC<GameOptionsMenuProps> = ({ onClose }) => {
+const GameOptionsMenu: React.FC = () => {
+  const hideOptionsMenu = useUIStore(state => state.hideOptionsMenu);
   // Profile state from Zustand store (selective subscriptions)
   const profileName = useProfileStore(state => state.profileName);
   const endingsAchieved = useProfileStore(state => state.endingsAchieved);
@@ -27,7 +24,7 @@ const GameOptionsMenu: React.FC<GameOptionsMenuProps> = ({ onClose }) => {
       if (e.type === 'keydown') {
         const keyEvent = e as KeyboardEvent;
         if (keyEvent.key === 'Escape') {
-          onClose();
+          hideOptionsMenu();
         }
         // Prevent all other keyboard events (including QuickBar shortcuts)
         e.preventDefault();
@@ -56,7 +53,7 @@ const GameOptionsMenu: React.FC<GameOptionsMenuProps> = ({ onClose }) => {
         window.removeEventListener(eventType, handleEventCapture, { capture: true });
       });
     };
-  }, [onClose]);
+  }, [hideOptionsMenu]);
 
   // Placeholder click handlers
   const handleChangeProfile = () => {
@@ -68,7 +65,7 @@ const GameOptionsMenu: React.FC<GameOptionsMenuProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="options-overlay" onClick={onClose}>
+    <div className="options-overlay" onClick={hideOptionsMenu}>
       <div className="options-menu" onClick={(e) => e.stopPropagation()}>
         
         {/* Profile Section */}
@@ -108,7 +105,7 @@ const GameOptionsMenu: React.FC<GameOptionsMenuProps> = ({ onClose }) => {
 
         {/* Close Button */}
         <div className="options-close-section">
-          <button className="options-btn close-btn" onClick={onClose}>
+          <button className="options-btn close-btn" onClick={hideOptionsMenu}>
             Close Menu
           </button>
         </div>
