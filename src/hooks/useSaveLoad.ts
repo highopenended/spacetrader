@@ -27,7 +27,9 @@ export const useSaveLoad = (
   encodeToggleState: () => any,
   decodeToggleState: (state: any) => boolean,
   encodeProfileState: () => any,
-  decodeProfileState: (state: any) => boolean
+  decodeProfileState: (state: any) => boolean,
+  encodeQuickBarState: () => any,
+  decodeQuickBarState: (state: any) => boolean
 ) => {
   // Credit costs for save operations only
   const SAVE_COST = 50;
@@ -43,7 +45,8 @@ export const useSaveLoad = (
       gameState: encodeGameState(),
       windowState: encodeWindowState(),
       toggleState: encodeToggleState(),
-      profileState: encodeProfileState()
+      profileState: encodeProfileState(),
+      quickBarState: encodeQuickBarState()
     };
 
     const success = saveGameToLocalStorage(saveData);
@@ -52,7 +55,7 @@ export const useSaveLoad = (
       console.log(`Game saved to local cache. Cost: ${SAVE_COST} credits`);
     }
     return success;
-  }, [credits, encodeGameState, encodeWindowState, encodeToggleState, encodeProfileState, updateCredits]);
+  }, [credits, encodeGameState, encodeWindowState, encodeToggleState, encodeProfileState, encodeQuickBarState, updateCredits]);
 
   // Load from local cache
   const loadFromLocalCache = useCallback(() => {
@@ -90,9 +93,16 @@ export const useSaveLoad = (
       return false;
     }
 
+    // Decode quick bar state
+    const quickBarSuccess = decodeQuickBarState(loadedData.quickBarState);
+    if (!quickBarSuccess) {
+      console.error('Failed to decode quick bar state');
+      return false;
+    }
+
     console.log('Game loaded from local cache');
     return true;
-  }, [decodeGameState, decodeWindowState, decodeToggleState, decodeProfileState]);
+  }, [decodeGameState, decodeWindowState, decodeToggleState, decodeProfileState, decodeQuickBarState]);
 
   // Export to file
   const exportToFile = useCallback(() => {
@@ -105,7 +115,8 @@ export const useSaveLoad = (
       gameState: encodeGameState(),
       windowState: encodeWindowState(),
       toggleState: encodeToggleState(),
-      profileState: encodeProfileState()
+      profileState: encodeProfileState(),
+      quickBarState: encodeQuickBarState()
     };
 
     const success = exportGameToFile(saveData);
@@ -114,7 +125,7 @@ export const useSaveLoad = (
       console.log(`Game exported to file. Cost: ${SAVE_COST} credits`);
     }
     return success;
-  }, [credits, encodeGameState, encodeWindowState, encodeToggleState, encodeProfileState, updateCredits]);
+  }, [credits, encodeGameState, encodeWindowState, encodeToggleState, encodeProfileState, encodeQuickBarState, updateCredits]);
 
   // Import from file
   const importFromFile = useCallback(async (file: File) => {
@@ -152,9 +163,16 @@ export const useSaveLoad = (
       return false;
     }
 
+    // Decode quick bar state
+    const quickBarSuccess = decodeQuickBarState(loadedData.quickBarState);
+    if (!quickBarSuccess) {
+      console.error('Failed to decode quick bar state from file');
+      return false;
+    }
+
     console.log('Game imported from file');
     return true;
-  }, [decodeGameState, decodeWindowState, decodeToggleState, decodeProfileState]);
+  }, [decodeGameState, decodeWindowState, decodeToggleState, decodeProfileState, decodeQuickBarState]);
 
   return {
     saveToLocalCache,

@@ -23,7 +23,7 @@
 export const resetGame = (): boolean => {
   try {
     // Reset all state in the correct order - all from Zustand stores directly
-    const { useGameStore, useWindowStore, useToggleStore, useUpgradesStore, useEndingsStore } = require('../stores');
+    const { useGameStore, useWindowStore, useToggleStore, useUpgradesStore, useEndingsStore, useQuickBarStore } = require('../stores');
     
     // Reset game state
     useGameStore.getState().resetGameState();
@@ -39,6 +39,9 @@ export const resetGame = (): boolean => {
     
     // Reset endings state
     useEndingsStore.getState().resetEndingsState();
+    
+    // Reset quick bar state
+    useQuickBarStore.getState().resetQuickBar();
     
     return true;
   } catch (error) {

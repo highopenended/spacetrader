@@ -11,6 +11,4 @@ export { useToggleStore } from './toggleStore';
 export { useWindowStore } from './windowStore';
 export { useProfileStore } from './profileStore';
 export { useEndingsStore } from './endingsStore';
-
-// Future stores can be exported here as they're migrated:
-// export { useQuickBarStore } from './quickBarStore';
+export { useQuickBarStore } from './quickBarStore';

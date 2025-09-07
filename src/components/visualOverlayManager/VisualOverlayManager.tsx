@@ -1,14 +1,14 @@
 import React from 'react';
-import { QuickBarFlags } from '../../types/quickBarState';
+import { useQuickBarStore } from '../../stores';
 import { OVERLAY_MANIFEST } from './overlays/overlayManifest';
 
-interface VisualOverlayManagerProps {
-  quickBarFlags: QuickBarFlags;
-}
+interface VisualOverlayManagerProps {}
 
 const DEFAULT_OVERLAY_Z = 2500;
 
-const VisualOverlayManager: React.FC<VisualOverlayManagerProps> = ({ quickBarFlags }) => {
+const VisualOverlayManager: React.FC<VisualOverlayManagerProps> = () => {
+  // Get quick bar flags from store
+  const quickBarFlags = useQuickBarStore(state => state.quickBarFlags);
   // Keep overlays mounted briefly after they deactivate to allow exit animations
   const [mounted, setMounted] = React.useState<Record<string, { exiting: boolean }>>({});
 

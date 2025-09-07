@@ -20,7 +20,7 @@ import TerminalScreen from './components/terminalScreen/TerminalScreen';
 import AdminToolbar from './components/adminToolbar/AdminToolbar';
 import WorkScreen from './components/workMode/workScreen/WorkScreen';
 import GameBackground from './components/gameBackgrounds/GameBackground';
-import { useGameStore, useUpgradesStore, useToggleStore, useWindowStore, useProfileStore, useEndingsStore } from './stores';
+import { useGameStore, useUpgradesStore, useToggleStore, useWindowStore, useProfileStore, useEndingsStore, useQuickBarStore } from './stores';
 import { useSaveLoad } from './hooks/useSaveLoad';
 import { WindowData } from './types/windowState';
 
@@ -36,7 +36,6 @@ import QuickBarManager from './components/QuickBarManager';
 import VisualOverlayManager from './components/visualOverlayManager/VisualOverlayManager';
 import GameOptionsGear from './components/gameOptions/gameOptionsGear/GameOptionsGear';
 import GameOptionsMenu from './components/gameOptions/gameOptionsMenu/GameOptionsMenu';
-import { useQuickBarState } from './hooks/useQuickBarState';
 import { ENDINGS_REGISTRY } from './constants/endingsRegistry';
 import EndingCutscene from './components/endings/EndingCutscene';
 
@@ -72,8 +71,6 @@ function App() {
   const decodeGameState = useGameStore(state => state.decodeGameState);
 
 
-  // Quick Bar state
-  const { quickBarFlags, setQuickBarFlag, quickBarConfig } = useQuickBarState();
 
   // Enhanced uninstallApp that clears upgrades and turns off related features (defined later after endings state)
 
@@ -107,6 +104,10 @@ function App() {
   const checkForEndingTriggers = useEndingsStore(state => state.checkForEndingTriggers);
   const clearActiveEnding = useEndingsStore(state => state.clearActiveEnding);
 
+  // Quick bar state from Zustand store (selective subscriptions)
+  const encodeQuickBarState = useQuickBarStore(state => state.encodeQuickBarState);
+  const decodeQuickBarState = useQuickBarStore(state => state.decodeQuickBarState);
+
   // Enhanced uninstallApp that clears upgrades and turns off related features
   const uninstallAppWithUpgradeClearing = React.useCallback((appId: string) => {
     // Clear upgrades first - access upgradesStore directly
@@ -115,6 +116,7 @@ function App() {
     
     // Turn off Dumpster Vision if that app is being uninstalled
     if (appId === 'dumpsterVision') {
+      const { setQuickBarFlag } = useQuickBarStore.getState();
       setQuickBarFlag('isActiveDumpsterVision', false);
     }
     
@@ -137,7 +139,7 @@ function App() {
     
     // Then uninstall app
     uninstallApp(appId);
-  }, [uninstallApp, setQuickBarFlag, installedApps, checkForEndingTriggers]);
+  }, [uninstallApp, installedApps, checkForEndingTriggers]);
 
   // Create save/load functions with all encode/decode functions
   const {
@@ -146,7 +148,7 @@ function App() {
     exportToFile,
     importFromFile,
     SAVE_COST
-  } = useSaveLoad(credits, updateCredits, encodeGameState, decodeGameState, encodeWindowState, decodeWindowState, encodeToggleState, decodeToggleState, encodeProfileState, decodeProfileState);
+  } = useSaveLoad(credits, updateCredits, encodeGameState, decodeGameState, encodeWindowState, decodeWindowState, encodeToggleState, decodeToggleState, encodeProfileState, decodeProfileState, encodeQuickBarState, decodeQuickBarState);
 
   // Create reset function that coordinates all state resets
   const handleResetGame = React.useCallback(() => {
@@ -229,11 +231,6 @@ function App() {
       setToggleState
     };
 
-    const quickBarData = {
-      quickBarFlags,
-      setQuickBarFlag,
-      quickBarConfig
-    };
 
     const windowManager = {
       closeWindow,
@@ -243,7 +240,7 @@ function App() {
     };
 
     // Note: Windows now access upgradesStore directly - no need to pass upgrade data as props
-    return renderWindow(window, windowController, windowManager, toggleData, quickBarData);
+    return renderWindow(window, windowController, windowManager, toggleData);
   };
 
 
@@ -323,12 +320,12 @@ function App() {
       >
         <div className="App">
           <GameBackground backgroundId={gameBackground} />
-          <KeyboardManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
-          <QuickBarManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
-          <VisualOverlayManager quickBarFlags={quickBarFlags} />
+          <KeyboardManager installedApps={installedApps} />
+          <QuickBarManager installedApps={installedApps} />
+          <VisualOverlayManager />
           <GameOptionsGear onClick={handleOptionsClick} />
           <DataReadout {...componentProps.dataReadout} />
-          <QuickKeysBar installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
+          <QuickKeysBar installedApps={installedApps} />
           <TerminalScreen {...componentProps.terminalScreen} />
           <AdminToolbar {...componentProps.adminToolbar} />
           <UIPopupComponent />

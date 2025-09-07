@@ -1,13 +1,10 @@
 import React from 'react';
 import { InstalledApp } from '../../types/appListState';
-import { QuickBarConfig, QuickBarFlags } from '../../types/quickBarState';
-import { useUpgradesStore } from '../../stores';
+import { useUpgradesStore, useQuickBarStore } from '../../stores';
+import { QUICKBAR_CONFIG } from '../../constants/quickBarConstants';
 
 interface QuickKeysBarProps {
   installedApps: InstalledApp[];
-  quickBarFlags: QuickBarFlags;
-  setQuickBarFlag: (key: keyof QuickBarFlags, value: boolean) => void;
-  quickBarConfig: QuickBarConfig;
 }
 
 const Keycap: React.FC<{ label: string; letter: string; glow?: boolean; onClick?: () => void }> = ({ label, letter, glow = false, onClick }) => {
@@ -56,12 +53,16 @@ const Keycap: React.FC<{ label: string; letter: string; glow?: boolean; onClick?
   );
 };
 
-const QuickKeysBar: React.FC<QuickKeysBarProps> = ({ installedApps, quickBarFlags, setQuickBarFlag, quickBarConfig }) => {
+const QuickKeysBar: React.FC<QuickKeysBarProps> = ({ installedApps }) => {
+  // Get quick bar state from store
+  const quickBarFlags = useQuickBarStore(state => state.quickBarFlags);
+  const setQuickBarFlag = useQuickBarStore(state => state.setQuickBarFlag);
+  
   // Get upgrade checker from upgradesStore
   const isUpgradePurchased = useUpgradesStore(state => state.isPurchased);
   
   // Build quick items from quickBarConfig, respect requiresAppId and requiresUpgradeId
-  const quickItems = Object.values(quickBarConfig)
+  const quickItems = Object.values(QUICKBAR_CONFIG)
     .filter(cfg => cfg.showInQuickBar)
     .filter(cfg => !cfg.requiresAppId || installedApps.some(app => app.id === cfg.requiresAppId))
     .filter(cfg => !cfg.requiresUpgradeId || isUpgradePurchased(cfg.requiresUpgradeId))
