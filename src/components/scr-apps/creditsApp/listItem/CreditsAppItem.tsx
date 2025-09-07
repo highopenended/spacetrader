@@ -1,11 +1,7 @@
 import React from 'react';
 import ScrApp from '../../ScrAppItem';
 
-interface CreditsAppProps {
-  credits?: number;
-}
-
-const CreditsApp: React.FC<CreditsAppProps> = ({ credits = 0 }) => {
+const CreditsApp: React.FC = () => {
   return (
     <ScrApp>
       <div>

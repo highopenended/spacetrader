@@ -9,7 +9,6 @@ interface DragManagerProps {
   installedApps: InstalledApp[];
   apps: any[];
   appOrder: string[];
-  appPropsMap: Record<string, any>;
   reorderApps: (apps: InstalledApp[]) => void;
   uninstallApp: (appId: string) => void;
   closeWindowsByAppType: (appType: string) => void;
@@ -22,7 +21,6 @@ const DragManager: React.FC<DragManagerProps> = ({
   installedApps,
   apps,
   appOrder,
-  appPropsMap,
   reorderApps,
   uninstallApp,
   closeWindowsByAppType,
@@ -74,8 +72,8 @@ const DragManager: React.FC<DragManagerProps> = ({
       if (!appConfig) return null;
 
       const AppComponent = appConfig.component;
-      const appProps = appPropsMap[appConfig.id];
-
+      
+      // App components now use Zustand directly - no props needed
       return (
         <DragOverlay
           zIndex={2000}
@@ -85,7 +83,7 @@ const DragManager: React.FC<DragManagerProps> = ({
             className={`sortable-item dragging`}
             style={{ opacity: 0.8, position: 'relative' }}
           >
-            <AppComponent {...appProps} />
+            <AppComponent />
           </div>
         </DragOverlay>
       );

@@ -1,11 +1,7 @@
 import React from 'react';
 import ScrApp from '../../ScrAppItem';
 
-interface ChronoTrackAppProps {
-  // No props needed for barebones version
-}
-
-const ChronoTrackApp: React.FC<ChronoTrackAppProps> = () => {
+const ChronoTrackApp: React.FC = () => {  
   return (
     <ScrApp>
       <div>

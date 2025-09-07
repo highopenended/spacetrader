@@ -11,7 +11,7 @@
  * - GameState: Complete game state structure (currently unused but available for future use)
  * 
  * Used by:
- * - Unified game state hook (useGameState)
+ * - Game store (gameStore)
  * - All components that display game state
  * - Utility functions that manipulate game state
  * - Constants file for type safety

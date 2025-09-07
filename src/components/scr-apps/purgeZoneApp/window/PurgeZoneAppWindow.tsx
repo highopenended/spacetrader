@@ -4,14 +4,21 @@ import UpgradeList from '../../scrAppWindow/UpgradeList';
 import PurgeDropArea from '../../../purgeDropArea/PurgeDropArea';
 import './PurgeZoneAppWindow.css';
 import { DOM_IDS } from '../../../../constants/domIds';
+import { useUpgradesStore } from '../../../../stores';
 
 const PurgeZoneAppWindow: React.FC<BaseWindowProps> = ({
   appType,
   ...windowProps
 }) => {
-  // Upgrades plumbing
-  const { upgradeData } = (windowProps as any) || {};
-  const upgradesForApp = upgradeData?.getUpgradesForApp ? upgradeData.getUpgradesForApp(appType) : [];
+  // Get upgrades directly from upgradesStore
+  const getUpgradesForApp = useUpgradesStore(state => state.getUpgradesForApp);
+  const isPurchased = useUpgradesStore(state => state.isPurchased);
+  const canPurchase = useUpgradesStore(state => state.canPurchase);
+  const purchase = useUpgradesStore(state => state.purchase);
+  const refund = useUpgradesStore(state => state.refund);
+  
+  // Call the function outside the selector to avoid infinite re-renders
+  const upgradesForApp = React.useMemo(() => getUpgradesForApp(appType), [getUpgradesForApp, appType]);
 
   const content = (
     <div className="purge-zone-content window-column-layout">
@@ -31,10 +38,10 @@ const PurgeZoneAppWindow: React.FC<BaseWindowProps> = ({
         <div className="detail-label" style={{ marginBottom: 4 }}>UPGRADES</div>
         <UpgradeList
           upgrades={upgradesForApp}
-          isPurchased={upgradeData?.isPurchased || (() => false)}
-          canPurchase={upgradeData?.canPurchase || (() => false)}
-          purchase={upgradeData?.purchase || (() => false)}
-          refund={upgradeData?.refund || (() => false)}
+          isPurchased={isPurchased}
+          canPurchase={canPurchase}
+          purchase={purchase}
+          refund={refund}
         />
       </div>
     </div>

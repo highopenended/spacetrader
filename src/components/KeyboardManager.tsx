@@ -1,23 +1,26 @@
 import React from 'react';
 import { InstalledApp } from '../types/appListState';
 import { QuickBarConfig, QuickBarFlags } from '../types/quickBarState';
+import { useUpgradesStore } from '../stores';
 
 interface KeyboardManagerProps {
   installedApps: InstalledApp[];
   quickBarFlags: QuickBarFlags;
   setQuickBarFlag: (key: keyof QuickBarFlags, value: boolean) => void;
   quickBarConfig: QuickBarConfig;
-  isUpgradePurchased?: (id: string) => boolean;
 }
 
-const KeyboardManager: React.FC<KeyboardManagerProps> = ({ installedApps, quickBarFlags, setQuickBarFlag, quickBarConfig, isUpgradePurchased }) => {
+const KeyboardManager: React.FC<KeyboardManagerProps> = ({ installedApps, quickBarFlags, setQuickBarFlag, quickBarConfig }) => {
+  // Get upgrade checker from upgradesStore
+  const isUpgradePurchased = useUpgradesStore(state => state.isPurchased);
+  
   React.useEffect(() => {
     // Build a quick lookup of key -> toggleKey using conditional rendering logic
     const keyToToggleKey = new Map<string, keyof QuickBarFlags>();
     Object.values(quickBarConfig).forEach(cfg => {
       if (!cfg.showInQuickBar) return;
       if (cfg.requiresAppId && !installedApps.some(app => app.id === cfg.requiresAppId)) return;
-      if (cfg.requiresUpgradeId && (!isUpgradePurchased || !isUpgradePurchased(cfg.requiresUpgradeId))) return;
+      if (cfg.requiresUpgradeId && !isUpgradePurchased(cfg.requiresUpgradeId)) return;
       if (!cfg.shortcutKey || !cfg.toggleFlagKey) return;
       keyToToggleKey.set(String(cfg.shortcutKey).toUpperCase(), cfg.toggleFlagKey);
     });

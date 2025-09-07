@@ -24,14 +24,16 @@ import { MutatorRegistry } from '../../../constants/mutatorRegistry';
 import { DOM_IDS } from '../../../constants/domIds';
 import { ScrapRegistry } from '../../../constants/scrapRegistry';
 import WorkModePurgeZone from '../workModePurgeZone/WorkModePurgeZone';
+import { useUpgradesStore } from '../../../stores';
 
 interface WorkScreenProps {
   updateCredits?: (amount: number) => void;
-  isUpgradePurchased?: (upgradeId: string) => boolean;
   installedApps?: any[];
 }
 
-const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, isUpgradePurchased, installedApps }) => {
+const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps }) => {
+  // Get upgrade checker from upgradesStore
+  const isUpgradePurchased = useUpgradesStore(state => state.isPurchased);
   
   // Timer management
   const lastFrameTimeRef = useRef<number>(performance.now());
@@ -424,7 +426,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, isUpgradePurchas
 
   // Check if work mode purge zone should be shown (upgrade purchased AND purgeZone app installed)
   const isPurgeZoneInstalled = installedApps?.some(app => app.id === 'purgeZone') ?? false;
-  const isUpgradePurchased_WorkMode = isUpgradePurchased?.('purgeZone.workModePurgeZone') ?? false;
+  const isUpgradePurchased_WorkMode = isUpgradePurchased('purgeZone.workModePurgeZone');
   const showWorkModePurgeZone = isPurgeZoneInstalled && isUpgradePurchased_WorkMode;
 
   return (

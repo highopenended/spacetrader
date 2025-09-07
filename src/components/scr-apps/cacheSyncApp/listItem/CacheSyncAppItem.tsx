@@ -1,11 +1,7 @@
 import React from 'react';
 import ScrApp from '../../ScrAppItem';
 
-interface CacheSyncAppProps {
-  // Props will be determined based on what data this app needs to display
-}
-
-const CacheSyncApp: React.FC<CacheSyncAppProps> = () => {
+const CacheSyncApp: React.FC = () => {
   return (
     <ScrApp>
       <div>

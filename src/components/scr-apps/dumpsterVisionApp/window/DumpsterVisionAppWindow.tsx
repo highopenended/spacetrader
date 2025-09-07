@@ -1,6 +1,7 @@
 import React from 'react';
 import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
 import UpgradeList from '../../scrAppWindow/UpgradeList';
+import { useUpgradesStore } from '../../../../stores';
 
 interface DumpsterVisionAppWindowProps extends BaseWindowProps {}
 
@@ -20,9 +21,15 @@ const DumpsterVisionAppWindow: React.FC<DumpsterVisionAppWindowProps> = ({
     setQuickBarFlag('isActiveDumpsterVision', !isEnabled);
   };
 
-  // Upgrades plumbing
-  const { upgradeData } = (windowProps as any) || {};
-  const upgradesForApp = upgradeData?.getUpgradesForApp ? upgradeData.getUpgradesForApp(appType) : [];
+  // Get upgrades directly from upgradesStore
+  const getUpgradesForApp = useUpgradesStore(state => state.getUpgradesForApp);
+  const isPurchased = useUpgradesStore(state => state.isPurchased);
+  const canPurchase = useUpgradesStore(state => state.canPurchase);
+  const purchase = useUpgradesStore(state => state.purchase);
+  const refund = useUpgradesStore(state => state.refund);
+  
+  // Call the function outside the selector to avoid infinite re-renders
+  const upgradesForApp = React.useMemo(() => getUpgradesForApp(appType), [getUpgradesForApp, appType]);
 
   return (
     <ScrAppWindow
@@ -80,10 +87,10 @@ const DumpsterVisionAppWindow: React.FC<DumpsterVisionAppWindowProps> = ({
             <div className="detail-label" style={{ marginBottom: 4 }}>UPGRADES</div>
             <UpgradeList
               upgrades={upgradesForApp}
-              isPurchased={upgradeData?.isPurchased || (() => false)}
-              canPurchase={upgradeData?.canPurchase || (() => false)}
-              purchase={upgradeData?.purchase || (() => false)}
-              refund={upgradeData?.refund || (() => false)}
+              isPurchased={isPurchased}
+              canPurchase={canPurchase}
+              purchase={purchase}
+              refund={refund}
             />
           </div>
         </div>

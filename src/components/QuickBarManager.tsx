@@ -7,10 +7,9 @@ interface QuickBarManagerProps {
   quickBarFlags: QuickBarFlags;
   setQuickBarFlag: (key: keyof QuickBarFlags, value: boolean) => void;
   quickBarConfig: QuickBarConfig;
-  isUpgradePurchased?: (id: string) => boolean;
 }
 
-const QuickBarManager: React.FC<QuickBarManagerProps> = ({ installedApps, quickBarFlags, setQuickBarFlag, quickBarConfig, isUpgradePurchased }) => {
+const QuickBarManager: React.FC<QuickBarManagerProps> = ({ installedApps, quickBarFlags, setQuickBarFlag, quickBarConfig }) => {
   // No effects needed - QuickKeysBar and KeyboardManager handle conditional rendering
   return null;
 };

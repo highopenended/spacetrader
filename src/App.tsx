@@ -1,20 +1,18 @@
 /**
- * CRITICAL ARCHITECTURAL RULE - READ BEFORE MAKING CHANGES:
+ * MIGRATED TO ZUSTAND ARCHITECTURE:
  * 
- * SINGLE INSTANCE PATTERN: Each custom hook that manages state should be called 
- * exactly once at the top level of your app (App.tsx). This prevents the 
- * "multiple state instances" problem that keeps recurring.
+ * Game state is now managed by Zustand stores instead of custom hooks.
+ * This eliminates prop drilling and allows components to directly access
+ * only the state they need, preventing unnecessary re-renders.
  * 
- * ✅ CORRECT: State hooks only called in App.tsx, passed down as props
- * ❌ WRONG: Calling useGameState(), useWindowState(), etc. in child components
+ * ✅ ZUSTAND PATTERN: Components use selective store subscriptions
+ * ❌ OLD PATTERN: All state passed down as props from App.tsx
  * 
- * This rule prevents:
- * - Multiple state instances getting out of sync
- * - Save/load working with different state than UI
- * - Components showing different values for same data
- * 
- * ENFORCE THIS PATTERN: If you need state in a component, get it from props,
- * not by calling the hook directly.
+ * Benefits:
+ * - No more massive prop objects
+ * - Selective subscriptions prevent unnecessary re-renders
+ * - Components declare exactly what state they need
+ * - Automatic single instance pattern (stores are singletons)
  */
 
 import React from 'react';
@@ -22,7 +20,7 @@ import TerminalScreen from './components/terminalScreen/TerminalScreen';
 import AdminToolbar from './components/adminToolbar/AdminToolbar';
 import WorkScreen from './components/workMode/workScreen/WorkScreen';
 import GameBackground from './components/gameBackgrounds/GameBackground';
-import { useGameState } from './hooks/useGameState';
+import { useGameStore, useUpgradesStore } from './stores';
 import { useWindowState } from './hooks/useWindowState';
 import { useSaveLoad } from './hooks/useSaveLoad';
 import { useToggleState } from './hooks/useToggleState';
@@ -33,7 +31,6 @@ import { resetGame } from './utils/resetGameUtils';
 import { UIProvider, UIPopupComponent } from './contexts/UIContext';
 import DragManager from './components/DragManager';
 
-import { getAppPropsMap } from './utils/appPropsBuilder';
 import DataReadout from './components/DataReadout';
 import QuickKeysBar from './components/quickKeys/QuickKeysBar';
 import KeyboardManager from './components/KeyboardManager';
@@ -42,47 +39,43 @@ import VisualOverlayManager from './components/visualOverlayManager/VisualOverla
 import GameOptionsGear from './components/gameOptions/gameOptionsGear/GameOptionsGear';
 import GameOptionsMenu from './components/gameOptions/gameOptionsMenu/GameOptionsMenu';
 import { useQuickBarState } from './hooks/useQuickBarState';
-import { useUpgradesState } from './hooks/useUpgradesState';
 import { useProfileState } from './hooks/useProfileState';
 import { useEndingsState } from './hooks/useEndingsState';
 import { ENDINGS_REGISTRY } from './constants/endingsRegistry';
 import EndingCutscene from './components/endings/EndingCutscene';
 
 function App() {  
-  const {
-    // Core state
-    credits,
-    gamePhase,
-    gameTime,
-    isPaused,
-    apps,
-    appOrder,
-    installedApps,
-    gameMode,
-    gameBackground,
+  // ===== ZUSTAND GAME STORE SELECTORS =====
+  // Core state - using selective subscriptions for better performance
+  const credits = useGameStore(state => state.credits);
+  const gamePhase = useGameStore(state => state.gamePhase);
+  const gameTime = useGameStore(state => state.gameTime);
+  const isPaused = useGameStore(state => state.isPaused);
+  const apps = useGameStore(state => state.apps);
+  const appOrder = useGameStore(state => state.appOrder);
+  const installedApps = useGameStore(state => state.installedApps);
+  const gameMode = useGameStore(state => state.gameMode);
+  const gameBackground = useGameStore(state => state.gameBackground);
 
-    // Actions
-    updateCredits,
-    setCredits,
-    setGamePhase,
-    advanceGamePhase,
-    setGameTime,
-    pauseTime,
-    resumeTime,
-    installApp,
-    uninstallApp,
-    reorderApps,
-    installAppOrder,
-    getAvailableApps,
-    resetGameState,
-    beginWorkSession,
-    setGameBackground,
-    encodeGameState,
-    decodeGameState
-  } = useGameState();
+  // Actions - these don't cause re-renders when called
+  const updateCredits = useGameStore(state => state.updateCredits);
+  const setCredits = useGameStore(state => state.setCredits);
+  const setGamePhase = useGameStore(state => state.setGamePhase);
+  const advanceGamePhase = useGameStore(state => state.advanceGamePhase);
+  const setGameTime = useGameStore(state => state.setGameTime);
+  const pauseTime = useGameStore(state => state.pauseTime);
+  const resumeTime = useGameStore(state => state.resumeTime);
+  const installApp = useGameStore(state => state.installApp);
+  const uninstallApp = useGameStore(state => state.uninstallApp);
+  const reorderApps = useGameStore(state => state.reorderApps);
+  const installAppOrder = useGameStore(state => state.installAppOrder);
+  const getAvailableApps = useGameStore(state => state.getAvailableApps);
+  const resetGameState = useGameStore(state => state.resetGameState);
+  const beginWorkSession = useGameStore(state => state.beginWorkSession);
+  const setGameBackground = useGameStore(state => state.setGameBackground);
+  const encodeGameState = useGameStore(state => state.encodeGameState);
+  const decodeGameState = useGameStore(state => state.decodeGameState);
 
-  // Upgrades state (single instance) - needs credits from useGameState
-  const upgrades = useUpgradesState(credits, updateCredits);
 
   // Quick Bar state
   const { quickBarFlags, setQuickBarFlag, quickBarConfig } = useQuickBarState();
@@ -129,8 +122,9 @@ function App() {
 
   // Enhanced uninstallApp that clears upgrades and turns off related features
   const uninstallAppWithUpgradeClearing = React.useCallback((appId: string) => {
-    // Clear upgrades first
-    upgrades.clearUpgradesForApp(appId);
+    // Clear upgrades first - access upgradesStore directly
+    const { clearUpgradesForApp } = useUpgradesStore.getState();
+    clearUpgradesForApp(appId);
     
     // Turn off Dumpster Vision if that app is being uninstalled
     if (appId === 'dumpsterVision') {
@@ -140,11 +134,12 @@ function App() {
     // Check for recursive purge ending (purge zone deleting itself)
     if (appId === 'purgeZone') {
       // Trigger the recursive purge ending
+      const { isPurchased } = useUpgradesStore.getState();
       const triggerData = {
         event: 'app-purged' as const,
         appId: appId,
         isWorkModePurge: false,
-        isUpgradePurchased: upgrades.isPurchased,
+        isUpgradePurchased: isPurchased,
         installedApps: installedApps.map(app => app.id)
       };
       
@@ -155,7 +150,7 @@ function App() {
     
     // Then uninstall app
     uninstallApp(appId);
-  }, [upgrades, uninstallApp, setQuickBarFlag, installedApps, checkForEndingTriggers]);
+  }, [uninstallApp, setQuickBarFlag, installedApps, checkForEndingTriggers]);
 
   // Create save/load functions with all encode/decode functions
   const {
@@ -206,11 +201,12 @@ function App() {
       
       // We need to manually call the ending state setter here
       // For now, let's use the trigger system but with a more specific approach
+      const { isPurchased } = useUpgradesStore.getState();
       const triggerData = {
         event: 'app-purged' as const,
         appId: endingId,
         isWorkModePurge: false,
-        isUpgradePurchased: upgrades.isPurchased,
+        isUpgradePurchased: isPurchased,
         installedApps: installedApps.map(app => app.id)
       };
       
@@ -218,7 +214,7 @@ function App() {
       const singleEndingRegistry = { [endingId]: ending };
       checkForEndingTriggers(triggerData, singleEndingRegistry);
     }
-  }, [checkForEndingTriggers, upgrades.isPurchased, installedApps]);
+  }, [checkForEndingTriggers, installedApps]);
 
 
 
@@ -263,19 +259,10 @@ function App() {
       bringToFront
     };
 
-    const upgradeData = {
-      isPurchased: upgrades.isPurchased,
-      canPurchase: upgrades.canPurchase,
-      purchase: upgrades.purchase,
-      refund: upgrades.refund,
-      getUpgradesForApp: upgrades.getUpgradesForApp
-    };
-
-    return renderWindow(window, windowController, windowManager, toggleData, quickBarData, upgradeData);
+    // Note: Windows now access upgradesStore directly - no need to pass upgrade data as props
+    return renderWindow(window, windowController, windowManager, toggleData, quickBarData);
   };
 
-  // Build app props map for TerminalScreen
-  const appPropsMap = getAppPropsMap(apps, { credits, gameTime, gamePhase });
 
   // Combined props object - simplified and memoized
   const componentProps = React.useMemo(() => ({
@@ -289,16 +276,12 @@ function App() {
       installedApps
     },
     terminalScreen: {
-      credits,
-      gameTime,
-      gamePhase,
       isOnline: !isPaused,
       onAppClick: openOrCloseWindow,
       apps,
       appOrder,
       openAppTypes: new Set(windows.map(w => w.appType)),
       onDockWindows: dockAllWindows,
-      appPropsMap,
       shouldCollapse: gameMode === 'workMode'
     },
     adminToolbar: {
@@ -331,7 +314,6 @@ function App() {
     appOrder,
     windows,
     dockAllWindows,
-    appPropsMap,
     updateCredits,
     setCredits,
     setGamePhase,
@@ -350,7 +332,6 @@ function App() {
         installedApps={installedApps}
         apps={apps}
         appOrder={appOrder}
-        appPropsMap={appPropsMap}
         reorderApps={reorderApps}
         uninstallApp={uninstallAppWithUpgradeClearing}
         closeWindowsByAppType={closeWindowsByAppType}
@@ -359,18 +340,18 @@ function App() {
       >
         <div className="App">
           <GameBackground backgroundId={gameBackground} />
-          <KeyboardManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} isUpgradePurchased={upgrades.isPurchased} />
-          <QuickBarManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} isUpgradePurchased={upgrades.isPurchased} />
+          <KeyboardManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
+          <QuickBarManager installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
           <VisualOverlayManager quickBarFlags={quickBarFlags} />
           <GameOptionsGear onClick={handleOptionsClick} />
           <DataReadout {...componentProps.dataReadout} />
-          <QuickKeysBar installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} isUpgradePurchased={upgrades.isPurchased} />
+          <QuickKeysBar installedApps={installedApps} quickBarFlags={quickBarFlags} setQuickBarFlag={setQuickBarFlag} quickBarConfig={quickBarConfig} />
           <TerminalScreen {...componentProps.terminalScreen} />
           <AdminToolbar {...componentProps.adminToolbar} />
           <UIPopupComponent />
           {windows.map(renderWindowComponent)}
 
-          {gameMode === 'workMode' && <WorkScreen updateCredits={updateCredits} isUpgradePurchased={upgrades.isPurchased} installedApps={installedApps} />}
+          {gameMode === 'workMode' && <WorkScreen updateCredits={updateCredits} installedApps={installedApps} />}
           
           {isOptionsMenuOpen && <GameOptionsMenu onClose={handleOptionsClose} profileState={profileState} />}
           

@@ -8,9 +8,9 @@ Gritty, analog, terminal‑driven incremental game. Primary UI is a terminal lis
 - Terminal apps: `src/components/scr-apps/{appName}/listItem`
 - Windows: `src/components/scr-apps/{appName}/window`
 - Base components: `ScrAppItem`, `SortableItem`, `ScrAppWindow`
-- State hooks (single-instance pattern): `useGameState`, `useWindowState`, `useToggleState`, `useQuickBarState`
+- State management: Zustand stores (`gameStore`, `upgradesStore`) + React hooks (`useWindowState`, `useToggleState`, `useQuickBarState`)
 - Drag orchestration: `DragManager` + `useUnifiedDrag` + `DragContext`
-- Props building: `utils/appPropsBuilder.ts`
+- Direct store access: Components use Zustand stores directly (no prop drilling)
 
 ## Unified Drag System
 
@@ -37,6 +37,6 @@ Key files:
 
 ## Dev Notes
 
-- Single-instance hooks live in `App.tsx`; pass data via props
+- Zustand stores provide global state; remaining React hooks live in `App.tsx`; pass data via props
 - Windows are rendered via `windowRegistry.renderWindow`
 - Avoid duplicate logic; prefer centralized utilities and constants

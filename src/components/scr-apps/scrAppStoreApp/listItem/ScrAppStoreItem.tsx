@@ -1,12 +1,7 @@
 import React from 'react';
 import ScrApp from '../../ScrAppItem';
 
-interface ScrAppStoreProps {
-  hasNewApps?: boolean;
-  onAppClick?: () => void;
-}
-
-const ScrAppStore: React.FC<ScrAppStoreProps> = ({ hasNewApps = false, onAppClick }) => {
+const ScrAppStore: React.FC = () => {
   return (
     <ScrApp>
       <div style={{ position: 'relative' }}>

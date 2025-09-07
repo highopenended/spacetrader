@@ -18,7 +18,7 @@
  * - GAME_PHASES: Configuration for all game phases with titles and descriptions
  * 
  * Used by:
- * - Unified game state hook (useGameState) for initial values and reset functionality
+ * - Game store (gameStore) for initial values and reset functionality
  * - Game state utilities that need phase configuration
  * - Any component that needs to display phase information
  * 

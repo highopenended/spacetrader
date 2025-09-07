@@ -10,9 +10,6 @@ import { useDragContext } from '../../contexts/DragContext';
 import { Z_LAYERS } from '../../constants/zLayers';
 
 interface TerminalScreenProps {
-  credits: number;
-  gameTime: any; // Simplified type since we're not importing GameTime
-  gamePhase: any; // Simplified type since we're not importing GamePhase
   isOnline?: boolean;
   onAppClick?: (appType: string, title: string, content?: React.ReactNode) => void;
   apps: any[];
@@ -20,7 +17,6 @@ interface TerminalScreenProps {
   pendingDeleteAppId?: string | null;
   openAppTypes?: Set<string>;
   onDockWindows?: () => void;
-  appPropsMap: Record<string, any>; // Pre-built app props from App.tsx
   shouldCollapse?: boolean; // Collapse trigger from parent (e.g., when work mode begins)
 }
 
@@ -32,7 +28,6 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   pendingDeleteAppId = null,
   openAppTypes = new Set(),
   onDockWindows,
-  appPropsMap,
   shouldCollapse
 }) => {
   // Terminal state
@@ -69,13 +64,9 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
     if (!appConfig) return null;
 
     const AppComponent = appConfig.component;
-    const appProps = appPropsMap[appConfig.id]; // Use pre-built props from App.tsx
-
-    return (
-      <AppComponent
-        {...appProps}
-      />
-    );
+    
+    // App components now use Zustand directly - no props needed
+    return <AppComponent />;
   };
 
   // Calculate height based on mode

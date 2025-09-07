@@ -50,8 +50,7 @@ interface WindowConfig {
     windowController: WindowController,
     windowManager: WindowManagerContext,
     toggleData?: { toggleStates: any; setToggleState: any },
-    quickBarData?: { quickBarFlags: any; setQuickBarFlag: any; quickBarConfig: any },
-    upgradeData?: { isPurchased: (id: string) => boolean; canPurchase: (id: string) => boolean; purchase: (id: string) => boolean; refund: (id: string) => boolean; getUpgradesForApp: (appId: string) => any[] }
+    quickBarData?: { quickBarFlags: any; setQuickBarFlag: any; quickBarConfig: any }
   ) => any;
 }
 
@@ -86,12 +85,11 @@ const buildCommonProps = (
 export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
   purgeZone: {
     component: PurgeZoneAppWindow,
-    getProps: (window, windowController, windowManager, toggleData, quickBarData, upgradeData) => ({
+    getProps: (window, windowController, windowManager, toggleData, quickBarData) => ({
       ...buildCommonProps(window, windowController, windowManager, toggleData),
       quickBarFlags: quickBarData?.quickBarFlags,
       setQuickBarFlag: quickBarData?.setQuickBarFlag,
-      quickBarConfig: quickBarData?.quickBarConfig,
-      upgradeData
+      quickBarConfig: quickBarData?.quickBarConfig
     })
   },
 
@@ -144,12 +142,11 @@ export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
   },
   dumpsterVision: {
     component: DumpsterVisionAppWindow,
-    getProps: (window, windowController, windowManager, toggleData, quickBarData, upgradeData) => ({
+    getProps: (window, windowController, windowManager, toggleData, quickBarData) => ({
       ...buildCommonProps(window, windowController, windowManager, toggleData),
       quickBarFlags: quickBarData?.quickBarFlags,
       setQuickBarFlag: quickBarData?.setQuickBarFlag,
-      quickBarConfig: quickBarData?.quickBarConfig,
-      upgradeData
+      quickBarConfig: quickBarData?.quickBarConfig
     })
   }
 };
@@ -163,14 +160,13 @@ export const renderWindow = (
   windowController: WindowController, 
   windowManager: WindowManagerContext,
   toggleData?: { toggleStates: any; setToggleState: any },
-  quickBarData?: { quickBarFlags: any; setQuickBarFlag: any; quickBarConfig: any },
-  upgradeData?: { isPurchased: (id: string) => boolean; canPurchase: (id: string) => boolean; purchase: (id: string) => boolean; refund: (id: string) => boolean; getUpgradesForApp: (appId: string) => any[] }
+  quickBarData?: { quickBarFlags: any; setQuickBarFlag: any; quickBarConfig: any }
 ): React.ReactElement => {
   const config = WINDOW_REGISTRY[window.appType];
   
   if (config) {
     const WindowComponent = config.component;
-    const props = config.getProps(window, windowController, windowManager, toggleData, quickBarData, upgradeData);
+    const props = config.getProps(window, windowController, windowManager, toggleData, quickBarData);
     return React.createElement(WindowComponent, props);
   }
   

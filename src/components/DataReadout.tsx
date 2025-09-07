@@ -11,7 +11,7 @@
  * 
  * CORRECT PATTERN:
  * - Get all data via props from App.tsx
- * - NEVER call useGameState() or useToggleContext() directly
+ * - NEVER call gameStore or useToggleContext() directly
  * - This ensures DataReadout stays synchronized with all other components
  */
 

@@ -1,13 +1,7 @@
 import React from 'react';
-import './JobTitleAppItem.css';
 import ScrApp from '../../ScrAppItem';
-import { GamePhase } from '../../../../types/gameState';
 
-interface JobTitleAppProps {
-  gamePhase: GamePhase;
-}
-
-const JobTitleApp: React.FC<JobTitleAppProps> = ({ gamePhase }) => {
+const JobTitleApp: React.FC = () => {
   return (
     <ScrApp>
       <div>

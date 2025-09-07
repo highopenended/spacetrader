@@ -1,9 +1,7 @@
 import React from 'react';
 import ScrApp from '../../ScrAppItem';
 
-interface DumpsterVisionAppItemProps {}
-
-const DumpsterVisionAppItem: React.FC<DumpsterVisionAppItemProps> = () => {
+const DumpsterVisionAppItem: React.FC = () => {
   return (
     <ScrApp>
       <div>
