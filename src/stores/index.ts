@@ -8,6 +8,7 @@
 export { useGameStore } from './gameStore';
 export { useUpgradesStore } from './upgradesStore';
 export { useToggleStore } from './toggleStore';
+export { useUIStore } from './uiStore';
 export { useWindowStore } from './windowStore';
 export { useProfileStore } from './profileStore';
 export { useEndingsStore } from './endingsStore';

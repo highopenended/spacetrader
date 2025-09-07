@@ -16,7 +16,7 @@ import { useSensor, PointerSensor } from '@dnd-kit/core';
 import { rectIntersection } from '@dnd-kit/core';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
-import { useUIContext } from './useUIContext';
+import { useUIStore } from '../stores';
 
 // ===== TYPES =====
 
@@ -71,7 +71,7 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
     installAppOrder
   } = dependencies;
 
-  const { actions: uiActions } = useUIContext();
+  const showPopup = useUIStore(state => state.showPopup);
 
   // ===== STATE =====
   const [dragState, setDragState] = useState<DragState>({
@@ -248,7 +248,7 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
       
       if (deletable) {
         setPendingDelete({ appId: appType, prevOrder: appOrder });
-        uiActions.showPopup({
+        showPopup({
           title: 'PURGE APP?',
           message: `Are you sure you want to permanently purge ${windowTitle}?`,
           confirmText: 'PURGE',
@@ -264,7 +264,7 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
       const appDefinition = apps.find((app: any) => app.id === active.id);
       if (appDefinition && appDefinition.deletable) {
         setPendingDelete({ appId: active.id, prevOrder: appOrder });
-        uiActions.showPopup({
+        showPopup({
           title: 'PURGE APP?',
           message: `Are you sure you want to permanently purge ${appDefinition.name}?`,
           confirmText: 'PURGE',
@@ -275,7 +275,7 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
         });
       }
     }
-  }, [apps, appOrder, uiActions, handleConfirmPurge, handleCancelPurge]);
+  }, [apps, appOrder, showPopup, handleConfirmPurge, handleCancelPurge]);
 
   const handleTerminalDrop = useCallback((active: any) => {
     if (active.data?.current?.type === 'window-drag-node') {

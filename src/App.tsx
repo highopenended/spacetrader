@@ -26,7 +26,7 @@ import { WindowData } from './types/windowState';
 
 import { renderWindow } from './constants/windowRegistry';
 import { resetGame } from './utils/resetGameUtils';
-import { UIProvider, UIPopupComponent } from './contexts/UIContext';
+import { UIPopupComponent } from './contexts/UIContext';
 import DragManager from './components/DragManager';
 
 import DataReadout from './components/DataReadout';
@@ -307,44 +307,42 @@ function App() {
   ]);
 
   return (
-    <UIProvider>
-      <DragManager
-        installedApps={installedApps}
-        apps={apps}
-        appOrder={appOrder}
-        reorderApps={reorderApps}
-        uninstallApp={uninstallAppWithUpgradeClearing}
-        closeWindowsByAppType={closeWindowsByAppType}
-        installAppOrder={installAppOrder}
-        openOrCloseWindow={openOrCloseWindow}
-      >
-        <div className="App">
-          <GameBackground backgroundId={gameBackground} />
-          <KeyboardManager installedApps={installedApps} />
-          <QuickBarManager installedApps={installedApps} />
-          <VisualOverlayManager />
-          <GameOptionsGear onClick={handleOptionsClick} />
-          <DataReadout {...componentProps.dataReadout} />
-          <QuickKeysBar installedApps={installedApps} />
-          <TerminalScreen {...componentProps.terminalScreen} />
-          <AdminToolbar {...componentProps.adminToolbar} />
-          <UIPopupComponent />
-          {windows.map(renderWindowComponent)}
+    <DragManager
+      installedApps={installedApps}
+      apps={apps}
+      appOrder={appOrder}
+      reorderApps={reorderApps}
+      uninstallApp={uninstallAppWithUpgradeClearing}
+      closeWindowsByAppType={closeWindowsByAppType}
+      installAppOrder={installAppOrder}
+      openOrCloseWindow={openOrCloseWindow}
+    >
+      <div className="App">
+        <GameBackground backgroundId={gameBackground} />
+        <KeyboardManager installedApps={installedApps} />
+        <QuickBarManager installedApps={installedApps} />
+        <VisualOverlayManager />
+        <GameOptionsGear onClick={handleOptionsClick} />
+        <DataReadout {...componentProps.dataReadout} />
+        <QuickKeysBar installedApps={installedApps} />
+        <TerminalScreen {...componentProps.terminalScreen} />
+        <AdminToolbar {...componentProps.adminToolbar} />
+        <UIPopupComponent />
+        {windows.map(renderWindowComponent)}
 
-          {gameMode === 'workMode' && <WorkScreen updateCredits={updateCredits} installedApps={installedApps} />}
-          
-          {isOptionsMenuOpen && <GameOptionsMenu onClose={handleOptionsClose} />}
-          
-          {/* Ending cutscene overlay - renders on top of everything */}
-          {activeEnding && (
-            <EndingCutscene 
-              activeEnding={activeEnding}
-              onComplete={clearActiveEnding}
-            />
-          )}
-        </div>
-      </DragManager>
-    </UIProvider>
+        {gameMode === 'workMode' && <WorkScreen updateCredits={updateCredits} installedApps={installedApps} />}
+        
+        {isOptionsMenuOpen && <GameOptionsMenu onClose={handleOptionsClose} />}
+        
+        {/* Ending cutscene overlay - renders on top of everything */}
+        {activeEnding && (
+          <EndingCutscene 
+            activeEnding={activeEnding}
+            onComplete={clearActiveEnding}
+          />
+        )}
+      </div>
+    </DragManager>
   );
 }
 
