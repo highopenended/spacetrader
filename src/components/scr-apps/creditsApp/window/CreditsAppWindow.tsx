@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
 import ToggleSection from '../../scrAppWindow/ToggleSection';
+import { useToggleStore } from '../../../../stores';
 import './CreditsAppWindow.css';
 
 interface CreditsAppWindowProps extends BaseWindowProps {
@@ -9,16 +10,17 @@ interface CreditsAppWindowProps extends BaseWindowProps {
 
 const CreditsAppWindow: React.FC<CreditsAppWindowProps> = ({
   credits,
-  toggleStates,
-  setToggleState,
   ...windowProps
 }) => {
+  // Get toggle state directly from Zustand store
+  const toggleStates = useToggleStore(state => state.toggleStates);
+  const setToggleState = useToggleStore(state => state.setToggleState);
   const [creditsReadoutEnabled, setCreditsReadoutEnabled] = useState(toggleStates.readoutEnabled_Credits || false);
 
   const toggleCreditsReadout = () => {
     const newState = !creditsReadoutEnabled;
     setCreditsReadoutEnabled(newState);
-    setToggleState?.('readoutEnabled_Credits', newState);
+    setToggleState('readoutEnabled_Credits', newState);
   };
 
   const toggleConfig = [

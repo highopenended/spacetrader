@@ -61,8 +61,6 @@ export interface BaseWindowProps {
   onWidthChange?: (width: number) => void;
   onBringToFront?: () => void;
   updateCredits?: (amount: number) => void; // For credit transactions
-  toggleStates?: any; // For DataReadout visibility controls
-  setToggleState?: (key: string, value: boolean) => void; // For updating toggle states
 }
 
 interface ScrAppWindowProps extends BaseWindowProps {

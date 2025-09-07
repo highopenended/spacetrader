@@ -3,6 +3,7 @@ import ScrAppWindow, { BaseWindowProps } from '../../scrAppWindow/ScrAppWindow';
 import ToggleSection from '../../scrAppWindow/ToggleSection';
 import { GamePhase, GameMode } from '../../../../types/gameState';
 import { GAME_PHASES } from '../../../../constants/gameConstants';
+import { useToggleStore } from '../../../../stores';
 import './JobTitleAppWindow.css';
 
 interface JobTitleAppWindowProps extends BaseWindowProps {
@@ -15,24 +16,26 @@ const JobTitleAppWindow: React.FC<JobTitleAppWindowProps> = ({
   gamePhase,
   gameMode,
   beginWorkSession,
-  toggleStates,
-  setToggleState,
   ...windowProps
 }) => {
   const jobTitle = GAME_PHASES[gamePhase].title;
+  
+  // Get toggle state directly from Zustand store
+  const toggleStates = useToggleStore(state => state.toggleStates);
+  const setToggleState = useToggleStore(state => state.setToggleState);
   const [jobTitleReadoutEnabled, setJobTitleReadoutEnabled] = useState(toggleStates.readoutEnabled_JobTitle);
   const [workButtonReadoutEnabled, setWorkButtonReadoutEnabled] = useState(toggleStates.readoutEnabled_WorkButton);
 
   const toggleJobTitleReadout = () => {
     const newState = !jobTitleReadoutEnabled;
     setJobTitleReadoutEnabled(newState);
-    setToggleState?.('readoutEnabled_JobTitle', newState);
+    setToggleState('readoutEnabled_JobTitle', newState);
   };
 
   const toggleWorkButtonReadout = () => {
     const newState = !workButtonReadoutEnabled;
     setWorkButtonReadoutEnabled(newState);
-    setToggleState?.('readoutEnabled_WorkButton', newState);
+    setToggleState('readoutEnabled_WorkButton', newState);
   };
 
   const toggleConfig = [

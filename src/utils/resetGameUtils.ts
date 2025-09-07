@@ -2,12 +2,12 @@
  * Reset Game Utility Functions
  * 
  * Centralized reset functionality that coordinates all state resets.
- * Follows the same pattern as save/load utilities - pure functions
- * that receive reset functions as parameters.
+ * Now fully integrated with Zustand stores - calls reset methods directly
+ * from each store instead of requiring parameters.
  * 
  * Purpose:
  * - Provide a single entry point for complete game reset
- * - Coordinate reset across all state management hooks
+ * - Coordinate reset across all Zustand stores
  * - Ensure consistent reset behavior across the application
  * 
  * Used by:
@@ -15,23 +15,27 @@
  * - Any other component that needs to reset the game
  */
 
-interface ResetFunctions {
-  resetGameState: () => void;
-  resetWindowState: () => void;
-  resetToggleState: () => void;
-}
-
 /**
  * Reset the entire game to initial state
- * @param resetFunctions - Object containing all reset functions
+ * Calls reset methods directly from all Zustand stores
  * @returns boolean indicating success/failure
  */
-export const resetGame = (resetFunctions: ResetFunctions): boolean => {
+export const resetGame = (): boolean => {
   try {
-    // Reset all state in the correct order
-    resetFunctions.resetGameState();
-    resetFunctions.resetWindowState();
-    resetFunctions.resetToggleState();
+    // Reset all state in the correct order - all from Zustand stores directly
+    const { useGameStore, useWindowStore, useToggleStore, useUpgradesStore } = require('../stores');
+    
+    // Reset game state
+    useGameStore.getState().resetGameState();
+    
+    // Reset window state
+    useWindowStore.getState().resetWindowState();
+    
+    // Reset toggle state
+    useToggleStore.getState().resetToggleState();
+    
+    // Reset upgrades state
+    useUpgradesStore.getState().resetUpgrades();
     
     return true;
   } catch (error) {

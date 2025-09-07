@@ -6,17 +6,17 @@
  * 
  * STATE FLOW ARCHITECTURE:
  * 
- * This component receives all data via props from App.tsx to ensure
- * single source of truth and prevent state synchronization issues.
+ * This component receives game data via props from App.tsx and accesses
+ * toggle state directly from Zustand store for optimal performance.
  * 
  * CORRECT PATTERN:
- * - Get all data via props from App.tsx
- * - NEVER call gameStore or useToggleContext() directly
+ * - Get game data via props from App.tsx
+ * - Get toggle state directly from useToggleStore (selective subscription)
  * - This ensures DataReadout stays synchronized with all other components
  */
 
 import React from 'react';
-import { ToggleStates } from '../types/toggleState';
+import { useToggleStore } from '../stores';
 import { getAnnumReckoningName, getLedgerCycleName, getGrindName } from '../utils/gameStateUtils';
 import { getJobTitle } from '../utils/gameStateUtils';
 import { GameTime, GamePhase, GameMode } from '../types/gameState';
@@ -24,7 +24,6 @@ import { InstalledApp } from '../types/appListState';
 import './DataReadout.css';
 
 interface DataReadoutProps {
-  toggleStates: ToggleStates;
   gameMode: GameMode;
   beginWorkSession: () => void;
   credits: number;
@@ -34,7 +33,6 @@ interface DataReadoutProps {
 }
 
 const DataReadout: React.FC<DataReadoutProps> = ({
-  toggleStates,
   gameMode,
   beginWorkSession,
   credits,
@@ -42,6 +40,8 @@ const DataReadout: React.FC<DataReadoutProps> = ({
   gamePhase,
   installedApps
 }) => {
+  // Get toggle states directly from Zustand store
+  const toggleStates = useToggleStore(state => state.toggleStates);
   const { annumReckoning, ledgerCycle, grind } = gameTime;
 
   // Check if ChronoTrack, JobTitle, and Credits are installed

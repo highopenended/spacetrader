@@ -6,8 +6,6 @@ import { useUpgradesStore } from '../../../../stores';
 interface DumpsterVisionAppWindowProps extends BaseWindowProps {}
 
 const DumpsterVisionAppWindow: React.FC<DumpsterVisionAppWindowProps> = ({
-  toggleStates,
-  setToggleState,
   appType,
   ...windowProps
 }) => {

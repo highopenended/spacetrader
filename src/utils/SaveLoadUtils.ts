@@ -8,7 +8,7 @@
 
 interface SaveData {
   gameState: any; // Encoded game state from gameStore
-  windowState: any; // Encoded window state from useWindowState
+  windowState: any; // Encoded window state from useWindowStore
   toggleState: any; // Encoded toggle state from useToggleState
   profileState: any; // Encoded profile state from useProfileState
   timestamp: number;

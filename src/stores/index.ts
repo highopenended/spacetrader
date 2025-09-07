@@ -7,10 +7,10 @@
 
 export { useGameStore } from './gameStore';
 export { useUpgradesStore } from './upgradesStore';
+export { useToggleStore } from './toggleStore';
+export { useWindowStore } from './windowStore';
 
 // Future stores can be exported here as they're migrated:
-// export { useWindowStore } from './windowStore';
-// export { useToggleStore } from './toggleStore';
 // export { useQuickBarStore } from './quickBarStore';
 // export { useProfileStore } from './profileStore';
 // export { useEndingsStore } from './endingsStore';

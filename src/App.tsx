@@ -20,10 +20,8 @@ import TerminalScreen from './components/terminalScreen/TerminalScreen';
 import AdminToolbar from './components/adminToolbar/AdminToolbar';
 import WorkScreen from './components/workMode/workScreen/WorkScreen';
 import GameBackground from './components/gameBackgrounds/GameBackground';
-import { useGameStore, useUpgradesStore } from './stores';
-import { useWindowState } from './hooks/useWindowState';
+import { useGameStore, useUpgradesStore, useToggleStore, useWindowStore } from './stores';
 import { useSaveLoad } from './hooks/useSaveLoad';
-import { useToggleState } from './hooks/useToggleState';
 import { WindowData } from './types/windowState';
 
 import { renderWindow } from './constants/windowRegistry';
@@ -70,7 +68,6 @@ function App() {
   const reorderApps = useGameStore(state => state.reorderApps);
   const installAppOrder = useGameStore(state => state.installAppOrder);
   const getAvailableApps = useGameStore(state => state.getAvailableApps);
-  const resetGameState = useGameStore(state => state.resetGameState);
   const beginWorkSession = useGameStore(state => state.beginWorkSession);
   const setGameBackground = useGameStore(state => state.setGameBackground);
   const encodeGameState = useGameStore(state => state.encodeGameState);
@@ -82,28 +79,26 @@ function App() {
 
   // Enhanced uninstallApp that clears upgrades and turns off related features (defined later after endings state)
 
-  const {
-    windows,
-    updateWindowPosition,
-    updateWindowSize,
-    openOrCloseWindow,
-    closeWindow,
-    closeWindowsByAppType,
-    bringToFront,
-    dockAllWindows,
-    resetWindowState,
-    encodeWindowState,
-    decodeWindowState
-  } = useWindowState();
+  // ===== ZUSTAND WINDOW STORE SELECTORS =====
+  // Window state - using selective subscriptions for better performance
+  const windows = useWindowStore(state => state.windows);
+  
+  // Window actions - these don't cause re-renders when called
+  const updateWindowPosition = useWindowStore(state => state.updateWindowPosition);
+  const updateWindowSize = useWindowStore(state => state.updateWindowSize);
+  const openOrCloseWindow = useWindowStore(state => state.openOrCloseWindow);
+  const closeWindow = useWindowStore(state => state.closeWindow);
+  const closeWindowsByAppType = useWindowStore(state => state.closeWindowsByAppType);
+  const bringToFront = useWindowStore(state => state.bringToFront);
+  const dockAllWindows = useWindowStore(state => state.dockAllWindows);
+  const encodeWindowState = useWindowStore(state => state.encodeWindowState);
+  const decodeWindowState = useWindowStore(state => state.decodeWindowState);
 
-  // Add toggle state hook (single instance pattern)
-  const {
-    toggleStates,
-    setToggleState,
-    resetToggleState,
-    encodeToggleState,
-    decodeToggleState
-  } = useToggleState();
+  // Toggle state from Zustand store (selective subscriptions)
+  const toggleStates = useToggleStore(state => state.toggleStates);
+  const setToggleState = useToggleStore(state => state.setToggleState);
+  const encodeToggleState = useToggleStore(state => state.encodeToggleState);
+  const decodeToggleState = useToggleStore(state => state.decodeToggleState);
 
   // Profile state (single instance)
   const {
@@ -163,13 +158,9 @@ function App() {
 
   // Create reset function that coordinates all state resets
   const handleResetGame = React.useCallback(() => {
-    resetGame({
-      resetGameState,
-      resetWindowState,
-      resetToggleState
-    });
+    resetGame();
     // Note: Profile state is NOT reset when resetting game
-  }, [resetGameState, resetWindowState, resetToggleState]);
+  }, []);
 
   // Options menu state
   const [isOptionsMenuOpen, setIsOptionsMenuOpen] = React.useState(false);
