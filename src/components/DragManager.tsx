@@ -2,7 +2,7 @@ import React from 'react';
 import { DragOverlay, DndContext } from '@dnd-kit/core';
 import { useUnifiedDrag } from '../hooks/useUnifiedDrag';
 import { InstalledApp } from '../types/appListState';
-import { DragContextProvider } from '../contexts/DragContext';
+import { useDragStore } from '../stores';
 
 interface DragManagerProps {
   children: React.ReactNode;
@@ -27,11 +27,8 @@ const DragManager: React.FC<DragManagerProps> = ({
   installAppOrder,
   openOrCloseWindow
 }) => {
-  // Use unified drag hook
+  // Use unified drag hook for handlers and configuration
   const {
-    dragState,
-    overId,
-    isOverTerminalDropZone,
     sensors,
     customCollisionDetection,
     handleDragStart,
@@ -48,21 +45,9 @@ const DragManager: React.FC<DragManagerProps> = ({
     openOrCloseWindow
   });
 
-  // Create drag context value (memoized, minimal churn)
-  const dragContextValue = React.useMemo(() => ({
-    overId,
-    isOverTerminalDropZone,
-    isDragging: dragState.isDragging,
-    draggedAppType: dragState.draggedAppType,
-    dragType: dragState.isDragging
-      ? (dragState.draggedAppType ? 'window-drag-node' as const : 'app-drag-node' as const)
-      : 'none' as const
-  }), [
-    overId,
-    isOverTerminalDropZone,
-    dragState.isDragging,
-    dragState.draggedAppType
-  ]);
+  // Get drag state directly from store
+  const dragState = useDragStore(state => state.dragState);
+  const isOverTerminalDropZone = useDragStore(state => state.isOverTerminalDropZone);
 
   // DragOverlay content helper (purely visual, for ghost image of app being dragged)
   const renderDragOverlay_AppGhost = () => {
@@ -159,41 +144,39 @@ const DragManager: React.FC<DragManagerProps> = ({
   };
 
   return (
-    <DragContextProvider value={dragContextValue}>
-      <DndContext {...dndContextProps}>
-        {children}
-        {renderDragOverlay_AppGhost()}
-        {renderDragOverlay_DragNode()}
+    <DndContext {...dndContextProps}>
+      {children}
+      {renderDragOverlay_AppGhost()}
+      {renderDragOverlay_DragNode()}
         
-        {/* Debug readout for overId and drag type */}
-        {/* <div
-          style={{
-            position: 'fixed',
-            bottom: '10px',
-            left: '10px',
-            background: 'rgba(0, 0, 0, 0.8)',
-            color: '#00ff00',
-            padding: '8px 12px',
-            borderRadius: '4px',
-            fontFamily: 'Courier New, monospace',
-            fontSize: '12px',
-            zIndex: 9999,
-            border: '1px solid #333',
-            boxShadow: '0 0 10px rgba(0, 255, 0, 0.3)'
-          }}
-        >
-          overId: {overId || 'null'}
-          <br />
-          dragType: {dragState.isDragging ? (dragState.draggedAppType ? 'window-drag-node' : 'app-drag-node') : 'none'}
-          <br />
-          overTerminal: {isOverTerminalDropZone ? 'true' : 'false'}
-          <br />
-          appDragPos: {dragState.mousePosition ? `${dragState.mousePosition.x}, ${dragState.mousePosition.y}` : 'null'}
-          <br />
-          toBePurged: {pendingDelete.appId || 'null'}
-        </div> */}
-      </DndContext>
-    </DragContextProvider>
+      {/* Debug readout for drag state - now using dragStore directly */}
+      {/* <div
+        style={{
+          position: 'fixed',
+          bottom: '10px',
+          left: '10px',
+          background: 'rgba(0, 0, 0, 0.8)',
+          color: '#00ff00',
+          padding: '8px 12px',
+          borderRadius: '4px',
+          fontFamily: 'Courier New, monospace',
+          fontSize: '12px',
+          zIndex: 9999,
+          border: '1px solid #333',
+          boxShadow: '0 0 10px rgba(0, 255, 0, 0.3)'
+        }}
+      >
+        overId: {useDragStore.getState().overId || 'null'}
+        <br />
+        dragType: {dragState.isDragging ? (dragState.draggedAppType ? 'window-drag-node' : 'app-drag-node') : 'none'}
+        <br />
+        overTerminal: {isOverTerminalDropZone ? 'true' : 'false'}
+        <br />
+        appDragPos: {dragState.mousePosition ? `${dragState.mousePosition.x}, ${dragState.mousePosition.y}` : 'null'}
+        <br />
+        toBePurged: {useDragStore.getState().pendingDelete.appId || 'null'}
+      </div> */}
+    </DndContext>
   );
 };
 

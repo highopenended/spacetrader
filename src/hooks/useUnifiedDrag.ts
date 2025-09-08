@@ -10,28 +10,14 @@
  * This replaces the fragmented drag system with a single source of truth.
  */
 
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useCallback, useRef, useEffect, useMemo } from 'react';
 import { DOM_IDS } from '../constants/domIds';
 import { useSensor, PointerSensor } from '@dnd-kit/core';
 import { rectIntersection } from '@dnd-kit/core';
-import { UniqueIdentifier } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
-import { useUIStore } from '../stores';
+import { useUIStore, useDragStore } from '../stores';
 
 // ===== TYPES =====
-
-interface DragState {
-  isDragging: boolean;
-  draggedAppId: string | null;
-  draggedAppType: string | null;
-  draggedWindowTitle: string | null;
-  mousePosition: { x: number; y: number } | null;
-}
-
-interface PendingDeleteState {
-  appId: string | null;
-  prevOrder: string[];
-}
 
 interface UnifiedDragDependencies {
   installedApps: any[];
@@ -73,23 +59,21 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
 
   const showPopup = useUIStore(state => state.showPopup);
 
-  // ===== STATE =====
-  const [dragState, setDragState] = useState<DragState>({
-    isDragging: false,
-    draggedAppId: null,
-    draggedAppType: null,
-    draggedWindowTitle: null,
-    mousePosition: null
-  });
+  // ===== DRAG STORE =====
+  const dragState = useDragStore(state => state.dragState);
+  const overId = useDragStore(state => state.overId);
+  const isOverTerminalDropZone = useDragStore(state => state.isOverTerminalDropZone);
+  const pendingDelete = useDragStore(state => state.pendingDelete);
+  
+  // Drag store actions
+  const startDrag = useDragStore(state => state.startDrag);
+  const updateMousePosition = useDragStore(state => state.updateMousePosition);
+  const endDrag = useDragStore(state => state.endDrag);
+  const updateCollision = useDragStore(state => state.updateCollision);
+  const setPendingDelete = useDragStore(state => state.setPendingDelete);
+  const clearPendingDelete = useDragStore(state => state.clearPendingDelete);
 
-  const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
-  const [isOverTerminalDropZone, setIsOverTerminalDropZone] = useState<boolean>(false);
-  const [pendingDelete, setPendingDelete] = useState<PendingDeleteState>({ 
-    appId: null, 
-    prevOrder: [] 
-  });
-
-  const pendingDeleteRef = useRef<PendingDeleteState>({ appId: null, prevOrder: [] });
+  const pendingDeleteRef = useRef<{ appId: string | null; prevOrder: string[] }>({ appId: null, prevOrder: [] });
   const mouseMoveHandlerRef = useRef<((e: MouseEvent) => void) | null>(null);
   
   useEffect(() => {
@@ -138,27 +122,33 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
   const createMouseMoveHandler = useCallback((type: 'window' | 'app') => {
     return throttle((e: MouseEvent) => {
       // Track mouse position for both window and app drags
-      setDragState(prev => ({
-        ...prev,
-        mousePosition: { x: e.clientX, y: e.clientY }
-      }));
+      updateMousePosition({ x: e.clientX, y: e.clientY });
     }, 16); // ~60fps throttling
-  }, []);
+  }, [updateMousePosition]);
 
   // ===== DRAG HANDLERS =====
   const handleDragStart = useCallback((event: any) => {
     const { active } = event;
     
+    // CRITICAL: Get initial mouse position from the drag start event
+    // This MUST be set immediately for collision detection to work correctly.
+    // DO NOT remove this or collision detection will break for window drags!
+    // The red drag node positioning relies on having accurate coordinates from drag start.
+    const initialMousePosition = { 
+      x: event.activatorEvent?.clientX || 0, 
+      y: event.activatorEvent?.clientY || 0 
+    };
+    
     if (active.data?.current?.type === 'window-drag-node') {
       // Window drag
       const { windowTitle, appType } = active.data.current;
-      setDragState({
-        isDragging: true,
-        draggedAppId: null,
-        draggedAppType: appType,
-        draggedWindowTitle: windowTitle,
-        mousePosition: null
+      startDrag('window', {
+        appType,
+        windowTitle
       });
+      
+      // Set initial mouse position immediately - REQUIRED for collision detection!
+      updateMousePosition(initialMousePosition);
       
       // Create and store throttled mouse move handler
       const mouseMoveHandler = createMouseMoveHandler('window');
@@ -174,13 +164,12 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
       };
     } else {
       // App drag
-      setDragState({
-        isDragging: true,
-        draggedAppId: active.id,
-        draggedAppType: null,
-        draggedWindowTitle: null,
-        mousePosition: null
+      startDrag('app', {
+        appId: active.id
       });
+      
+      // Set initial mouse position immediately for app drags too
+      updateMousePosition(initialMousePosition);
       
       // Create and store throttled mouse move handler for app drags
       const mouseMoveHandler = createMouseMoveHandler('app');
@@ -195,7 +184,7 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
         }
       };
     }
-  }, [createMouseMoveHandler]);
+  }, [createMouseMoveHandler, startDrag, updateMousePosition]);
 
   const handleDragOver = useCallback((event: any) => {
     const newOverId = event.over?.id ?? null;
@@ -204,9 +193,8 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
                           newOverId !== DOM_IDS.PURGE_ZONE_WINDOW && 
                           newOverId !== DOM_IDS.PURGE_ZONE_WORKMODE;
     
-    setOverId(newOverId);
-    setIsOverTerminalDropZone(isOverTerminal);
-  }, []);
+    updateCollision(newOverId, isOverTerminal);
+  }, [updateCollision]);
 
   // ===== MEMOIZED HELPER FUNCTIONS =====
   const handleAppReorder = useCallback((activeId: string, overId: string | null) => {
@@ -231,23 +219,23 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
       closeWindowsByAppType(currentPendingDelete.appId);
       onAppUninstall(currentPendingDelete.appId);
     }
-    setPendingDelete({ appId: null, prevOrder: [] });
-  }, [closeWindowsByAppType, onAppUninstall]);
+    clearPendingDelete();
+  }, [closeWindowsByAppType, onAppUninstall, clearPendingDelete]);
 
   const handleCancelPurge = useCallback(() => {
     const currentPendingDelete = pendingDeleteRef.current;
     if (currentPendingDelete.prevOrder.length) {
       installAppOrder(currentPendingDelete.prevOrder);
     }
-    setPendingDelete({ appId: null, prevOrder: [] });
-  }, [installAppOrder]);
+    clearPendingDelete();
+  }, [installAppOrder, clearPendingDelete]);
 
   const handlePurgeDrop = useCallback((active: any, over: any) => {
     if (active.data?.current?.type === 'window-drag-node') {
       const { appType, deletable, windowTitle } = active.data.current;
       
       if (deletable) {
-        setPendingDelete({ appId: appType, prevOrder: appOrder });
+        setPendingDelete(appType, appOrder);
         showPopup({
           title: 'PURGE APP?',
           message: `Are you sure you want to permanently purge ${windowTitle}?`,
@@ -263,7 +251,7 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
       // App list item deletion
       const appDefinition = apps.find((app: any) => app.id === active.id);
       if (appDefinition && appDefinition.deletable) {
-        setPendingDelete({ appId: active.id, prevOrder: appOrder });
+        setPendingDelete(active.id, appOrder);
         showPopup({
           title: 'PURGE APP?',
           message: `Are you sure you want to permanently purge ${appDefinition.name}?`,
@@ -275,7 +263,7 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
         });
       }
     }
-  }, [apps, appOrder, showPopup, handleConfirmPurge, handleCancelPurge]);
+  }, [apps, appOrder, showPopup, handleConfirmPurge, handleCancelPurge, setPendingDelete]);
 
   const handleTerminalDrop = useCallback((active: any) => {
     if (active.data?.current?.type === 'window-drag-node') {
@@ -298,15 +286,7 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
     }
     
     // Reset state
-    setDragState({
-      isDragging: false,
-      draggedAppId: null,
-      draggedAppType: null,
-      draggedWindowTitle: null,
-      mousePosition: null
-    });
-    setOverId(null);
-    setIsOverTerminalDropZone(false);
+    endDrag();
     
     if (!over) {
       // Handle reordering for app drags
@@ -326,7 +306,7 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
     } else if (active.data?.current?.type === 'app-drag-node') {
       handleAppReorder(active.id, over.id);
     }
-  }, [handleAppReorder, handlePurgeDrop, handleTerminalDrop]);
+  }, [handleAppReorder, handlePurgeDrop, handleTerminalDrop, endDrag]);
 
   // ===== RETURN VALUES =====
   return {

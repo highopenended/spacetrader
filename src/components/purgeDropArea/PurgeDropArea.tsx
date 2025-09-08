@@ -6,14 +6,14 @@
  * 
  * Features:
  * - Configurable DOM ID for multiple instances
- * - Drag-over visual feedback via DragContext
+ * - Drag-over visual feedback via dragStore
  * - Responsive sizing via containerStyle prop
  * - Consistent purge zone styling and behavior
  */
 
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { useDragContext } from '../../contexts/DragContext';
+import { useDragStore } from '../../stores';
 import './PurgeDropArea.css';
 
 interface PurgeDropAreaProps {
@@ -34,7 +34,7 @@ const PurgeDropArea: React.FC<PurgeDropAreaProps> = ({
     id: domId,
   });
 
-  const { overId } = useDragContext();
+  const overId = useDragStore(state => state.overId);
   const isActive = overId === domId;
 
   return (

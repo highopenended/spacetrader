@@ -6,7 +6,7 @@ import { DOM_IDS } from '../../constants/domIds';
 import SortableItem from '../scr-apps/SortableItem';
 import DockWindowsButton from './DockWindowsButton';
 import TerminalToggle from './TerminalToggle';
-import { useDragContext } from '../../contexts/DragContext';
+import { useDragStore } from '../../stores';
 import { Z_LAYERS } from '../../constants/zLayers';
 
 interface TerminalScreenProps {
@@ -14,7 +14,6 @@ interface TerminalScreenProps {
   onAppClick?: (appType: string, title: string, content?: React.ReactNode) => void;
   apps: any[];
   appOrder: string[];
-  pendingDeleteAppId?: string | null;
   openAppTypes?: Set<string>;
   onDockWindows?: () => void;
   shouldCollapse?: boolean; // Collapse trigger from parent (e.g., when work mode begins)
@@ -25,7 +24,6 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   onAppClick,
   apps,
   appOrder,
-  pendingDeleteAppId = null,
   openAppTypes = new Set(),
   onDockWindows,
   shouldCollapse
@@ -33,8 +31,9 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   // Terminal state
   const [terminalMode, setTerminalMode] = useState<'expanded' | 'collapsed'>('expanded');
 
-  // Get drag context for visual feedback
-  const { overId } = useDragContext();
+  // Get drag state for visual feedback and pending deletion
+  const overId = useDragStore(state => state.overId);
+  const pendingDeleteAppId = useDragStore(state => state.pendingDelete.appId);
 
   // WINDOW DOCKING SYSTEM: Make terminal droppable for window docking
   const { setNodeRef } = useDroppable({

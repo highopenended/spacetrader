@@ -45,7 +45,7 @@ import { APP_REGISTRY } from '../../../constants/appListConstants';
 import { useDragHandler_Windows } from '../../../hooks/useDragHandler_Windows';
 import { useDraggable } from '@dnd-kit/core';
 import { useWindowDropZoneEffects } from './useDropZoneEffects';
-import { useDragContext } from '../../../contexts/DragContext';
+import { useDragStore } from '../../../stores';
 
 // Base interface for all window management props
 export interface BaseWindowProps {
@@ -179,10 +179,11 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
   // No upgrade info mode
 
   // CLEAN: Use drop zone effects hook to handle all conditional styling
-  // Pull drag-over state from context (source of truth), fallback to props if provided
-  const { overId: ctxOverId, draggedAppType } = useDragContext();
+  // Pull drag-over state from store (source of truth)
+  const overId = useDragStore(state => state.overId);
+  const draggedAppType = useDragStore(state => state.dragState.draggedAppType);
   const dropZoneEffects = useWindowDropZoneEffects(
-    ctxOverId,
+    overId as string | null,
     draggedAppType || null,
     appType
   );

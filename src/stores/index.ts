@@ -13,3 +13,4 @@ export { useWindowStore } from './windowStore';
 export { useProfileStore } from './profileStore';
 export { useEndingsStore } from './endingsStore';
 export { useQuickBarStore } from './quickBarStore';
+export { useDragStore } from './dragStore';
