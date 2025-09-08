@@ -14,8 +14,6 @@ import ScrapBin from '../scrapBin/ScrapBin';
 import WorkTimer from '../workTimer/WorkTimer';
 import ScrapItem from '../scrapItem/ScrapItem';
 import './WorkScreen.css';
-import { setAnchors, clear as clearAnchors } from '../../visualOverlayManager/anchors/AnchorsStore';
-import { Anchor } from '../../visualOverlayManager/anchors/types';
 import { useScrapDropTargets } from '../../../hooks/useScrapDropTargets';
 import { useScrapPhysics } from '../../../hooks/useScrapPhysics';
 import { useScrapDrag } from '../../../hooks/useScrapDrag';
@@ -24,7 +22,8 @@ import { MutatorRegistry } from '../../../constants/mutatorRegistry';
 import { DOM_IDS } from '../../../constants/domIds';
 import { ScrapRegistry } from '../../../constants/scrapRegistry';
 import WorkModePurgeZone from '../workModePurgeZone/WorkModePurgeZone';
-import { useUpgradesStore } from '../../../stores';
+import { useUpgradesStore, useAnchorsStore } from '../../../stores';
+import { Anchor } from '../../../stores/anchorsStore';
 
 interface WorkScreenProps {
   updateCredits?: (amount: number) => void;
@@ -34,6 +33,10 @@ interface WorkScreenProps {
 const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps }) => {
   // Get upgrade checker from upgradesStore
   const isUpgradePurchased = useUpgradesStore(state => state.isPurchased);
+  
+  // Get anchors store actions for DumpsterVision overlay
+  const setAnchors = useAnchorsStore(state => state.setAnchors);
+  const clearAnchors = useAnchorsStore(state => state.clearAnchors);
   
   // Timer management
   const lastFrameTimeRef = useRef<number>(performance.now());
@@ -329,7 +332,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       // Clear anchors when leaving work screen
       clearAnchors();
     };
-  }, [gameLoop]);
+  }, [gameLoop, clearAnchors]);
 
   // Memoize scrap items with stable style objects to prevent unnecessary re-renders
   const scrapItems = useMemo(() => {
@@ -385,7 +388,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
         } as Anchor;
       });
     setAnchors(anchors);
-  }, [spawnState.activeScrap, beingCollectedIds, getRenderedPosition, scrapSize]);
+  }, [spawnState.activeScrap, beingCollectedIds, getRenderedPosition, scrapSize, setAnchors]);
 
   // While dragging, update anchors every frame using live drag style
   useEffect(() => {
@@ -422,7 +425,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [draggedScrapId, spawnState.activeScrap, beingCollectedIds, getRenderedPosition, scrapSize]);
+  }, [draggedScrapId, spawnState.activeScrap, beingCollectedIds, getRenderedPosition, scrapSize, setAnchors]);
 
   // Check if work mode purge zone should be shown (upgrade purchased AND purgeZone app installed)
   const isPurgeZoneInstalled = installedApps?.some(app => app.id === 'purgeZone') ?? false;

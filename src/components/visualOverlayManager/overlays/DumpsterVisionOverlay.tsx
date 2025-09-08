@@ -1,19 +1,16 @@
 import React from 'react';
 import './DumpsterVisionOverlay.css';
-import { subscribe, getAnchors } from '../anchors/AnchorsStore';
-import { Anchor } from '../anchors/types';
+import { useAnchorsStore } from '../../../stores';
+import { Anchor } from '../../../stores/anchorsStore';
 
 const DumpsterVisionOverlay: React.FC<{ isExiting?: boolean }> = ({ isExiting }) => {
-  const [anchors, setAnchorsState] = React.useState<Anchor[]>(() => getAnchors());
+  // Get anchors from Zustand store with selective subscription
+  const anchors = useAnchorsStore(state => state.anchors);
+  
   const [isBooting, setIsBooting] = React.useState<boolean>(true);
   const [animateLabels, setAnimateLabels] = React.useState<boolean>(false);
   const labelRefs = React.useRef<Map<string, HTMLDivElement>>(new Map());
-  const [smoothedAnchors, setSmoothedAnchors] = React.useState<Anchor[]>(() => getAnchors());
   const smoothMapRef = React.useRef<Map<string, Anchor>>(new Map());
-
-  React.useEffect(() => {
-    return subscribe(setAnchorsState);
-  }, []);
 
   React.useEffect(() => {
     const t = window.setTimeout(() => setIsBooting(false), 2600);
@@ -28,8 +25,8 @@ const DumpsterVisionOverlay: React.FC<{ isExiting?: boolean }> = ({ isExiting })
     return () => window.clearTimeout(t);
   }, [isBooting]);
 
-  // Dead-zone smoothing for tiny jiggles (improves text readability)
-  React.useEffect(() => {
+  // Optimized dead-zone smoothing using useMemo (prevents unnecessary recalculations)
+  const smoothedAnchors = React.useMemo(() => {
     const vwToPx = window.innerWidth / 100;
     const vhToPx = window.innerHeight / 100;
     const DEAD_PX = 2.5; // slightly larger dead-zone for micro jiggles
@@ -60,7 +57,8 @@ const DumpsterVisionOverlay: React.FC<{ isExiting?: boolean }> = ({ isExiting })
       if (!nextIds.has(id)) smoothMapRef.current.delete(id);
     }
     next.forEach(a => smoothMapRef.current.set(a.id, a));
-    setSmoothedAnchors(next);
+    
+    return next;
   }, [anchors]);
 
   return (
@@ -122,7 +120,7 @@ const DumpsterVisionOverlay: React.FC<{ isExiting?: boolean }> = ({ isExiting })
           }}
           aria-hidden
         >
-          {(a.label.split('\n')).map((line, idx, arr) => {
+          {(a.label.split('\n')).map((line: string, idx: number, arr: string[]) => {
             const isHeader = idx === 0;
             const isFirstMutator = idx === 1 && arr.length > 1;
             const style: React.CSSProperties | undefined = isHeader
