@@ -45,9 +45,8 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   
   // Timer display state
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
-  const [displayFrameCount, setDisplayFrameCount] = useState<number>(0);
   
-  // Frame counting ref for internal timing (doesn't trigger re-renders)
+  // Frame counting ref for internal timing only (doesn't trigger re-renders)
   const frameCountRef = useRef<number>(0);
   
   // Scrap spawning state
@@ -320,13 +319,8 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     const elapsed = (currentTime - startTimeRef.current) / 1000;
     setElapsedSeconds(elapsed);
     
-    // Increment frame counter
+    // Increment frame counter (for internal timing only)
     frameCountRef.current++;
-    
-    // Update display frame count every 30 frames (0.5 seconds) for better UX
-    if (frameCountRef.current % 30 === 0) {
-      setDisplayFrameCount(frameCountRef.current);
-    }
 
     lastFrameTimeRef.current = currentTime;
     animationFrameRef.current = requestAnimationFrame(gameLoop);
@@ -444,7 +438,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
 
   return (
     <div className="work-screen">
-      <WorkTimer elapsedSeconds={elapsedSeconds} frameCount={displayFrameCount} collectedCount={collectedCount} />
+      <WorkTimer elapsedSeconds={elapsedSeconds} collectedCount={collectedCount} />
       <AssemblyLine />
       <ScrapBin ref={dropZoneRef} />
       
