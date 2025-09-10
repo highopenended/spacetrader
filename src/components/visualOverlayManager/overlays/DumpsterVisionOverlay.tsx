@@ -2,28 +2,23 @@ import React from 'react';
 import './DumpsterVisionOverlay.css';
 import { useAnchorsStore } from '../../../stores';
 import { Anchor } from '../../../stores/anchorsStore';
+import { VisualOverlayProps, ANIMATION_DURATIONS } from '../types';
 
-const DumpsterVisionOverlay: React.FC<{ isExiting?: boolean }> = ({ isExiting }) => {
+const DumpsterVisionOverlay: React.FC<VisualOverlayProps> = ({ isExiting, animationState }) => {
   // Get anchors from Zustand store with selective subscription
   const anchors = useAnchorsStore(state => state.anchors);
   
-  const [isBooting, setIsBooting] = React.useState<boolean>(true);
   const [animateLabels, setAnimateLabels] = React.useState<boolean>(false);
   const labelRefs = React.useRef<Map<string, HTMLDivElement>>(new Map());
   const smoothMapRef = React.useRef<Map<string, Anchor>>(new Map());
 
-  React.useEffect(() => {
-    const t = window.setTimeout(() => setIsBooting(false), 2600);
-    return () => window.clearTimeout(t);
-  }, []);
-
   // Trigger a one-shot intro animation for labels once booting completes
   React.useEffect(() => {
-    if (isBooting) return;
+    if (animationState !== 'idle') return;
     setAnimateLabels(true);
-    const t = window.setTimeout(() => setAnimateLabels(false), 800);
+    const t = window.setTimeout(() => setAnimateLabels(false), ANIMATION_DURATIONS.LABEL_INTRO);
     return () => window.clearTimeout(t);
-  }, [isBooting]);
+  }, [animationState]);
 
   // Optimized dead-zone smoothing using useMemo (prevents unnecessary recalculations)
   const smoothedAnchors = React.useMemo(() => {
@@ -71,10 +66,10 @@ const DumpsterVisionOverlay: React.FC<{ isExiting?: boolean }> = ({ isExiting })
       }}
     >
       {/* Base CRT layer: scanlines + vignette + subtle green tint */}
-      <div className={`dv-crt ${isBooting ? 'dv-booting' : isExiting ? 'dv-shutdown' : 'dv-active'}`} aria-hidden />
+      <div className={`dv-crt ${animationState === 'booting' ? 'dv-booting' : isExiting ? 'dv-shutdown' : 'dv-active'}`} aria-hidden />
 
       {/* Boot overlays (shown only during startup) */}
-      {isBooting && (
+      {animationState === 'booting' && (
         <>
           <div className="dv-boot-flash" aria-hidden />
           <div className="dv-boot-beam" aria-hidden />
@@ -87,7 +82,7 @@ const DumpsterVisionOverlay: React.FC<{ isExiting?: boolean }> = ({ isExiting })
           </div>
         </>
       )}
-      {!isBooting && !isExiting && smoothedAnchors.map((a, idx) => (
+      {animationState === 'idle' && !isExiting && smoothedAnchors.map((a, idx) => (
         <div
           key={a.id}
           ref={(el) => {
@@ -143,7 +138,7 @@ const DumpsterVisionOverlay: React.FC<{ isExiting?: boolean }> = ({ isExiting })
       ))}
 
       {/* Dynamic connector lines from scrap center to nearest label edge */}
-      {!isBooting && !isExiting && smoothedAnchors.map((a) => {
+      {animationState === 'idle' && !isExiting && smoothedAnchors.map((a) => {
         if (a.cxVw == null || a.cyVh == null) return null;
         return (
           <ConnectorLine key={`${a.id}-line`} anchor={a} getLabelEl={() => labelRefs.current.get(a.id) || null} />

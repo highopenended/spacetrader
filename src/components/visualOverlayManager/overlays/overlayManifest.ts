@@ -1,10 +1,11 @@
 import { QuickBarFlags } from '../../../types/quickBarState';
 import React from 'react';
 import DumpsterVisionOverlay from './DumpsterVisionOverlay';
+import { VisualOverlayProps } from '../types';
 
 export interface VisualOverlayEntry {
   id: string;
-  Component: React.ComponentType<{ isExiting?: boolean }>;
+  Component: React.ComponentType<VisualOverlayProps>;
   isActive: (flags: QuickBarFlags) => boolean;
   zIndex?: number;
 }
