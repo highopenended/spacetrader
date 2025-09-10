@@ -1,7 +1,7 @@
 import React from 'react';
 import { InstalledApp } from '../../types/appListState';
 import { useUpgradesStore, useQuickBarStore } from '../../stores';
-import { QUICKBAR_CONFIG } from '../../constants/quickBarConstants';
+import { buildQuickBarItems } from '../../utils/quickBarUtils';
 
 interface QuickKeysBarProps {
   installedApps: InstalledApp[];
@@ -62,16 +62,7 @@ const QuickKeysBar: React.FC<QuickKeysBarProps> = ({ installedApps }) => {
   const isUpgradePurchased = useUpgradesStore(state => state.isPurchased);
   
   // Build quick items from quickBarConfig, respect requiresAppId and requiresUpgradeId
-  const quickItems = Object.values(QUICKBAR_CONFIG)
-    .filter(cfg => cfg.showInQuickBar)
-    .filter(cfg => !cfg.requiresAppId || installedApps.some(app => app.id === cfg.requiresAppId))
-    .filter(cfg => !cfg.requiresUpgradeId || isUpgradePurchased(cfg.requiresUpgradeId))
-    .map(cfg => ({
-      id: cfg.id,
-      keyLetter: cfg.shortcutKey,
-      label: cfg.label,
-      toggleKey: cfg.toggleFlagKey
-    }));
+  const quickItems = buildQuickBarItems(installedApps, isUpgradePurchased);
 
   if (quickItems.length === 0) return null;
 
