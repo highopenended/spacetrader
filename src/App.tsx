@@ -20,7 +20,7 @@ import TerminalScreen from './components/terminalScreen/TerminalScreen';
 import AdminToolbar from './components/adminToolbar/AdminToolbar';
 import WorkScreen from './components/workMode/workScreen/WorkScreen';
 import GameBackground from './components/gameBackgrounds/GameBackground';
-import { useGameStore, useUpgradesStore, useToggleStore, useWindowStore, useProfileStore, useEndingsStore, useQuickBarStore, useUIStore } from './stores';
+import { useGameStore, useUpgradesStore, useToggleStore, useWindowStore, useEndingsStore, useQuickBarStore, useUIStore } from './stores';
 import { useSaveLoad } from './hooks/useSaveLoad';
 import { WindowData } from './types/windowState';
 
@@ -67,8 +67,6 @@ function App() {
   const getAvailableApps = useGameStore(state => state.getAvailableApps);
   const beginWorkSession = useGameStore(state => state.beginWorkSession);
   const setGameBackground = useGameStore(state => state.setGameBackground);
-  const encodeGameState = useGameStore(state => state.encodeGameState);
-  const decodeGameState = useGameStore(state => state.decodeGameState);
 
 
 
@@ -86,18 +84,12 @@ function App() {
   const closeWindowsByAppType = useWindowStore(state => state.closeWindowsByAppType);
   const bringToFront = useWindowStore(state => state.bringToFront);
   const dockAllWindows = useWindowStore(state => state.dockAllWindows);
-  const encodeWindowState = useWindowStore(state => state.encodeWindowState);
-  const decodeWindowState = useWindowStore(state => state.decodeWindowState);
 
   // Toggle state from Zustand store (selective subscriptions)
   const toggleStates = useToggleStore(state => state.toggleStates);
   const setToggleState = useToggleStore(state => state.setToggleState);
-  const encodeToggleState = useToggleStore(state => state.encodeToggleState);
-  const decodeToggleState = useToggleStore(state => state.decodeToggleState);
 
   // Profile state from Zustand store (selective subscriptions)
-  const encodeProfileState = useProfileStore(state => state.encodeProfileState);
-  const decodeProfileState = useProfileStore(state => state.decodeProfileState);
 
   // Endings state from Zustand store (selective subscriptions)
   const activeEnding = useEndingsStore(state => state.activeEnding);
@@ -105,8 +97,6 @@ function App() {
   const clearActiveEnding = useEndingsStore(state => state.clearActiveEnding);
 
   // Quick bar state from Zustand store (selective subscriptions)
-  const encodeQuickBarState = useQuickBarStore(state => state.encodeQuickBarState);
-  const decodeQuickBarState = useQuickBarStore(state => state.decodeQuickBarState);
 
   // UI state from Zustand store (selective subscriptions)
   const isOptionsMenuOpen = useUIStore(state => state.isOptionsMenuOpen);
@@ -144,14 +134,14 @@ function App() {
     uninstallApp(appId);
   }, [uninstallApp, installedApps, checkForEndingTriggers]);
 
-  // Create save/load functions with all encode/decode functions
+  // Create save/load functions with direct store access
   const {
     saveToLocalCache,
     loadFromLocalCache,
     exportToFile,
     importFromFile,
     SAVE_COST
-  } = useSaveLoad(credits, updateCredits, encodeGameState, decodeGameState, encodeWindowState, decodeWindowState, encodeToggleState, decodeToggleState, encodeProfileState, decodeProfileState, encodeQuickBarState, decodeQuickBarState);
+  } = useSaveLoad();
 
   // Create reset function that coordinates all state resets
   const handleResetGame = React.useCallback(() => {
@@ -207,10 +197,6 @@ function App() {
       getAvailableApps,
       installedApps,
       installApp,
-      encodeGameState,
-      decodeGameState,
-      encodeWindowState,
-      decodeWindowState,
       saveToLocalCache,
       loadFromLocalCache,
       exportToFile,

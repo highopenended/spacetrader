@@ -31,10 +31,6 @@ interface WindowController {
   getAvailableApps: () => any[];
   installedApps: any[];
   installApp: (appId: string, order?: number) => void;
-  encodeGameState: () => any;
-  decodeGameState: (state: any) => boolean;
-  encodeWindowState: () => any;
-  decodeWindowState: (state: any) => boolean;
   saveToLocalCache: () => boolean;
   loadFromLocalCache: () => boolean;
   exportToFile: () => boolean;

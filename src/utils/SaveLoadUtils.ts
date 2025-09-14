@@ -9,8 +9,11 @@
 interface SaveData {
   gameState: any; // Encoded game state from gameStore
   windowState: any; // Encoded window state from useWindowStore
-  toggleState: any; // Encoded toggle state from useToggleState
+  toggleState: any; // Encoded toggle state from useToggleStore
   profileState: any; // Encoded profile state from profileStore
+  quickBarState: any; // Encoded quick bar state from useQuickBarStore
+  endingsState: any; // Encoded endings state from useEndingsStore
+  upgradesState: any; // Encoded upgrades state from useUpgradesStore
   timestamp: number;
   saveDate: string;
 }
@@ -29,6 +32,9 @@ export const saveGameToLocalStorage = (saveData: any): boolean => {
       windowState: saveData.windowState,
       toggleState: saveData.toggleState,
       profileState: saveData.profileState,
+      quickBarState: saveData.quickBarState,
+      endingsState: saveData.endingsState,
+      upgradesState: saveData.upgradesState,
       timestamp: Date.now(),
       saveDate: new Date().toISOString()
     };
@@ -69,6 +75,9 @@ export const exportGameToFile = (saveData: any): boolean => {
       windowState: saveData.windowState,
       toggleState: saveData.toggleState,
       profileState: saveData.profileState,
+      quickBarState: saveData.quickBarState,
+      endingsState: saveData.endingsState,
+      upgradesState: saveData.upgradesState,
       timestamp: Date.now(),
       saveDate: new Date().toISOString()
     };
@@ -110,6 +119,10 @@ export const importGameFromFile = async (file: File): Promise<any | null> => {
       console.error('Invalid game file format');
       return null;
     }
+    
+    // Note: New fields (quickBarState, endingsState, upgradesState) are optional
+    // for backward compatibility with older save files. The decode functions
+    // in each store will handle missing fields gracefully.
     
     return parsedData;
   } catch (error) {

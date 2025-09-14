@@ -27,6 +27,10 @@ interface UpgradesActions {
   getDefinition: (id: UpgradeId) => UpgradeDefinition | undefined;
   getUpgradesForApp: (appId: string) => UpgradeDefinition[];
   
+  // Save/load functions
+  encodeUpgradesState: () => PurchasedUpgrades;
+  decodeUpgradesState: (state: PurchasedUpgrades) => boolean;
+  
   // Reset function
   resetUpgrades: () => void;
 }
@@ -120,6 +124,39 @@ export const useUpgradesStore = create<UpgradesStore>((set, get) => ({
       });
       return { purchased: updated };
     });
+  },
+
+  // ===== SAVE/LOAD FUNCTIONS =====
+  encodeUpgradesState: (): PurchasedUpgrades => {
+    const state = get();
+    return { ...state.purchased };
+  },
+
+  decodeUpgradesState: (state: PurchasedUpgrades): boolean => {
+    try {
+      // Validate the incoming state
+      if (!state || typeof state !== 'object') return false;
+      
+      // Validate that all values are booleans
+      const valuesValid = Object.values(state).every(value => typeof value === 'boolean');
+      if (!valuesValid) {
+        console.error('Invalid upgrades state format - all values must be booleans');
+        return false;
+      }
+
+      // Validate that all keys exist in the upgrade registry
+      const keysValid = Object.keys(state).every(key => UPGRADE_REGISTRY[key as UpgradeId]);
+      if (!keysValid) {
+        console.error('Invalid upgrades state format - unknown upgrade IDs');
+        return false;
+      }
+
+      set({ purchased: { ...state } });
+      return true;
+    } catch (error) {
+      console.error('Failed to decode upgrades state:', error);
+      return false;
+    }
   },
 
   // ===== RESET FUNCTION =====
