@@ -327,6 +327,7 @@ function App() {
           <EndingCutscene 
             activeEnding={activeEnding}
             onComplete={clearActiveEnding}
+            resetGame={handleResetGame}
           />
         )}
       </div>

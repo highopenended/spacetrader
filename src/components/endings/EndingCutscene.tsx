@@ -15,11 +15,14 @@ interface EndingCutsceneProps {
   activeEnding: ActiveEnding;
   /** Called when the cutscene completes */
   onComplete: () => void;
+  /** Function to reset the game */
+  resetGame?: () => void;
 }
 
 const EndingCutscene: React.FC<EndingCutsceneProps> = ({ 
   activeEnding, 
-  onComplete
+  onComplete,
+  resetGame
 }) => {
   const { ending } = activeEnding;
 
@@ -34,6 +37,7 @@ const EndingCutscene: React.FC<EndingCutsceneProps> = ({
           onComplete={onComplete}
           endingName={ending.name}
           endingDescription={ending.description}
+          resetGame={resetGame}
         />
       );
     

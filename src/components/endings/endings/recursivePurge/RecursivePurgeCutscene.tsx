@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import PanicMessageOverlay from './effects/PanicMessageOverlay';
 import CRTEffects from './effects/CRTEffects';
+import { useClockStore } from '../../../../stores';
 import './RecursivePurgeCutscene.css';
 
 interface RecursivePurgeCutsceneProps {
@@ -17,18 +18,52 @@ interface RecursivePurgeCutsceneProps {
   endingName: string;
   /** Ending description */
   endingDescription?: string;
+  /** Function to reset the game */
+  resetGame?: () => void;
 }
 
 const RecursivePurgeCutscene: React.FC<RecursivePurgeCutsceneProps> = ({ 
   onComplete, 
   endingName, 
-  endingDescription
+  endingDescription,
+  resetGame
 }) => {
   const [panicActive, setPanicActive] = useState(false);
   const [panicIntensity, setPanicIntensity] = useState<'low' | 'medium' | 'high' | 'extreme'>('low');
   const [crtActive, setCrtActive] = useState(false);
   const [crtIntensity, setCrtIntensity] = useState<'subtle' | 'moderate' | 'heavy' | 'extreme'>('subtle');
   const [showEndingScreen, setShowEndingScreen] = useState(false);
+
+  // Clock store actions for gradual slowdown
+  const setTimeScale = useClockStore((state: any) => state.setTimeScale);
+  const pauseClock = useClockStore((state: any) => state.pauseClock);
+
+  // Gradual slowdown effect - reduce time scale from 1.0 to 0 over 2 seconds
+  // Creates dramatic effect where game world slows down while panic messages continue at normal speed
+  useEffect(() => {
+    let currentTimeScale = 1.0;
+    const slowdownInterval = 200; // Change every 200ms
+    const totalSteps = 2000 / slowdownInterval; // 10 steps over 2 seconds
+    const scaleDecrement = 1.0 / totalSteps; // 0.1 per step
+    
+    const slowdownTimer = setInterval(() => {
+      currentTimeScale -= scaleDecrement;
+      
+      if (currentTimeScale <= 0) {
+        currentTimeScale = 0;
+        setTimeScale(0);
+        pauseClock();
+        clearInterval(slowdownTimer);
+      } else {
+        setTimeScale(currentTimeScale);
+      }
+    }, slowdownInterval);
+
+    // Cleanup on unmount
+    return () => {
+      clearInterval(slowdownTimer);
+    };
+  }, []); // Run once when cutscene starts
 
   // Start effects and gradually increase intensity
   useEffect(() => {
@@ -65,6 +100,10 @@ const RecursivePurgeCutscene: React.FC<RecursivePurgeCutsceneProps> = ({
   // Handle click to continue (only when ending screen is showing)
   const handleClick = () => {
     if (showEndingScreen) {
+      // Reset the game if resetGame function is provided
+      if (resetGame) {
+        resetGame();
+      }
       onComplete();
     }
   };

@@ -1,4 +1,4 @@
-import React from 'react';
+ import React from 'react';
 import { useQuickBarStore } from '../../stores';
 import { OVERLAY_MANIFEST } from './overlays/overlayManifest';
 import { AnimationState, ANIMATION_DURATIONS } from './types';

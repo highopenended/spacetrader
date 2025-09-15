@@ -8,6 +8,7 @@
 
 import React, { useRef, useEffect, useMemo } from 'react';
 import './SpaceDock.css';
+import { useClockSubscription } from '../../../hooks/useClockSubscription';
 
 interface Star {
   x: number;
@@ -23,7 +24,7 @@ interface Star {
 
 const SpaceDock: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number | undefined>(undefined);
+  const animationTimeRef = useRef<number>(0); // Track scaled animation time
 
   // Generate stars data
   const stars = useMemo((): Star[] => {
@@ -90,13 +91,10 @@ const SpaceDock: React.FC = () => {
     });
   }, []);
 
-  // Animation loop
+  // Canvas setup and resize handling
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
 
     // Set canvas size
     const resizeCanvas = () => {
@@ -107,7 +105,19 @@ const SpaceDock: React.FC = () => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    const animate = (timestamp: number) => {
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, []);
+
+  // Animation function
+  const animate = useMemo(() => {
+    return () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
       // Clear canvas
       ctx.fillStyle = 'black';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -134,7 +144,7 @@ const SpaceDock: React.FC = () => {
         let currentSize = star.size;
         
         if (star.twinkleSpeed > 0) {
-          const twinkle = Math.sin(timestamp * 0.001 * star.twinkleSpeed + star.twinklePhase);
+          const twinkle = Math.sin(animationTimeRef.current * 0.001 * star.twinkleSpeed + star.twinklePhase);
           const twinkleFactor = (twinkle + 1) / 2; // Normalize to 0-1
           
           switch (star.type) {
@@ -260,19 +270,21 @@ const SpaceDock: React.FC = () => {
           ctx.globalAlpha = 1;
         }
       });
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animationRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
     };
   }, [stars]);
+
+  // Subscribe to global clock for animation
+  useClockSubscription(
+    'spacedock-animation',
+    (deltaTime, scaledDeltaTime, tickCount) => {
+      // Update animation time (respects pause and time scale)
+      animationTimeRef.current += scaledDeltaTime;
+      
+      // Run animation
+      animate();
+    },
+    { priority: 5, name: 'spacedock-animation' }
+  );
 
   return (
     <canvas
