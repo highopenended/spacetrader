@@ -17,6 +17,7 @@ import './WorkScreen.css';
 import { useScrapDropTargets } from '../../../hooks/useScrapDropTargets';
 import { useScrapPhysics } from '../../../hooks/useScrapPhysics';
 import { useScrapDrag } from '../../../hooks/useScrapDrag';
+import { useClockSubscription } from '../../../hooks/useClockSubscription';
 import { SCRAP_BASELINE_BOTTOM_VH, vhFromPx } from '../../../constants/physicsConstants';
 import { MutatorRegistry } from '../../../constants/mutatorRegistry';
 import { DOM_IDS } from '../../../constants/domIds';
@@ -38,16 +39,15 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   const setAnchors = useAnchorsStore(state => state.setAnchors);
   const clearAnchors = useAnchorsStore(state => state.clearAnchors);
   
-  // Timer management
-  const lastFrameTimeRef = useRef<number>(performance.now());
-  const animationFrameRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number>(performance.now());
-  
   // Timer display state
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+  const startTimeRef = useRef<number>(performance.now());
   
-  // Frame counting ref for internal timing only (doesn't trigger re-renders)
+  // Frame counting ref for cleanup timing (doesn't trigger re-renders)
   const frameCountRef = useRef<number>(0);
+  
+  // Scaled time tracking for spawn timing (respects pause and time scale)
+  const scaledTimeRef = useRef<number>(0);
   
   // Scrap spawning state
   const [spawnState, setSpawnState] = useState<ScrapSpawnState>(initializeScrapSpawnState());
@@ -301,42 +301,44 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     return { xVw, bottomVh };
   }, [getAirborneState, getDragStyle]);
 
-  const gameLoop = useCallback((currentTime: number) => {
-    const deltaTime = currentTime - lastFrameTimeRef.current;
-    const dtSeconds = Math.max(0, deltaTime / 1000);
+  // Subscribe to global clock for game loop
+  useClockSubscription(
+    'workscreen-gameloop',
+    (deltaTime, scaledDeltaTime, tickCount) => {
+      const dtSeconds = Math.max(0, scaledDeltaTime / 1000);
 
-    // Physics step first so horizontal deltas are available this frame
-    stepAirborne(dtSeconds);
-    updateScrapPositions(deltaTime);
-    checkScrapSpawning(currentTime);
+      // Update scaled time accumulator (respects pause and time scale)
+      scaledTimeRef.current += scaledDeltaTime;
 
-    // Cleanup collected scrap every 6 frames (≈100ms at 60fps)
-    if (frameCountRef.current % 6 === 0) {
-      cleanupScrap();
-    }
+      // Physics step first so horizontal deltas are available this frame
+      stepAirborne(dtSeconds);
+      updateScrapPositions(scaledDeltaTime);
+      checkScrapSpawning(scaledTimeRef.current); // Use scaled time for spawn timing
 
-    // Update timer display
-    const elapsed = (currentTime - startTimeRef.current) / 1000;
-    setElapsedSeconds(elapsed);
-    
-    // Increment frame counter (for internal timing only)
-    frameCountRef.current++;
-
-    lastFrameTimeRef.current = currentTime;
-    animationFrameRef.current = requestAnimationFrame(gameLoop);
-  }, [updateScrapPositions, stepAirborne, checkScrapSpawning, cleanupScrap]);
-
-  useEffect(() => {
-    animationFrameRef.current = requestAnimationFrame(gameLoop);
-
-    return () => {
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current);
+      // Cleanup collected scrap every 6 frames (≈100ms at 60fps)
+      if (frameCountRef.current % 6 === 0) {
+        cleanupScrap();
       }
-      // Clear anchors when leaving work screen
+
+      // Update timer display (use scaled time for work session timing)
+      const elapsed = (performance.now() - startTimeRef.current) / 1000;
+      setElapsedSeconds(elapsed);
+      
+      // Increment frame counter (for internal timing only)
+      frameCountRef.current++;
+    },
+    {
+      priority: 1, // High priority - core gameplay system
+      name: 'WorkScreen Game Loop'
+    }
+  );
+
+  // Clear anchors when component unmounts
+  useEffect(() => {
+    return () => {
       clearAnchors();
     };
-  }, [gameLoop, clearAnchors]);
+  }, [clearAnchors]);
 
   // Memoize scrap items with stable style objects to prevent unnecessary re-renders
   const scrapItems = useMemo(() => {
