@@ -28,6 +28,8 @@ interface GameState {
   
   // Work mode state
   gameMode: GameMode;
+  workSessionStartTime: number; // Scaled time when work session began (0 = not in session)
+  workSessionDuration: number; // Duration in milliseconds (30000 = 30 seconds)
   
   // Background state
   gameBackground: string;
@@ -35,9 +37,6 @@ interface GameState {
   // Computed values (derived state)
   apps: (AppDefinition & InstalledApp)[];
   appOrder: string[];
-
-  // Refs for timers (stored as IDs)
-  workSessionTimerId: NodeJS.Timeout | null;
 }
 
 interface GameActions {
@@ -47,6 +46,8 @@ interface GameActions {
 
   // ===== WORK MODE MANAGEMENT =====
   beginWorkSession: () => void;
+  endWorkSession: () => void;
+  updateWorkSessionTime: (scaledTime: number) => void;
 
   // ===== PHASE MANAGEMENT =====
   setGamePhase: (phase: GamePhase) => void;
@@ -90,14 +91,13 @@ const initialGameState: GameState = {
   lastUpdate: INITIAL_GAME_STATE.lastUpdate,
   installedApps: INITIAL_GAME_STATE.installedApps,
   gameMode: INITIAL_GAME_STATE.gameMode,
+  workSessionStartTime: 0,
+  workSessionDuration: 30000, // 30 seconds
   gameBackground: 'default',
   
   // Computed values - will be updated by updateComputedValues
   apps: [],
   appOrder: [],
-  
-  // Timer refs
-  workSessionTimerId: null,
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -114,20 +114,36 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   // ===== WORK MODE MANAGEMENT =====
   beginWorkSession: () => {
-    // Clear existing timer if any
-    const currentTimer = get().workSessionTimerId;
-    if (currentTimer) {
-      clearTimeout(currentTimer);
-    }
+    set({ 
+      gameMode: 'workMode',
+      workSessionStartTime: 0 // Will be set by the first clock tick
+    });
+  },
 
-    set({ gameMode: 'workMode' });
+  endWorkSession: () => {
+    set({ 
+      gameMode: 'freeMode',
+      workSessionStartTime: 0 
+    });
+  },
+
+  updateWorkSessionTime: (scaledTime: number) => {
+    const state = get();
     
-    // 30 second timer for work session
-    const timerId = setTimeout(() => {
-      set({ gameMode: 'freeMode', workSessionTimerId: null });
-    }, 30000);
+    // Only update if we're in work mode
+    if (state.gameMode !== 'workMode') return;
     
-    set({ workSessionTimerId: timerId });
+    // Initialize start time on first update
+    if (state.workSessionStartTime === 0) {
+      set({ workSessionStartTime: scaledTime });
+      return;
+    }
+    
+    // Check if session duration has elapsed
+    const elapsedTime = scaledTime - state.workSessionStartTime;
+    if (elapsedTime >= state.workSessionDuration) {
+      get().endWorkSession();
+    }
   },
 
   // ===== PHASE MANAGEMENT =====
@@ -364,6 +380,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       lastUpdate: state.lastUpdate,
       installedApps: state.installedApps,
       gameMode: state.gameMode,
+      workSessionStartTime: state.workSessionStartTime,
+      workSessionDuration: state.workSessionDuration,
       gameBackground: state.gameBackground
     };
   },
@@ -385,12 +403,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return false;
       }
 
-      // Clear any existing work session timer
-      const currentTimer = get().workSessionTimerId;
-      if (currentTimer) {
-        clearTimeout(currentTimer);
-      }
-
       // Apply the decoded state
       set({
         credits: encodedState.credits,
@@ -400,8 +412,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         lastUpdate: encodedState.lastUpdate,
         installedApps: encodedState.installedApps,
         gameMode: encodedState.gameMode,
-        gameBackground: encodedState.gameBackground,
-        workSessionTimerId: null
+        workSessionStartTime: encodedState.workSessionStartTime || 0,
+        workSessionDuration: encodedState.workSessionDuration || 30000,
+        gameBackground: encodedState.gameBackground
       });
 
       // Update computed values after loading
@@ -416,15 +429,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   // ===== RESET FUNCTION =====
   resetGameState: () => {
-    // Clear any existing work session timer
-    const currentTimer = get().workSessionTimerId;
-    if (currentTimer) {
-      clearTimeout(currentTimer);
-    }
-
     set({
-      ...initialGameState,
-      workSessionTimerId: null
+      ...initialGameState
     });
 
     // Update computed values after reset

@@ -23,7 +23,7 @@ import { MutatorRegistry } from '../../../constants/mutatorRegistry';
 import { DOM_IDS } from '../../../constants/domIds';
 import { ScrapRegistry } from '../../../constants/scrapRegistry';
 import WorkModePurgeZone from '../workModePurgeZone/WorkModePurgeZone';
-import { useUpgradesStore, useAnchorsStore } from '../../../stores';
+import { useGameStore, useUpgradesStore, useAnchorsStore } from '../../../stores';
 import { Anchor } from '../../../stores/anchorsStore';
 
 interface WorkScreenProps {
@@ -41,7 +41,6 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   
   // Timer display state
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
-  const startTimeRef = useRef<number>(performance.now());
   
   // Frame counting ref for cleanup timing (doesn't trigger re-renders)
   const frameCountRef = useRef<number>(0);
@@ -310,6 +309,10 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       // Update scaled time accumulator (respects pause and time scale)
       scaledTimeRef.current += scaledDeltaTime;
 
+      // Update work session timer (check if work session should end)
+      const { updateWorkSessionTime } = useGameStore.getState();
+      updateWorkSessionTime(scaledTimeRef.current);
+
       // Physics step first so horizontal deltas are available this frame
       stepAirborne(dtSeconds);
       updateScrapPositions(scaledDeltaTime);
@@ -321,7 +324,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       }
 
       // Update timer display (use scaled time for work session timing)
-      const elapsed = (performance.now() - startTimeRef.current) / 1000;
+      const elapsed = scaledTimeRef.current / 1000;
       setElapsedSeconds(elapsed);
       
       // Increment frame counter (for internal timing only)
