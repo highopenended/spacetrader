@@ -14,13 +14,13 @@ export const ScrapRegistry = {
     baseValue: 2, 
     appearance: '🔩', 
     weight: 70, 
-    description: "Common metallic debris. Low value but abundant." 
+    description: "Just some common metal scrap. Usually pretty low value." 
   },
   junkCircuitry: { 
     id: 'junkCircuitry', 
     label: 'Junk Circuitry', 
     baseValue: 5, 
-    appearance: '🪨', 
+    appearance: '🖥️', 
     weight: 5, 
     description: "Damaged electronic components. Always a good source of scrap." 
   },
@@ -38,7 +38,7 @@ export const ScrapRegistry = {
     baseValue: 20, 
     appearance: '🫙', 
     weight: 10, 
-    description: "Shattered reamins of a cryogenic preservation tube. Doubt the occupent made it out alive." 
+    description: "Looks like the shattered remains of a cryogenic preservation tube. Doubt the occupants made it out alive." 
   },
   corpCreds: { 
     id: 'corpCreds', 
@@ -54,7 +54,7 @@ export const ScrapRegistry = {
     baseValue: 15, 
     appearance: '🧬', 
     weight: 5, 
-    description: "Organic material of unknown origin. Research labs pay well for specimens. Warning, do not consume or rub in your eyes." 
+    description: "Looks like some kind of organic material. The guys in the lab would love this. Guess they'll get the shredded version later..." 
   },
   brokenDroneCore: { 
     id: 'brokenDroneCore', 
