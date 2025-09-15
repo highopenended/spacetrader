@@ -186,10 +186,14 @@ export const useClockStore = create<ClockStore>((set, get) => ({
     // Calculate delta time
     const deltaTime = timestamp - state.lastTickTime;
     
-    // Skip if delta time is too large (likely a pause/resume)
-    if (deltaTime > 100) {
-      set({ lastTickTime: timestamp });
-      return;
+    // Handle first tick or large delta times (pause/resume)
+    let metricsDeltatime = deltaTime;
+    if (state.lastTickTime === 0 || deltaTime > 100) {
+      // Use reasonable default for metrics calculation
+      metricsDeltatime = 16.67; // ~60fps
+      if (deltaTime > 100) {
+        set({ lastTickTime: timestamp });
+      }
     }
     
     // Calculate scaled delta time
@@ -202,12 +206,12 @@ export const useClockStore = create<ClockStore>((set, get) => ({
     // Process subscribers
     const processingStartTime = performance.now();
     
-    if (!state.isPaused && state.subscribers.size > 0) {
+    if (state.subscribers.size > 0) {
       // Sort subscribers by priority (lower priority numbers execute first)
       const sortedSubscribers = Array.from(state.subscribers.values())
         .sort((a, b) => (a.priority || 0) - (b.priority || 0));
       
-      // Execute subscriber callbacks
+      // Execute subscriber callbacks (scaledDeltaTime will be 0 when paused)
       for (const subscriber of sortedSubscribers) {
         try {
           subscriber.callback(deltaTime, scaledDeltaTime, newTickCount);
@@ -219,15 +223,15 @@ export const useClockStore = create<ClockStore>((set, get) => ({
     
     const processingTime = performance.now() - processingStartTime;
     
-    // Update metrics
-    get().updateMetrics(deltaTime);
+    // Always update metrics (use metricsDeltatime for first tick)
+    get().updateMetrics(metricsDeltatime);
     
-    // Update state
+    // Update state (don't overwrite metrics that were just updated)
     set({ 
       tickCount: newTickCount,
       lastTickTime: timestamp,
       metrics: {
-        ...state.metrics,
+        ...get().metrics, // Use the updated metrics, not the old state
         totalTicks: newTickCount,
         subscriberCount: state.subscribers.size,
         lastTickProcessingTime: processingTime

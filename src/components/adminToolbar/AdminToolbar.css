@@ -128,6 +128,20 @@
   text-align: center;
 }
 
+.clock-control-row,
+.time-control-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  align-items: center;
+}
+
+.clock-control-row button,
+.time-control-row button {
+  min-width: 40px;
+  text-align: center;
+}
+
 .background-select,
 .ending-select {
   width: 100%;

@@ -39,6 +39,11 @@ import GameOptionsMenu from './components/gameOptions/gameOptionsMenu/GameOption
 import { ENDINGS_REGISTRY } from './constants/endingsRegistry';
 import EndingCutscene from './components/endings/EndingCutscene';
 
+// Global Clock System
+import ClockManager from './components/clock/ClockManager';
+import ClockDebugReadout from './components/clock/ClockDebugReadout';
+import ClockTestSubscriber from './components/clock/ClockTestSubscriber';
+
 function App() {  
   // ===== ZUSTAND GAME STORE SELECTORS =====
   // Core state - using selective subscriptions for better performance
@@ -295,12 +300,17 @@ function App() {
       installAppOrder={installAppOrder}
       openOrCloseWindow={openOrCloseWindow}
     >
+      {/* Global Clock System - manages timing for all game systems */}
+      <ClockManager startPaused={false} />
+      
       <div className="App">
         <GameBackground backgroundId={gameBackground} />
         <KeyboardManager installedApps={installedApps} />
         <QuickBarManager installedApps={installedApps} />
         <VisualOverlayManager />
         <GameOptionsGear />
+        <ClockDebugReadout visible={true} position="bottom-left" />
+        <ClockTestSubscriber visible={true} position="bottom-left" />
         <DataReadout {...componentProps.dataReadout} />
         <QuickKeysBar installedApps={installedApps} />
         <TerminalScreen {...componentProps.terminalScreen} />

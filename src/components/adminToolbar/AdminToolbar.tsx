@@ -5,6 +5,7 @@ import { advanceGameTime } from '../../utils/gameStateUtils';
 import { useDragHandler_Windows } from '../../hooks/useDragHandler_Windows';
 import { clampPositionToBounds } from '../../utils/viewportConstraints';
 import { GameBackgroundRegistry } from '../../constants/gameBackgroundRegistry';
+import { useClockStore } from '../../stores';
 
 interface AdminToolbarProps {
   credits: number;
@@ -46,6 +47,13 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
   triggerEnding
 }) => {
   const [isMinimized, setIsMinimized] = useState(true);
+  
+  // Clock store for global clock controls
+  const clockIsPaused = useClockStore(state => state.isPaused);
+  const timeScale = useClockStore(state => state.timeScale);
+  const pauseClock = useClockStore(state => state.pauseClock);
+  const resumeClock = useClockStore(state => state.resumeClock);
+  const setTimeScale = useClockStore(state => state.setTimeScale);
   
   // Drag constraint: don't drag when interacting with standard interactive controls
   const dragConstraint = useCallback((element: HTMLElement, event: React.MouseEvent) => {
@@ -175,13 +183,51 @@ const AdminToolbar: React.FC<AdminToolbarProps> = ({
           </div>
           
           <div className="admin-section">
-            <h4>Time Controls</h4>
-            <button onClick={isPaused ? resumeTime : pauseTime}>
-              {isPaused ? 'Resume' : 'Pause'} Time
-            </button>
-            <button onClick={addAnnumReckoning}>Add 1 Annum Reckoning</button>
-            <button onClick={addLedgerCycle}>Add 1 Ledger Cycle</button>
-            <button onClick={addGrind}>Add 1 Grind</button>
+            <h4>Global Clock Controls</h4>
+            <div className="clock-control-row">
+              <button onClick={clockIsPaused ? resumeClock : pauseClock}>
+                {clockIsPaused ? 'Resume' : 'Pause'}
+              </button>
+              <button 
+                onClick={() => setTimeScale(0.5)}
+                className={timeScale === 0.5 ? 'active' : ''}
+              >
+                0.5x
+              </button>
+              <button 
+                onClick={() => setTimeScale(0.75)}
+                className={timeScale === 0.75 ? 'active' : ''}
+              >
+                0.75x
+              </button>
+              <button 
+                onClick={() => setTimeScale(1.0)}
+                className={timeScale === 1.0 ? 'active' : ''}
+              >
+                1.0x
+              </button>
+              <button 
+                onClick={() => setTimeScale(1.5)}
+                className={timeScale === 1.5 ? 'active' : ''}
+              >
+                1.5x
+              </button>
+              <button 
+                onClick={() => setTimeScale(2.0)}
+                className={timeScale === 2.0 ? 'active' : ''}
+              >
+                2.0x
+              </button>
+            </div>
+          </div>
+
+          <div className="admin-section">
+            <h4>In-Game Time Controls</h4>
+            <div className="time-control-row">
+              <button onClick={addGrind}>Add 1 Grind</button>
+              <button onClick={addLedgerCycle}>Add 1 Ledger Cycle</button>
+              <button onClick={addAnnumReckoning}>Add 1 Annum Reckoning</button>
+            </div>
           </div>
 
           <div className="admin-section">
