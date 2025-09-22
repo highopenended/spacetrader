@@ -10,12 +10,16 @@ const PurgeZoneAppWindow: React.FC<BaseWindowProps> = ({
   appType,
   ...windowProps
 }) => {
-  // Get upgrades directly from upgradesStore
+  // Get upgrades directly from upgradesStore with proper subscriptions
   const getUpgradesForApp = useUpgradesStore(state => state.getUpgradesForApp);
   const isPurchased = useUpgradesStore(state => state.isPurchased);
   const canPurchase = useUpgradesStore(state => state.canPurchase);
   const purchase = useUpgradesStore(state => state.purchase);
   const refund = useUpgradesStore(state => state.refund);
+  
+  // Subscribe to upgrade state changes to ensure UI updates when upgrades complete
+  // We don't use the value directly, but the subscription triggers re-renders
+  useUpgradesStore(state => state.purchased['purgeZone.workModePurgeZone']);
   
   // Call the function outside the selector to avoid infinite re-renders
   const upgradesForApp = React.useMemo(() => getUpgradesForApp(appType), [getUpgradesForApp, appType]);

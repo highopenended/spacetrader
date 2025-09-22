@@ -42,7 +42,7 @@ const ChronoTrackAppWindow: React.FC<ChronoTrackAppWindowProps> = ({
     setTimeScale(newState ? 0.5 : 1.0);
   };
 
-  // Get upgrades directly from upgradesStore
+  // Get upgrades directly from upgradesStore with proper subscriptions
   const getUpgradesForApp = useUpgradesStore(state => state.getUpgradesForApp);
   const isPurchased = useUpgradesStore(state => state.isPurchased);
   const canPurchase = useUpgradesStore(state => state.canPurchase);
@@ -52,8 +52,8 @@ const ChronoTrackAppWindow: React.FC<ChronoTrackAppWindowProps> = ({
   // Call the function outside the selector to avoid infinite re-renders
   const upgradesForApp = React.useMemo(() => getUpgradesForApp(appType), [getUpgradesForApp, appType]);
 
-  // Check if time control upgrade is purchased
-  const isTimeControlUpgradePurchased = isPurchased('chronoTrack.timeControl');
+  // Check if time control upgrade is purchased - subscribe to state changes
+  const isTimeControlUpgradePurchased = useUpgradesStore(state => state.purchased['chronoTrack.timeControl']);
 
   const toggleDateReadout = () => {
     const newState = !dateReadoutEnabled;
