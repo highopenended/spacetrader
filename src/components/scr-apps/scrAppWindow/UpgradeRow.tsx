@@ -69,7 +69,8 @@ const UpgradeRow: React.FC<UpgradeRowProps> = ({
             <button
               type="button"
               onClick={onRefund}
-              title={`Refund ${cost} credits`}
+              disabled={appUpgradeInProgress}
+              title={appUpgradeInProgress ? 'Upgrade in progress...' : `Refund ${cost} credits`}
               className="upgrade-btn upgrade-btn--purchased"
             >
               PURCHASED
