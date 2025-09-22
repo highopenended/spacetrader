@@ -10,14 +10,18 @@ import { create } from 'zustand';
 import { UPGRADE_REGISTRY } from '../constants/upgradeRegistry';
 import { PurchasedUpgrades, UpgradeDefinition, UpgradeId } from '../types/upgradeState';
 import { useGameStore } from './gameStore';
+import { useQuickBarStore } from './quickBarStore';
 
 interface UpgradesState {
   purchased: PurchasedUpgrades;
+  appUpgradeInProgress: boolean;
+  currentUpgradeId: UpgradeId | null;
 }
 
 interface UpgradesActions {
   // Core upgrade operations
   purchase: (id: UpgradeId) => boolean;
+  completeUpgrade: () => void;
   refund: (id: UpgradeId) => boolean;
   clearUpgradesForApp: (appId: string) => void;
   
@@ -38,7 +42,9 @@ interface UpgradesActions {
 type UpgradesStore = UpgradesState & UpgradesActions;
 
 const initialUpgradesState: UpgradesState = {
-  purchased: {}
+  purchased: {},
+  appUpgradeInProgress: false,
+  currentUpgradeId: null,
 };
 
 export const useUpgradesStore = create<UpgradesStore>((set, get) => ({
@@ -64,6 +70,9 @@ export const useUpgradesStore = create<UpgradesStore>((set, get) => ({
     const state = get();
     if (state.purchased[id]) return false;
     
+    // Block purchases if upgrade is in progress
+    if (state.appUpgradeInProgress) return false;
+    
     if (def.dependencies && def.dependencies.some(dep => !state.purchased[dep])) return false;
     
     // Get current credits from gameStore
@@ -80,16 +89,37 @@ export const useUpgradesStore = create<UpgradesStore>((set, get) => ({
     
     if (!get().canPurchase(id)) return false;
     
-    // Deduct credits from gameStore
+    // Deduct credits from gameStore immediately
     const updateCredits = useGameStore.getState().updateCredits;
     updateCredits(-def.cost);
     
-    // Mark as purchased
+    // Start upgrade process (don't mark as purchased yet)
     set(state => ({
-      purchased: { ...state.purchased, [id]: true }
+      ...state,
+      appUpgradeInProgress: true,
+      currentUpgradeId: id
     }));
     
+    // Update quick bar flag to show overlay
+    useQuickBarStore.getState().setQuickBarFlag('isUpgradeInProgress', true);
+    
     return true;
+  },
+
+  completeUpgrade: (): void => {
+    const state = get();
+    if (!state.currentUpgradeId) return;
+    
+    // Now mark as purchased
+    set(prevState => ({
+      ...prevState,
+      purchased: { ...prevState.purchased, [state.currentUpgradeId!]: true },
+      appUpgradeInProgress: false,
+      currentUpgradeId: null
+    }));
+    
+    // Update quick bar flag to hide overlay
+    useQuickBarStore.getState().setQuickBarFlag('isUpgradeInProgress', false);
   },
 
   refund: (id: UpgradeId): boolean => {

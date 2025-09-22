@@ -4,10 +4,67 @@
   justify-content: space-between;
   gap: 10px;
   padding: 8px 10px;
-  background: linear-gradient(180deg, rgba(18, 18, 18, 0.95) 0%, rgba(28, 28, 28, 0.95) 100%);
-  border: 1px solid #3a3a3a;
   border-radius: 2px;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+/* Unpurchased upgrade - grey styling */
+.upgrade-card--unpurchased {
+  background: linear-gradient(180deg, rgba(20, 20, 20, 0.95) 0%, rgba(30, 30, 30, 0.95) 100%);
+  border: 1px solid #444;
+}
+
+/* Purchased upgrade - faded desaturated green */
+.upgrade-card--purchased {
+  background: linear-gradient(180deg, rgba(15, 18, 15, 0.95) 0%, rgba(25, 28, 25, 0.95) 100%);
+  border: 1px solid #2a3a2a;
+  filter: saturate(0.6) brightness(0.8);
+}
+
+.upgrade-card--purchased .detail-label {
+  color: #6a8a6a;
+  text-shadow: 0 0 8px rgba(106, 138, 106, 0.4);
+}
+
+.upgrade-card--dependent {
+  margin-left: 20px;
+}
+
+.upgrade-card--dependent.upgrade-card--unpurchased {
+  background: linear-gradient(180deg, rgba(20, 20, 20, 0.95) 0%, rgba(30, 30, 30, 0.95) 100%);
+  border-color: #444;
+}
+
+.upgrade-card--dependent.upgrade-card--purchased {
+  background: linear-gradient(180deg, rgba(15, 18, 15, 0.95) 0%, rgba(25, 28, 25, 0.95) 100%);
+  border-color: #2a3a2a;
+}
+
+.upgrade-dependency-connector {
+  position: absolute;
+  left: -20px;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.upgrade-dependency-line {
+  width: 1px;
+  height: 50%;
+  background: linear-gradient(to bottom, transparent, #4a6a4a);
+  box-shadow: 0 0 4px rgba(74, 106, 74, 0.6);
+}
+
+.upgrade-dependency-continuation {
+  width: 1px;
+  height: 50%;
+  background: linear-gradient(to bottom, #4a6a4a, transparent);
+  box-shadow: 0 0 4px rgba(74, 106, 74, 0.6);
 }
 
 .upgrade-actions {
@@ -17,32 +74,40 @@
   gap: 4px;
 }
 
+/* Base upgrade button styles */
 .upgrade-btn {
   padding: 6px 10px;
   letter-spacing: 1px;
   border-radius: 2px;
-  background: #0f0f0f;
-  border: 1px solid #4a4;
-  color: #9f9;
-  text-shadow: 0 0 6px rgba(144, 255, 144, 0.4);
   cursor: pointer;
   width: 110px;
   text-align: center;
   transition: all 0.15s ease;
   position: relative;
   overflow: hidden;
+  border: 1px solid;
 }
 
-.upgrade-btn:hover {
+/* Unpurchased upgrade button - raised and clickable */
+.upgrade-btn--purchase {
+  background: #0f0f0f;
+  border-color: #4a4;
+  color: #9f9;
+  text-shadow: 0 0 6px rgba(144, 255, 144, 0.4);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  transform: translateY(-1px);
+}
+
+.upgrade-btn--purchase:hover {
   background: #1a1a1a;
   border-color: #5a5;
   color: #afa;
   text-shadow: 0 0 8px rgba(144, 255, 144, 0.6);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 0 12px rgba(144, 255, 144, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8), 0 0 12px rgba(144, 255, 144, 0.2);
 }
 
-.upgrade-btn:hover::before {
+.upgrade-btn--purchase:hover::before {
   content: '';
   position: absolute;
   top: 0;
@@ -53,55 +118,65 @@
   animation: scan 0.6s ease;
 }
 
-@keyframes scan {
-  0% { left: -100%; }
-  100% { left: 100%; }
-}
-
-.upgrade-btn:disabled {
+.upgrade-btn--purchase:disabled {
   background: #141414;
   border-color: #444;
   color: #888;
   text-shadow: none;
   cursor: default;
+  transform: translateY(0);
+  box-shadow: none;
 }
 
-.upgrade-btn--remove {
+/* Downloading state - pulsing animation */
+.upgrade-btn--downloading {
+  background: #1a1a1a;
+  border-color: #6a6a6a;
+  color: #9f9;
+  text-shadow: 0 0 6px rgba(144, 255, 144, 0.4);
+  animation: downloading-pulse 1.5s ease-in-out infinite;
+}
+
+.upgrade-btn--downloading:hover {
+  background: #1a1a1a;
+  border-color: #6a6a6a;
+  color: #9f9;
+  text-shadow: 0 0 6px rgba(144, 255, 144, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+@keyframes downloading-pulse {
+  0%, 100% { 
+    opacity: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  }
+  50% { 
+    opacity: 0.7;
+    box-shadow: 0 2px 8px rgba(144, 255, 144, 0.2);
+  }
+}
+
+/* Purchased upgrade button - sunken and desaturated green */
+.upgrade-btn--purchased {
   background: #0f1a0f;
-  border: 1px solid #2a4a2a;
+  border-color: #2a4a2a;
   color: #6a8a6a;
+  text-shadow: 0 0 4px rgba(106, 138, 106, 0.3);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+  transform: translateY(1px);
 }
 
-.upgrade-btn--remove:hover {
+.upgrade-btn--purchased:hover {
   background: #1a0f0f;
   border-color: #a44;
   color: transparent;
   text-shadow: none;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 0 12px rgba(255, 170, 170, 0.2);
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 170, 170, 0.2);
 }
 
-.upgrade-btn--remove:hover::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(200, 200, 200, 0.08), transparent);
-  animation: scan 0.6s ease;
-}
-
-.upgrade-btn--remove:hover {
-  background: #1a1a1a;
-  border-color: #a44;
-  color: transparent;
-  text-shadow: none;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 0 12px rgba(255, 170, 170, 0.2);
-}
-
-.upgrade-btn--remove:hover::after {
+.upgrade-btn--purchased:hover::after {
   content: 'REMOVE?';
   position: absolute;
   top: 50%;
@@ -113,20 +188,38 @@
   letter-spacing: 1px;
 }
 
+.upgrade-btn--purchased:hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(200, 200, 200, 0.08), transparent);
+  animation: scan 0.6s ease;
+}
+
+/* Non-refundable purchased upgrade button */
 .upgrade-btn--installed {
-  background: #151515;
-  border: 1px solid #444;
-  color: #aaa;
+  background: #0f1a0f;
+  border-color: #2a4a2a;
+  color: #6a8a6a;
+  text-shadow: 0 0 4px rgba(106, 138, 106, 0.3);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+  transform: translateY(1px);
+  cursor: default;
 }
 
 .upgrade-btn--installed:hover {
-  background: #1a1a1a;
-  border-color: #555;
-  color: #bbb;
-  text-shadow: 0 0 4px rgba(170, 170, 170, 0.3);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  background: #0f1a0f;
+  border-color: #2a4a2a;
+  color: #6a8a6a;
+  text-shadow: 0 0 4px rgba(106, 138, 106, 0.3);
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
-
-
+@keyframes scan {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}

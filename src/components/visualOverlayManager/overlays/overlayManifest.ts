@@ -1,6 +1,7 @@
 import { QuickBarFlags } from '../../../types/quickBarState';
 import React from 'react';
 import DumpsterVisionOverlay from './DumpsterVisionOverlay';
+import UpgradeProgressOverlay from './UpgradeProgressOverlay';
 import { VisualOverlayProps } from '../types';
 
 export interface VisualOverlayEntry {
@@ -16,6 +17,12 @@ export const OVERLAY_MANIFEST: VisualOverlayEntry[] = [
     Component: DumpsterVisionOverlay,
     isActive: (flags) => flags.isActiveDumpsterVision,
     zIndex: 3000,
+  },
+  {
+    id: 'upgradeProgress',
+    Component: UpgradeProgressOverlay,
+    isActive: (flags) => flags.isUpgradeInProgress,
+    zIndex: 4000,
   },
 ];
 

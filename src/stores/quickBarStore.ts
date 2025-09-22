@@ -30,6 +30,7 @@ const DEFAULT_QUICKBAR_STATE: QuickBarStoreState = {
   quickBarFlags: {
     isActiveDumpsterVision: false,
     isActiveTimeControl: false,
+    isUpgradeInProgress: false,
   }
 };
 
@@ -63,6 +64,7 @@ export const useQuickBarStore = create<QuickBarStore>((set, get) => ({
       if (!state || typeof state !== 'object') return false;
       if (typeof state.isActiveDumpsterVision !== 'boolean') return false;
       if (typeof state.isActiveTimeControl !== 'boolean') return false;
+      if (typeof state.isUpgradeInProgress !== 'boolean') return false;
 
       set({
         quickBarFlags: { ...state }

@@ -12,6 +12,17 @@ interface UpgradeListProps {
 
 const UpgradeList: React.FC<UpgradeListProps> = ({ upgrades, isPurchased, canPurchase, purchase, refund }) => {
   if (upgrades.length === 0) return null;
+  
+  // Sort upgrades: parents first, then children
+  const sortedUpgrades = [...upgrades].sort((a, b) => {
+    const aHasDeps = a.dependencies && a.dependencies.length > 0;
+    const bHasDeps = b.dependencies && b.dependencies.length > 0;
+    
+    if (aHasDeps && !bHasDeps) return 1; // a is child, b is parent
+    if (!aHasDeps && bHasDeps) return -1; // a is parent, b is child
+    return 0; // both same type
+  });
+  
   return (
     <div className="window-section" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {/* Upgrades Header */}
@@ -30,7 +41,7 @@ const UpgradeList: React.FC<UpgradeListProps> = ({ upgrades, isPurchased, canPur
         <div style={{ flex: 1, height: '1px', background: '#555' }}></div>
       </div>
       
-      {upgrades.map(up => (
+      {sortedUpgrades.map(up => (
         <UpgradeRow
           key={up.id}
           label={up.label}
@@ -41,6 +52,8 @@ const UpgradeList: React.FC<UpgradeListProps> = ({ upgrades, isPurchased, canPur
           canPurchase={canPurchase(up.id)}
           onPurchase={() => purchase(up.id)}
           onRefund={() => refund(up.id)}
+          dependencies={up.dependencies}
+          allUpgrades={upgrades}
         />
       ))}
     </div>
