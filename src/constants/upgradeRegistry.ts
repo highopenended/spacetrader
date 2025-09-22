@@ -35,7 +35,7 @@ export const UPGRADE_REGISTRY: UpgradeRegistry = {
     appId: 'chronoTrack',
     label: 'TIME CONTROL',
     description: 'Enables time scaling functionality to slow down game time.',
-    cost: 200,
+    cost: 2000,
     refundable: true,
   },
 

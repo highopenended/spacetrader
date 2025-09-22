@@ -10,15 +10,6 @@
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
-.upgrade-price {
-  padding: 2px 6px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid #444;
-  border-radius: 2px;
-  color: #bbb;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
-}
-
 .upgrade-actions {
   display: flex;
   flex-direction: column;
@@ -35,6 +26,8 @@
   color: #9f9;
   text-shadow: 0 0 6px rgba(144, 255, 144, 0.4);
   cursor: pointer;
+  width: 110px;
+  text-align: center;
 }
 
 .upgrade-btn:disabled {
@@ -57,18 +50,5 @@
   color: #aaa;
 }
 
-/* Compact price note shown under the button */
-.upgrade-price-note {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
-  font-size: 11px;
-  line-height: 1;
-  color: #9f9;
-  text-shadow: 0 0 4px rgba(144, 255, 144, 0.35);
-}
-
-.upgrade-price-note.is-unaffordable {
-  color: #888;
-  text-shadow: none;
-}
 
 

@@ -14,6 +14,22 @@ const UpgradeList: React.FC<UpgradeListProps> = ({ upgrades, isPurchased, canPur
   if (upgrades.length === 0) return null;
   return (
     <div className="window-section" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Upgrades Header */}
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        marginBottom: 4,
+        fontSize: '12px',
+        color: 'rgba(255, 255, 255, 0.4)',
+        letterSpacing: '1px',
+        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+        textTransform: 'uppercase'
+      }}>
+        <div style={{ flex: 1, height: '1px', background: '#555' }}></div>
+        <div style={{ padding: '0 8px' }}>Upgrades</div>
+        <div style={{ flex: 1, height: '1px', background: '#555' }}></div>
+      </div>
+      
       {upgrades.map(up => (
         <UpgradeRow
           key={up.id}

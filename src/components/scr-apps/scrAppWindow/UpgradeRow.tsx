@@ -28,13 +28,8 @@ const UpgradeRow: React.FC<UpgradeRowProps> = ({ label, description, cost, purch
             title={canPurchase ? `Purchase for ${cost} credits` : 'Insufficient credits or requirements not met'}
             className="upgrade-btn"
           >
-            UPGRADE
+            {cost}c
           </button>
-        )}
-        {!purchased && (
-          <div className={`upgrade-price-note ${canClick ? '' : 'is-unaffordable'}`} aria-label={`Cost: ${cost} credits`}>
-            ₵{cost}
-          </div>
         )}
         {purchased && (
           refundable && onRefund ? (
@@ -44,7 +39,7 @@ const UpgradeRow: React.FC<UpgradeRowProps> = ({ label, description, cost, purch
               title={`Refund ${cost} credits`}
               className="upgrade-btn upgrade-btn--remove"
             >
-              REMOVE
+              PURCHASED
             </button>
           ) : (
             <button
