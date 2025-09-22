@@ -4,6 +4,7 @@ import { UpgradeDefinition } from '../../../types/upgradeState';
 import { useUpgradesStore } from '../../../stores';
 
 interface UpgradeRowProps {
+  upgradeId: string;
   label: string;
   description?: string;
   cost: number;
@@ -17,6 +18,7 @@ interface UpgradeRowProps {
 }
 
 const UpgradeRow: React.FC<UpgradeRowProps> = ({ 
+  upgradeId,
   label, 
   description, 
   cost, 
@@ -28,7 +30,8 @@ const UpgradeRow: React.FC<UpgradeRowProps> = ({
   dependencies,
   allUpgrades
 }) => {
-  const { appUpgradeInProgress } = useUpgradesStore();
+  const { appUpgradeInProgress, currentUpgradeId } = useUpgradesStore();
+  const isThisUpgradeInProgress = appUpgradeInProgress && currentUpgradeId === upgradeId;
   const canClick = !purchased && canPurchase && !appUpgradeInProgress;
   const hasDependencies = dependencies && dependencies.length > 0;
   
@@ -56,9 +59,9 @@ const UpgradeRow: React.FC<UpgradeRowProps> = ({
             onClick={onPurchase}
             disabled={!canClick}
             title={appUpgradeInProgress ? 'Upgrade in progress...' : (canPurchase ? `Purchase for ${cost} credits` : 'Insufficient credits or requirements not met')}
-            className={`upgrade-btn upgrade-btn--purchase ${appUpgradeInProgress ? 'upgrade-btn--downloading' : ''}`}
+            className={`upgrade-btn upgrade-btn--purchase ${isThisUpgradeInProgress ? 'upgrade-btn--downloading' : ''}`}
           >
-            {appUpgradeInProgress ? 'DOWNLOADING...' : `${cost}c`}
+            {isThisUpgradeInProgress ? 'DOWNLOADING...' : `${cost}c`}
           </button>
         )}
         {purchased && (

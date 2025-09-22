@@ -44,6 +44,7 @@ const UpgradeList: React.FC<UpgradeListProps> = ({ upgrades, isPurchased, canPur
       {sortedUpgrades.map(up => (
         <UpgradeRow
           key={up.id}
+          upgradeId={up.id}
           label={up.label}
           description={up.description}
           cost={up.cost}
