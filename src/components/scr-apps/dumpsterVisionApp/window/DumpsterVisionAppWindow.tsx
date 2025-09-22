@@ -83,7 +83,6 @@ const DumpsterVisionAppWindow: React.FC<DumpsterVisionAppWindowProps> = ({
 
           {/* Upgrades Section */}
           <div style={{ marginTop: 8 }}>
-            <div className="detail-label" style={{ marginBottom: 4 }}>UPGRADES</div>
             <UpgradeList
               upgrades={upgradesForApp}
               isPurchased={isPurchased}

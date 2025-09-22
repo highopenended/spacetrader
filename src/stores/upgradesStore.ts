@@ -100,6 +100,16 @@ export const useUpgradesStore = create<UpgradesStore>((set, get) => ({
     if (!state.purchased[id]) return false;
     if (!def.refundable) return false;
     
+    // Find all upgrades that depend on this one and refund them first
+    const dependentUpgrades = Object.values(UPGRADE_REGISTRY)
+      .filter(upgrade => upgrade.dependencies?.includes(id))
+      .filter(upgrade => state.purchased[upgrade.id]);
+    
+    // Refund dependent upgrades first (recursively)
+    for (const dependent of dependentUpgrades) {
+      get().refund(dependent.id);
+    }
+    
     // Refund credits to gameStore (full refund by default)
     const updateCredits = useGameStore.getState().updateCredits;
     updateCredits(def.cost);

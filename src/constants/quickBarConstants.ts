@@ -17,4 +17,13 @@ export const QUICKBAR_CONFIG: QuickBarConfig = {
     requiresAppId: 'dumpsterVision',
     requiresUpgradeId: 'dumpsterVision.addQuickKey',
   },
+  chronoTrack: {
+    id: 'chronoTrack',
+    label: 'Time Control',
+    shortcutKey: 'T',
+    showInQuickBar: true,
+    toggleFlagKey: 'isActiveTimeControl',
+    requiresAppId: 'chronoTrack',
+    requiresUpgradeId: 'chronoTrack.addQuickKey',
+  },
 };

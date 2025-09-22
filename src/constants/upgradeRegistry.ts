@@ -28,6 +28,27 @@ export const UPGRADE_REGISTRY: UpgradeRegistry = {
     cost: 5000,
     refundable: true,
   },
+
+  // Chrono Track: Time Control
+  'chronoTrack.timeControl': {
+    id: 'chronoTrack.timeControl',
+    appId: 'chronoTrack',
+    label: 'TIME CONTROL',
+    description: 'Enables time scaling functionality to slow down game time.',
+    cost: 200,
+    refundable: true,
+  },
+
+  // Chrono Track: Add Quick Key
+  'chronoTrack.addQuickKey': {
+    id: 'chronoTrack.addQuickKey',
+    appId: 'chronoTrack',
+    label: 'ADD QUICK KEY',
+    description: 'Adds a Time Control quick key to the Quick Bar.',
+    cost: 100,
+    refundable: true,
+    dependencies: ['chronoTrack.timeControl'],
+  },
 };
 
 

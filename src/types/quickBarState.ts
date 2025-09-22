@@ -2,6 +2,7 @@ import { AppType } from './appListState';
 
 export interface QuickBarFlags {
   isActiveDumpsterVision: boolean;
+  isActiveTimeControl: boolean;
 }
 
 export interface QuickKeyConfig {
