@@ -2,6 +2,7 @@ import React from 'react';
 import './UpgradeProgressOverlay.css';
 import { VisualOverlayProps } from '../types';
 import { useUpgradesStore } from '../../../stores';
+import { getAppDisplayName_fromID } from '../../../utils/appUtils';
 
 const UpgradeProgressOverlay: React.FC<VisualOverlayProps> = ({ isExiting, animationState }) => {
   const { appUpgradeInProgress, currentUpgradeId, completeUpgrade } = useUpgradesStore();
@@ -14,7 +15,11 @@ const UpgradeProgressOverlay: React.FC<VisualOverlayProps> = ({ isExiting, anima
     if (appUpgradeInProgress && currentUpgradeId) {
       setShowOverlay(true);
       setProgress(0);
-      setStatusText('UPDATING APP');
+      
+      // Get the app name from the upgrade registry
+      const upgradeDef = useUpgradesStore.getState().getDefinition(currentUpgradeId);
+      const appName = upgradeDef ? getAppDisplayName_fromID(upgradeDef.appId) : 'APP';
+      setStatusText(`UPDATING ${appName}`);
       
       // Animate progress bar
       const progressInterval = setInterval(() => {
