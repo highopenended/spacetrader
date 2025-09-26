@@ -310,7 +310,7 @@ function App() {
         <VisualOverlayManager />
         <GameOptionsGear />
         <ClockDebugReadout visible={true} position="bottom-left" />
-        <ClockTestSubscriber visible={true} position="bottom-left" />
+        {/* <ClockTestSubscriber visible={true} position="bottom-left" /> */}
         <DataReadout {...componentProps.dataReadout} />
         <QuickKeysBar installedApps={installedApps} />
         <TerminalScreen {...componentProps.terminalScreen} />
