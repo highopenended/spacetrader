@@ -65,9 +65,16 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     getHorizontalVelocity
   } = useScrapPhysics();
 
+  // Helper function to get mutators for a scrap
+  const getScrapMutators = useCallback((scrapId: string): string[] => {
+    const scrap = spawnState.activeScrap.find(s => s.id === scrapId);
+    return scrap?.mutators || [];
+  }, [spawnState.activeScrap]);
+
   // Drag handling for scrap items
   const [beingCollectedIds, setBeingCollectedIds] = useState<Set<string>>(new Set());
   const { getDraggableProps, getDragStyle, draggedScrapId } = useScrapDrag({
+    getScrapMutators,
     onDrop: ({ scrapId, releasePositionPx, releaseVelocityPxPerSec, elementSizePx }) => {
 			// Resolve drop target centrally
 			const target = resolveScrapDropTarget(releasePositionPx);
@@ -132,9 +139,13 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
         activeScrap: prev.activeScrap.map(s => (s.id === scrapId ? { ...s, x: newXvw } : s))
       }));
 
-      // Momentum is handled in physics; no extra nudge to avoid double application
+      // Apply custom physics modifiers for dense scrap
+      const mutators = getScrapMutators(scrapId);
+      const isDense = mutators.includes('dense');
+      const gravityMultiplier = isDense ? 1.5 : 1.0;
+      const momentumMultiplier = isDense ? 0.3 : 1.0;
 
-      launchAirborneFromRelease(scrapId, releaseVelocityPxPerSec, yAboveBaselineVh);
+      launchAirborneFromRelease(scrapId, releaseVelocityPxPerSec, yAboveBaselineVh, gravityMultiplier, momentumMultiplier);
     }
   });
 

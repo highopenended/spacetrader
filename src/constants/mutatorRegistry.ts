@@ -91,6 +91,8 @@ export const MutatorRegistry = {
     label: 'Fragile',
     appearance: '✧',
     creditMultiplier: 0.8,
+    impactThreshold: 300, // Velocity threshold for breaking on impact (vh/s)
+    shakeThreshold: 500,  // Acceleration threshold for breaking from shaking (vh/s^2)
     onInteract: ({ gameState, scrap }: ScrapInteractionContext) => {
       // TODO: handle fragile breakage logic here
       console.log('Fragile scrap interaction - implement breakage logic');
@@ -103,6 +105,7 @@ export const MutatorRegistry = {
     label: 'Dense',
     appearance: '⚓',
     creditMultiplier: 1.2,
+    dragSpeedMultiplier: 0.2, // Very slow drag - 20% of normal speed
     onInteract: ({ gameState, scrap }: ScrapInteractionContext) => {
       // TODO: handle dense material logic here
       console.log('Dense scrap interaction - implement weight/handling logic');

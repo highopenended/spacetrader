@@ -16,6 +16,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Z_LAYERS } from '../constants/zLayers';
 import { MOMENTUM_VALID_WINDOW_MS, VELOCITY_MIN_THRESHOLD_PX_PER_S } from '../constants/physicsConstants';
+import { useClockSubscription } from './useClockSubscription';
 
 export interface ScrapDragDropInfo {
   scrapId: string;
@@ -27,6 +28,7 @@ export interface ScrapDragDropInfo {
 export interface UseScrapDragOptions {
   onDrop?: (info: ScrapDragDropInfo) => void;
   throttleMs?: number; // default ~16ms (~60fps)
+  getScrapMutators?: (scrapId: string) => string[]; // Function to get mutators for a scrap
 }
 
 export interface UseScrapDragApi {
@@ -41,10 +43,13 @@ export interface UseScrapDragApi {
 }
 
 export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi => {
-  const { onDrop, throttleMs = 16 } = options;
+  const { onDrop, throttleMs = 16, getScrapMutators } = options;
 
   const [draggedScrapId, setDraggedScrapId] = useState<string | null>(null);
   const [cursorPositionPx, setCursorPositionPx] = useState<{ x: number; y: number } | null>(null);
+  
+  // Track lagged position for dense scrap
+  const [draggedScrapPositionPx, setDraggedScrapPositionPx] = useState<{ x: number; y: number } | null>(null);
 
   // Track when drag started to compute pointer velocity
   const lastEventTimeRef = useRef<number>(0);
@@ -61,6 +66,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
   const startDragAt = useCallback((scrapId: string, startClientX: number, startClientY: number, targetEl?: HTMLElement | null) => {
     setDraggedScrapId(scrapId);
     setCursorPositionPx({ x: startClientX, y: startClientY });
+    setDraggedScrapPositionPx({ x: startClientX, y: startClientY }); // Initialize lagged position
 
     if (targetEl) {
       const rect = targetEl.getBoundingClientRect();
@@ -78,6 +84,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     if (!draggedScrapId || !cursorPositionPx) {
       setDraggedScrapId(null);
       setCursorPositionPx(null);
+      setDraggedScrapPositionPx(null);
       return;
     }
 
@@ -91,6 +98,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
 
     setDraggedScrapId(null);
     setCursorPositionPx(null);
+    setDraggedScrapPositionPx(null);
 
     if (onDrop) {
       onDrop({ scrapId, releasePositionPx, releaseVelocityPxPerSec, elementSizePx: elementSizeRef.current });
@@ -127,7 +135,25 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     lastEventTimeRef.current = now;
     lastPointerRef.current = { x: clientX, y: clientY };
     setCursorPositionPx({ x: clientX, y: clientY });
-  }, [draggedScrapId, throttleMs]);
+
+    // For normal scrap, update position immediately
+    // For dense scrap, the position will be updated by the clock subscription
+    setDraggedScrapPositionPx(prevPosition => {
+      if (!prevPosition) return { x: clientX, y: clientY };
+      
+      // Check if scrap has dense mutator
+      const mutators = getScrapMutators?.(draggedScrapId) || [];
+      const isDense = mutators.includes('dense');
+      
+      if (!isDense) {
+        // Normal scrap follows cursor exactly
+        return { x: clientX, y: clientY };
+      } else {
+        // Dense scrap position will be updated by clock subscription
+        return prevPosition;
+      }
+    });
+  }, [draggedScrapId, throttleMs, getScrapMutators]);
 
   // Mouse events
   useEffect(() => {
@@ -178,12 +204,56 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
 
   const isDragging = useCallback((scrapId: string) => draggedScrapId === scrapId, [draggedScrapId]);
 
+  // Clock subscription for dense scrap lag movement
+  useClockSubscription(
+    'scrap-drag-lag',
+    (deltaTime, scaledDeltaTime, tickCount) => {
+      if (!draggedScrapId || !cursorPositionPx || !draggedScrapPositionPx) return;
+      
+      const mutators = getScrapMutators?.(draggedScrapId) || [];
+      const isDense = mutators.includes('dense');
+      
+      if (!isDense) return;
+      
+      // Time-based lag movement (independent of FPS)
+      // Move toward cursor at a moderate speed (dramatic lag but still responsive)
+      const dtSeconds = Math.max(0, deltaTime / 1000);
+      const lagSpeedPxPerSec = 200; // pixels per second
+      const maxMoveDistance = lagSpeedPxPerSec * dtSeconds;
+      
+      const deltaX = cursorPositionPx.x - draggedScrapPositionPx.x;
+      const deltaY = cursorPositionPx.y - draggedScrapPositionPx.y;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      
+      if (distance > maxMoveDistance) {
+        // Move toward cursor by maxMoveDistance
+        const moveRatio = maxMoveDistance / distance;
+        const newX = draggedScrapPositionPx.x + deltaX * moveRatio;
+        const newY = draggedScrapPositionPx.y + deltaY * moveRatio;
+        setDraggedScrapPositionPx({ x: newX, y: newY });
+      } else {
+        // Close enough, snap to cursor
+        setDraggedScrapPositionPx({ x: cursorPositionPx.x, y: cursorPositionPx.y });
+      }
+    },
+    {
+      priority: 2, // After main game loop but before rendering
+      name: 'Scrap Drag Lag Movement'
+    }
+  );
+
   const getDragStyle = useCallback((scrapId: string): React.CSSProperties | undefined => {
     if (!isDragging(scrapId) || !cursorPositionPx) return undefined;
+    
+    // Use lagged position for dense scrap, cursor position for normal scrap
+    const mutators = getScrapMutators?.(scrapId) || [];
+    const isDense = mutators.includes('dense');
+    const positionToUse = (isDense && draggedScrapPositionPx) ? draggedScrapPositionPx : cursorPositionPx;
+    
     const width = elementSizeRef.current.width || 0;
     const height = elementSizeRef.current.height || 0;
-    const leftPx = Math.max(0, cursorPositionPx.x - width / 2);
-    const bottomPx = Math.max(0, (window.innerHeight - (cursorPositionPx.y + height / 2)));
+    const leftPx = Math.max(0, positionToUse.x - width / 2);
+    const bottomPx = Math.max(0, (window.innerHeight - (positionToUse.y + height / 2)));
     return {
       position: 'fixed',
       left: `${leftPx}px`,
@@ -193,7 +263,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       pointerEvents: 'none',
       transition: 'none'
     };
-  }, [isDragging, cursorPositionPx]);
+  }, [isDragging, cursorPositionPx, draggedScrapPositionPx, getScrapMutators]);
 
   return useMemo(() => ({
     draggedScrapId,
