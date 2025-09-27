@@ -11,12 +11,45 @@ import { useClockSubscription } from '../../../hooks/useClockSubscription';
  * High-performance AR overlay for scrap item identification.
  * Uses direct DOM manipulation and clock-driven updates for 60fps performance.
  * 
- * Key Features:
- * - Direct DOM updates (no React re-renders)
- * - Clock-driven animation loop
- * - Dynamic element creation/removal
- * - Smooth position interpolation
- * - Connector lines from scrap to labels
+ * ## Architecture Overview
+ * 
+ * This component is optimized for performance by avoiding React re-renders:
+ * - **Direct Store Access**: Uses `useAnchorsStore.getState().anchors` instead of React subscriptions
+ * - **Clock-Driven Updates**: Subscribes to global clock system for 60fps updates
+ * - **Direct DOM Manipulation**: Creates/updates DOM elements directly, bypassing React reconciliation
+ * - **CSS-Based Styling**: Static styles in CSS, only dynamic positioning inline
+ * 
+ * ## Data Flow
+ * 
+ * 1. **WorkScreen** publishes anchor data via `setAnchors()` to `anchorsStore`
+ * 2. **Clock Subscription** reads anchors directly from store each frame
+ * 3. **DOM Sync** creates/removes label and connector elements as needed
+ * 4. **Position Updates** apply smoothing and update element positions directly
+ * 5. **Cleanup** removes elements when anchors are no longer present
+ * 
+ * ## Performance Optimizations
+ * 
+ * - **No React Re-renders**: Direct DOM updates avoid React reconciliation overhead
+ * - **Efficient Element Management**: Reuses DOM elements, only creates/removes when necessary
+ * - **Smooth Interpolation**: Dead-zone smoothing prevents micro-jitter while maintaining responsiveness
+ * - **CSS-Based Styling**: Static styles cached by browser, only dynamic properties set inline
+ * - **Clock-Driven**: Updates synchronized with global game clock for consistent 60fps
+ * 
+ * ## Key Features
+ * 
+ * - **Dynamic Labels**: AR-style labels showing scrap type and mutators
+ * - **Connector Lines**: Visual lines connecting labels to scrap items
+ * - **Smooth Animation**: Position interpolation with dead-zone smoothing
+ * - **Boot Sequence**: Animated startup with CRT-style effects
+ * - **Responsive Design**: Viewport-relative positioning (vw/vh units)
+ * 
+ * ## Technical Details
+ * 
+ * - **Priority**: Clock subscription runs at priority 2 (after WorkScreen game loop)
+ * - **Animation States**: Handles 'booting', 'idle', and 'shutting-down' states
+ * - **Element Lifecycle**: Automatic creation/removal based on anchor data
+ * - **Memory Management**: Cleans up DOM elements and refs on unmount
+ * - **Accessibility**: All dynamic elements marked with `aria-hidden="true"`
  */
 const DumpsterVisionOverlay: React.FC<VisualOverlayProps> = ({ isExiting, animationState }) => {
   // ===== REFS & STATE =====
