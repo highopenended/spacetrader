@@ -17,13 +17,31 @@ export const ScrapRegistry = {
     weight: 70, 
     description: "Just some common metal scrap. Usually pretty low value." 
   },
-  junkCircuitry: { 
-    id: 'junkCircuitry', 
-    label: 'Junk Circuitry', 
+  circuitry: { 
+    id: 'circuitry', 
+    label: 'Circuitry', 
     baseValue: 5, 
     appearance: '🖥️', 
     weight: 5, 
-    description: "Damaged electronic components. Always a good source of scrap." 
+    states: {
+      intact: {
+        appearance: '🖥️',
+        mutators: ['highVoltage'] as MutatorId[],
+        baseValue: 8,
+        label: 'Circuitry',
+        description: 'Intact electronic components. Still carries dangerous electrical charges.',
+        spawnWeight: 1 // Rarer - intact circuitry is harder to find
+      },
+      broken: {
+        appearance: '🖥️', // Will be different sprite when we have art
+        mutators: [] as MutatorId[],
+        baseValue: 3,
+        label: 'Junk Circuitry',
+        description: 'Damaged electronic components. Always a good source of scrap.',
+        spawnWeight: 3 // More common - broken circuitry is easier to find
+      }
+    },
+    description: "Electronic components. The intact ones can be dangerous to handle." 
   },
   heavyPlating: { 
     id: 'heavyPlating', 
@@ -47,6 +65,7 @@ export const ScrapRegistry = {
         mutators: ['fragile'] as MutatorId[],
         baseValue: 25,
         label: 'Cryotube',
+        description: 'A cryogenic preservation tube. The occupants might still be alive... or not.',
         spawnWeight: 1 // Rarer - intact cryotubes are harder to find
       },
       broken: {
@@ -54,6 +73,7 @@ export const ScrapRegistry = {
         mutators: ['sharp'] as MutatorId[],
         baseValue: 15,
         label: 'Shattered Cryotube',
+        description: 'Looks like the shattered remains of a cryogenic preservation tube. Doubt the occupants made it out alive.',
         spawnWeight: 3 // More common - broken ones are easier to find
       }
     },

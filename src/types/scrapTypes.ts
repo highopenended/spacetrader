@@ -46,6 +46,7 @@ export interface ScrapType {
       mutators: MutatorId[];     // Mutators for this state
       baseValue: number;         // Value for this state
       label?: string;            // Optional different label for this state
+      description?: string;      // Optional different description for this state
       spawnWeight?: number;      // Weight for spawning in this state (defaults to 1)
     }
   };
