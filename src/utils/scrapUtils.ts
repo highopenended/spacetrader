@@ -109,21 +109,101 @@ export const generateRandomMutators = (maxMutators: number = 2): MutatorId[] => 
 };
 
 /**
+ * Select a random state for scrap that has multiple states
+ * Returns the state name based on spawn weights
+ */
+export const selectRandomState = (states: Record<string, any>): string => {
+  const stateEntries = Object.entries(states);
+  if (stateEntries.length === 0) return 'default';
+  if (stateEntries.length === 1) return stateEntries[0][0];
+  
+  // Calculate total weight
+  const totalWeight = stateEntries.reduce((sum, [, state]) => {
+    return sum + (state.spawnWeight || 1);
+  }, 0);
+  
+  // Select based on weights
+  let random = Math.random() * totalWeight;
+  for (const [stateName, state] of stateEntries) {
+    random -= (state.spawnWeight || 1);
+    if (random <= 0) {
+      return stateName;
+    }
+  }
+  
+  // Fallback to first state
+  return stateEntries[0][0];
+};
+
+/**
+ * Assign mutators to scrap based on type rules and state
+ * Handles always/never mutators and state-specific mutators
+ */
+export const assignMutatorsToScrap = (
+  typeId: ScrapTypeId, 
+  state?: string
+): MutatorId[] => {
+  const scrapType = ScrapRegistry[typeId as keyof typeof ScrapRegistry];
+  if (!scrapType) return [];
+  
+  const mutators: MutatorId[] = [];
+  
+  // Add always-applied mutators
+  if ('alwaysMutators' in scrapType && scrapType.alwaysMutators) {
+    mutators.push(...(scrapType.alwaysMutators as MutatorId[]));
+  }
+  
+  // Add state-specific mutators
+  if (state && 'states' in scrapType && scrapType.states) {
+    const stateData = (scrapType.states as any)[state];
+    if (stateData?.mutators) {
+      mutators.push(...(stateData.mutators as MutatorId[]));
+    }
+  }
+  
+  // Add random mutators (excluding never-applied ones)
+  const neverMutators = new Set(('neverMutators' in scrapType ? scrapType.neverMutators : []) || []);
+  const availableMutators = MUTATOR_ENTRIES.filter(([mutatorId]) => 
+    !neverMutators.has(mutatorId as any) && 
+    !mutators.includes(mutatorId as MutatorId) // Don't duplicate
+  );
+  
+  for (const [mutatorId, mutator] of availableMutators) {
+    if (Math.random() < mutator.rarity && mutators.length < 3) { // Max 3 total mutators
+      mutators.push(mutatorId as MutatorId);
+    }
+  }
+  
+  return mutators;
+};
+
+/**
  * Create a new scrap object with random type and mutators
  */
 export const createRandomScrapObject = (options: {
   typeId?: ScrapTypeId;
   mutators?: MutatorId[];
   maxMutators?: number;
+  state?: string;
 } = {}): ScrapObject => {
   const typeId = options.typeId || getRandomScrapType();
-  const mutators = options.mutators || generateRandomMutators(options.maxMutators);
+  const scrapType = ScrapRegistry[typeId as keyof typeof ScrapRegistry];
+  
+  // Select state if not provided and scrap has states
+  let state = options.state;
+  if (!state && 'states' in scrapType && scrapType.states) {
+    state = selectRandomState(scrapType.states);
+  }
+  
+  // Assign mutators based on new system
+  const mutators = options.mutators || assignMutatorsToScrap(typeId, state);
   
   return {
     id: generateScrapId(),
     typeId,
     mutators,
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    state
   };
 };
 
@@ -275,7 +355,14 @@ export const calculateScrapValue = (scrap: ScrapObject): number => {
   const scrapType = ScrapRegistry[scrap.typeId as keyof typeof ScrapRegistry];
   if (!scrapType) return 0;
   
+  // Use state-specific base value if available
   let value = scrapType.baseValue;
+  if (scrap.state && 'states' in scrapType && scrapType.states) {
+    const stateData = (scrapType.states as any)[scrap.state];
+    if (stateData?.baseValue) {
+      value = stateData.baseValue;
+    }
+  }
   
   // Apply mutator multipliers
   for (const mutatorId of scrap.mutators) {
@@ -297,7 +384,14 @@ export const getScrapAppearance = (scrap: ScrapObject, includeMutators: boolean 
   const scrapType = ScrapRegistry[scrap.typeId as keyof typeof ScrapRegistry];
   if (!scrapType) return '❓';
   
+  // Use state-specific appearance if available
   let appearance = scrapType.appearance;
+  if (scrap.state && 'states' in scrapType && scrapType.states) {
+    const stateData = (scrapType.states as any)[scrap.state];
+    if (stateData?.appearance) {
+      appearance = stateData.appearance;
+    }
+  }
   
   // Add mutator appearance overlays when requested
   if (includeMutators) {

@@ -85,6 +85,43 @@ export const MutatorRegistry = {
     },
     rarity: 0.05,
     description: "Warning: This material exhibits unstable temporal coherence. All personnel are reminded to follow approved stabilization protocols (Directive 77-B, Rev. 6; see Memo #5124-QP) to prevent phase drift, asset loss, and/or causality infractions. Mishandling may negatively impact future performance reviews already on file and may result in retroactive termination of employment. We are observing you."
+  },
+  fragile: {
+    id: 'fragile',
+    label: 'Fragile',
+    appearance: '✧',
+    creditMultiplier: 0.8,
+    onInteract: ({ gameState, scrap }: ScrapInteractionContext) => {
+      // TODO: handle fragile breakage logic here
+      console.log('Fragile scrap interaction - implement breakage logic');
+    },
+    rarity: 0.15,
+    description: "This material is extremely delicate and prone to breakage. Handle with extreme care to avoid damage and value loss."
+  },
+  dense: {
+    id: 'dense',
+    label: 'Dense',
+    appearance: '⚓',
+    creditMultiplier: 1.2,
+    onInteract: ({ gameState, scrap }: ScrapInteractionContext) => {
+      // TODO: handle dense material logic here
+      console.log('Dense scrap interaction - implement weight/handling logic');
+    },
+    rarity: 0.1,
+    description: "This material is unusually dense and heavy. Requires additional effort to handle but may contain valuable concentrated materials."
+  },
+  highVoltage: {
+    id: 'highVoltage',
+    label: 'High Voltage',
+    appearance: '⚡',
+    creditMultiplier: 1.8,
+    protectionRequired: 'isProtectedFromElectricity',
+    onInteract: ({ gameState, scrap }: ScrapInteractionContext) => {
+      // TODO: handle electrical shock logic here
+      console.log('High voltage scrap interaction - implement electrical hazard logic');
+    },
+    rarity: 0.08,
+    description: "WARNING: This material contains dangerous electrical charges. Improper handling may result in severe electrical shock, equipment damage, and disciplinary action. Ensure proper insulation protocols are followed."
   }
 } as const satisfies Record<string, ScrapMutator>;
 

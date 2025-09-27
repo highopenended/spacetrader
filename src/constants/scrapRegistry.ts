@@ -6,6 +6,7 @@
  */
 
 import { ScrapType } from '../types/scrapTypes';
+import { MutatorId } from '../types/mutatorTypes';
 
 export const ScrapRegistry = {
   metalScrap: { 
@@ -30,15 +31,33 @@ export const ScrapRegistry = {
     baseValue: 20, 
     appearance: '🛡️', 
     weight: 5, 
+    alwaysMutators: ['dense'] as MutatorId[], // Heavy plating is always dense
     description: "Chunks of reinforced armor plating used on military vessels and the like. Not reinforced enough apparently." 
   },
-  shatteredCryotube: { 
-    id: 'shatteredCryotube', 
-    label: 'Shattered Cryotube', 
+  cryotube: { 
+    id: 'cryotube', 
+    label: 'Cryotube', 
     baseValue: 20, 
     appearance: '🫙', 
     weight: 10, 
-    description: "Looks like the shattered remains of a cryogenic preservation tube. Doubt the occupants made it out alive." 
+    neverMutators: ['dense'] as MutatorId[], // Cryotube can never be dense
+    states: {
+      intact: {
+        appearance: '🫙',
+        mutators: ['fragile'] as MutatorId[],
+        baseValue: 25,
+        label: 'Cryotube',
+        spawnWeight: 1 // Rarer - intact cryotubes are harder to find
+      },
+      broken: {
+        appearance: '🫙', // Will be different sprite when we have art
+        mutators: ['sharp'] as MutatorId[],
+        baseValue: 15,
+        label: 'Shattered Cryotube',
+        spawnWeight: 3 // More common - broken ones are easier to find
+      }
+    },
+    description: "A cryogenic preservation tube. The occupants might still be alive... or not." 
   },
   corpCreds: { 
     id: 'corpCreds', 
