@@ -15,7 +15,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Z_LAYERS } from '../constants/zLayers';
-import { MOMENTUM_VALID_WINDOW_MS, VELOCITY_MIN_THRESHOLD_PX_PER_S } from '../constants/physicsConstants';
+import { MOMENTUM_VALID_WINDOW_MS, VELOCITY_MIN_THRESHOLD_PX_PER_S, GRAVITY_VH_PER_S2 } from '../constants/physicsConstants';
 import { useClockSubscription } from './useClockSubscription';
 
 export interface ScrapDragDropInfo {
@@ -50,6 +50,9 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
   
   // Track lagged position for dense scrap
   const [draggedScrapPositionPx, setDraggedScrapPositionPx] = useState<{ x: number; y: number } | null>(null);
+  
+  // Track momentum for dense scrap (for swinging behavior)
+  const momentumRef = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
 
   // Track when drag started to compute pointer velocity
   const lastEventTimeRef = useRef<number>(0);
@@ -67,6 +70,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     setDraggedScrapId(scrapId);
     setCursorPositionPx({ x: startClientX, y: startClientY });
     setDraggedScrapPositionPx({ x: startClientX, y: startClientY }); // Initialize lagged position
+    momentumRef.current = { vx: 0, vy: 0 }; // Reset momentum
 
     if (targetEl) {
       const rect = targetEl.getBoundingClientRect();
@@ -99,6 +103,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     setDraggedScrapId(null);
     setCursorPositionPx(null);
     setDraggedScrapPositionPx(null);
+    momentumRef.current = { vx: 0, vy: 0 }; // Reset momentum
 
     if (onDrop) {
       onDrop({ scrapId, releasePositionPx, releaseVelocityPxPerSec, elementSizePx: elementSizeRef.current });
@@ -215,26 +220,59 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       
       if (!isDense) return;
       
-      // Time-based lag movement (independent of FPS)
-      // Move toward cursor at a moderate speed (dramatic lag but still responsive)
+      // Momentum-based swinging movement for dense scrap
       const dtSeconds = Math.max(0, deltaTime / 1000);
-      const lagSpeedPxPerSec = 200; // pixels per second
-      const maxMoveDistance = lagSpeedPxPerSec * dtSeconds;
       
+      // Convert pixels to physics units for calculations
+      const vhPerPx = 100 / window.innerHeight;
+      const vwPerPx = 100 / window.innerWidth;
+      
+      // Physics constants
+      const gravityResistance = Math.abs(GRAVITY_VH_PER_S2) * 0.002;
+      const inertiaResistance = 0.6;
+      const springStrength = 200; // How strongly it's pulled toward target
+      const damping = 0.8; // How much momentum is dampened (0.8 = 20% momentum lost per frame)
+      
+      // Calculate force toward target (like a spring)
       const deltaX = cursorPositionPx.x - draggedScrapPositionPx.x;
       const deltaY = cursorPositionPx.y - draggedScrapPositionPx.y;
-      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
       
-      if (distance > maxMoveDistance) {
-        // Move toward cursor by maxMoveDistance
-        const moveRatio = maxMoveDistance / distance;
-        const newX = draggedScrapPositionPx.x + deltaX * moveRatio;
-        const newY = draggedScrapPositionPx.y + deltaY * moveRatio;
-        setDraggedScrapPositionPx({ x: newX, y: newY });
-      } else {
-        // Close enough, snap to cursor
-        setDraggedScrapPositionPx({ x: cursorPositionPx.x, y: cursorPositionPx.y });
+      // Convert to physics units
+      const deltaXvw = deltaX * vwPerPx;
+      const deltaYvh = deltaY * vhPerPx;
+      
+      // Apply spring force toward target
+      const springForceX = deltaXvw * springStrength;
+      const springForceY = deltaYvh * springStrength;
+      
+      // Apply inertia resistance to horizontal force
+      const horizontalSpringForce = springForceX * (1 - inertiaResistance);
+      
+      // Update momentum (integrate forces)
+      momentumRef.current.vx += horizontalSpringForce * dtSeconds;
+      momentumRef.current.vy += springForceY * dtSeconds;
+      
+      // Apply gravity resistance to vertical momentum accumulation
+      // Note: In screen coordinates, positive Y is DOWN, negative Y is UP
+      if (momentumRef.current.vy > 0) { // Moving DOWN in screen coords (gravity helps)
+        momentumRef.current.vy *= (1 + gravityResistance * 0.3); // Increase downward momentum
+      } else { // Moving UP in screen coords (fighting gravity)
+        momentumRef.current.vy *= (1 - gravityResistance * 0.5); // Reduce upward momentum
       }
+      
+      // Apply damping (lose momentum over time)
+      momentumRef.current.vx *= damping;
+      momentumRef.current.vy *= damping;
+      
+      // Update position based on momentum
+      const newXvw = draggedScrapPositionPx.x * vwPerPx + momentumRef.current.vx * dtSeconds;
+      const newYvh = draggedScrapPositionPx.y * vhPerPx + momentumRef.current.vy * dtSeconds;
+      
+      // Convert back to pixels
+      const newX = newXvw / vwPerPx;
+      const newY = newYvh / vhPerPx;
+      
+      setDraggedScrapPositionPx({ x: newX, y: newY });
     },
     {
       priority: 2, // After main game loop but before rendering
