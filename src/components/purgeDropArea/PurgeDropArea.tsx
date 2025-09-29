@@ -34,8 +34,9 @@ const PurgeDropArea: React.FC<PurgeDropAreaProps> = ({
     id: domId,
   });
 
-  const overId = useDragStore(state => state.overId);
-  const isActive = overId === domId;
+  const overId_cursor = useDragStore(state => state.overId_cursor);
+  const overId_item = useDragStore(state => state.overId_item);
+  const isActive = (overId_cursor === domId) || (overId_item === domId);
 
   return (
     <div

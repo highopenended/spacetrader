@@ -61,7 +61,7 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
 
   // ===== DRAG STORE =====
   const dragState = useDragStore(state => state.dragState);
-  const overId = useDragStore(state => state.overId);
+  const overId_cursor = useDragStore(state => state.overId_cursor);
   const isOverTerminalDropZone = useDragStore(state => state.isOverTerminalDropZone);
   const pendingDelete = useDragStore(state => state.pendingDelete);
   
@@ -187,21 +187,21 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
   }, [createMouseMoveHandler, startDrag, updateMousePosition]);
 
   const handleDragOver = useCallback((event: any) => {
-    const newOverId = event.over?.id ?? null;
-    const isOverTerminal = (newOverId === DOM_IDS.TERMINAL_DOCK || 
-                          (newOverId && event.active?.data?.current?.type === 'app-drag-node')) &&
-                          newOverId !== DOM_IDS.PURGE_ZONE_WINDOW && 
-                          newOverId !== DOM_IDS.PURGE_ZONE_WORKMODE;
+    const newOverId_cursor = event.over?.id ?? null;
+    const isOverTerminal = (newOverId_cursor === DOM_IDS.TERMINAL_DOCK || 
+                          (newOverId_cursor && event.active?.data?.current?.type === 'app-drag-node')) &&
+                          newOverId_cursor !== DOM_IDS.PURGE_ZONE_WINDOW && 
+                          newOverId_cursor !== DOM_IDS.PURGE_ZONE_WORKMODE;
     
-    updateCollision(newOverId, isOverTerminal);
+    updateCollision(newOverId_cursor, isOverTerminal);
   }, [updateCollision]);
 
   // ===== MEMOIZED HELPER FUNCTIONS =====
-  const handleAppReorder = useCallback((activeId: string, overId: string | null) => {
-    if (!overId) return;
+  const handleAppReorder = useCallback((activeId: string, overId_cursor: string | null) => {
+    if (!overId_cursor) return;
     
     const activeIndex = appOrder.indexOf(activeId);
-    const overIndex = appOrder.indexOf(overId);
+    const overIndex = appOrder.indexOf(overId_cursor);
     
     if (activeIndex !== overIndex) {
       const reordered = arrayMove(installedApps, activeIndex, overIndex);
@@ -312,7 +312,7 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
   return {
     // State
     dragState,
-    overId,
+    overId_cursor,
     isOverTerminalDropZone,
     pendingDelete,
     

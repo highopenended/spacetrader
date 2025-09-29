@@ -180,10 +180,10 @@ const ScrAppWindow: React.FC<ScrAppWindowProps> = ({
 
   // CLEAN: Use drop zone effects hook to handle all conditional styling
   // Pull drag-over state from store (source of truth)
-  const overId = useDragStore(state => state.overId);
+  const overId_cursor = useDragStore(state => state.overId_cursor);
   const draggedAppType = useDragStore(state => state.dragState.draggedAppType);
   const dropZoneEffects = useWindowDropZoneEffects(
-    overId as string | null,
+    overId_cursor as string | null,
     draggedAppType || null,
     appType
   );

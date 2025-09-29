@@ -21,12 +21,12 @@ interface DropZoneEffects {
 }
 
 export const useWindowDropZoneEffects = (
-  overId: string | null,
+  overId_cursor: string | null,
   draggedAppType: string | null,
   appType: string
 ): DropZoneEffects => {
-  const isOverPurgeZone = (overId === DOM_IDS.PURGE_ZONE_WINDOW || overId === DOM_IDS.PURGE_ZONE_WORKMODE) && draggedAppType === appType;
-  const isOverTerminalDock = overId === DOM_IDS.TERMINAL_DOCK && draggedAppType === appType;
+  const isOverPurgeZone = (overId_cursor === DOM_IDS.PURGE_ZONE_WINDOW || overId_cursor === DOM_IDS.PURGE_ZONE_WORKMODE) && draggedAppType === appType;
+  const isOverTerminalDock = overId_cursor === DOM_IDS.TERMINAL_DOCK && draggedAppType === appType;
 
   const effects = useMemo((): DropZoneEffects => {
     // Base styles (no effects)

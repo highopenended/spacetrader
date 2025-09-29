@@ -92,7 +92,8 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       return;
     }
 
-    const releasePositionPx = cursorPositionPx;
+    // Use scrap position instead of cursor position for drop detection and physics
+    const releasePositionPx = draggedScrapPositionPx || cursorPositionPx;
     // Use last significant movement only if within recent time window; else zero out momentum
     const now = performance.now();
     const timeSinceActive = now - lastActiveTimeRef.current;
@@ -108,7 +109,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     if (onDrop) {
       onDrop({ scrapId, releasePositionPx, releaseVelocityPxPerSec, elementSizePx: elementSizeRef.current });
     }
-  }, [draggedScrapId, cursorPositionPx, onDrop]);
+  }, [draggedScrapId, cursorPositionPx, draggedScrapPositionPx, onDrop]);
 
   const handlePointerMove = useCallback((clientX: number, clientY: number) => {
     if (!draggedScrapId) return;

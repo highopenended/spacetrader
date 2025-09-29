@@ -32,7 +32,7 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
   const [terminalMode, setTerminalMode] = useState<'expanded' | 'collapsed'>('expanded');
 
   // Get drag state for visual feedback and pending deletion
-  const overId = useDragStore(state => state.overId);
+  const overId_cursor = useDragStore(state => state.overId_cursor);
   const pendingDeleteAppId = useDragStore(state => state.pendingDelete.appId);
 
   // WINDOW DOCKING SYSTEM: Make terminal droppable for window docking
@@ -40,7 +40,7 @@ const TerminalScreen: React.FC<TerminalScreenProps> = ({
     id: DOM_IDS.TERMINAL_DOCK,
   });
 
-  const isDockActive = overId === DOM_IDS.TERMINAL_DOCK;
+  const isDockActive = overId_cursor === DOM_IDS.TERMINAL_DOCK;
 
 
 

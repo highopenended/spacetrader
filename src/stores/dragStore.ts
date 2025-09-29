@@ -34,7 +34,8 @@ interface DragStoreState {
   dragState: DragState;
   
   // Collision detection state
-  overId: UniqueIdentifier | null;
+  overId_cursor: UniqueIdentifier | null;
+  overId_item: UniqueIdentifier | null;
   isOverTerminalDropZone: boolean;
   
   // Deletion management
@@ -67,11 +68,17 @@ interface DragActions {
   
   // ===== COLLISION DETECTION =====
   /**
-   * Update collision detection state
+   * Update collision detection state for cursor-based drags
    * @param overId - ID of element being dragged over
    * @param isOverTerminal - Whether dragging over terminal dock
    */
   updateCollision: (overId: UniqueIdentifier | null, isOverTerminal: boolean) => void;
+  
+  /**
+   * Update collision detection state for item-based drags
+   * @param overId - ID of element being dragged over
+   */
+  updateItemCollision: (overId: UniqueIdentifier | null) => void;
   
   // ===== DELETION MANAGEMENT =====
   /**
@@ -111,7 +118,8 @@ const initialPendingDelete: PendingDeleteState = {
 
 const initialState: DragStoreState = {
   dragState: initialDragState,
-  overId: null,
+  overId_cursor: null,
+  overId_item: null,
   isOverTerminalDropZone: false,
   pendingDelete: initialPendingDelete
 };
@@ -125,7 +133,8 @@ const initialState: DragStoreState = {
  * @example
  * // Subscribe to specific state
  * const isDragging = useDragStore(state => state.dragState.isDragging);
- * const overId = useDragStore(state => state.overId);
+ * const overId_cursor = useDragStore(state => state.overId_cursor);
+ * const overId_item = useDragStore(state => state.overId_item);
  * 
  * // Use actions
  * const startDrag = useDragStore(state => state.startDrag);
@@ -160,15 +169,22 @@ export const useDragStore = create<DragStore>((set, get) => ({
   endDrag: () => {
     set(state => ({
       dragState: initialDragState,
-      overId: null,
+      overId_cursor: null,
+      overId_item: null,
       isOverTerminalDropZone: false
     }));
   },
   
   updateCollision: (overId, isOverTerminal) => {
     set({
-      overId,
+      overId_cursor: overId,
       isOverTerminalDropZone: isOverTerminal
+    });
+  },
+  
+  updateItemCollision: (overId) => {
+    set({
+      overId_item: overId
     });
   },
   

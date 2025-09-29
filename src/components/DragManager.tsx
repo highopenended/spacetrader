@@ -148,34 +148,6 @@ const DragManager: React.FC<DragManagerProps> = ({
       {children}
       {renderDragOverlay_AppGhost()}
       {renderDragOverlay_DragNode()}
-        
-      {/* Debug readout for drag state - now using dragStore directly */}
-      {/* <div
-        style={{
-          position: 'fixed',
-          bottom: '10px',
-          left: '10px',
-          background: 'rgba(0, 0, 0, 0.8)',
-          color: '#00ff00',
-          padding: '8px 12px',
-          borderRadius: '4px',
-          fontFamily: 'Courier New, monospace',
-          fontSize: '12px',
-          zIndex: 9999,
-          border: '1px solid #333',
-          boxShadow: '0 0 10px rgba(0, 255, 0, 0.3)'
-        }}
-      >
-        overId: {useDragStore.getState().overId || 'null'}
-        <br />
-        dragType: {dragState.isDragging ? (dragState.draggedAppType ? 'window-drag-node' : 'app-drag-node') : 'none'}
-        <br />
-        overTerminal: {isOverTerminalDropZone ? 'true' : 'false'}
-        <br />
-        appDragPos: {dragState.mousePosition ? `${dragState.mousePosition.x}, ${dragState.mousePosition.y}` : 'null'}
-        <br />
-        toBePurged: {useDragStore.getState().pendingDelete.appId || 'null'}
-      </div> */}
     </DndContext>
   );
 };
