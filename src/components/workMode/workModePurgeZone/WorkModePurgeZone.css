@@ -3,9 +3,9 @@
 .work-mode-purge-zone {
   position: fixed;
   bottom: 2vh; /* Same as ScrapBin */
-  left: calc(50% - 12vw); /* Positioned to the left of centered ScrapBin (8vw wide + 4vw offset) */
-  width: 4vw; /* Smaller than window version */
-  height: 4vw; /* Square aspect ratio */
+  left: calc(50% - 13vw); /* Positioned to the left of centered ScrapBin (8vw wide + 4vw offset) */
+  width: 8vw; /* Same size as ScrapBin */
+  height: 8vw; /* Square aspect ratio matching ScrapBin */
   z-index: 101; /* Same as ScrapBin */
   user-select: none;
 }
