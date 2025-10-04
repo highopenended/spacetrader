@@ -44,6 +44,10 @@ import ClockManager from './components/clock/ClockManager';
 import ClockDebugReadout from './components/clock/ClockDebugReadout';
 import ClockTestSubscriber from './components/clock/ClockTestSubscriber';
 
+// Global Mouse Tracking
+import GlobalMouseTracker from './components/GlobalMouseTracker';
+import MouseDebugReadout from './components/clock/MouseDebugReadout';
+
 function App() {  
   // ===== ZUSTAND GAME STORE SELECTORS =====
   // Core state - using selective subscriptions for better performance
@@ -303,6 +307,9 @@ function App() {
       {/* Global Clock System - manages timing for all game systems */}
       <ClockManager startPaused={false} />
       
+      {/* Global Mouse Tracking - centralized mouse position tracking */}
+      <GlobalMouseTracker />
+      
       <div className="App">
         <GameBackground backgroundId={gameBackground} />
         <KeyboardManager installedApps={installedApps} />
@@ -310,6 +317,7 @@ function App() {
         <VisualOverlayManager />
         <GameOptionsGear />
         <ClockDebugReadout visible={true} position="bottom-left" />
+        <MouseDebugReadout visible={true} position="bottom-left" />
         {/* <ClockTestSubscriber visible={true} position="bottom-left" /> */}
         <DataReadout {...componentProps.dataReadout} />
         <QuickKeysBar installedApps={installedApps} />

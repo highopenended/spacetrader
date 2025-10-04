@@ -3,7 +3,7 @@
  *
  * Lightweight pointer-based drag management for scrap items.
  * - Tracks which scrap is being dragged
- * - Tracks cursor position and computes release velocity
+ * - Tracks cursor position via centralized dragStore and computes release velocity
  * - Exposes props for draggable elements and a style helper when dragging
  * - Calls an onDrop callback with release position and velocity
  *
@@ -11,12 +11,15 @@
  * - We position the dragged element using left (px) and bottom (px) with transform: none
  * - Rendering in WorkScreen also uses left/bottom with transform: none
  * - On drop, we convert the centered cursor to left/bottom consistently so there is no anchor switch
+ * 
+ * Uses centralized mouse tracking from dragStore to eliminate duplicate event listeners.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Z_LAYERS } from '../constants/zLayers';
 import { MOMENTUM_VALID_WINDOW_MS, VELOCITY_MIN_THRESHOLD_PX_PER_S, GRAVITY_VH_PER_S2 } from '../constants/physicsConstants';
 import { useClockSubscription } from './useClockSubscription';
+import { useDragStore } from '../stores';
 
 export interface ScrapDragDropInfo {
   scrapId: string;
@@ -45,8 +48,13 @@ export interface UseScrapDragApi {
 export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi => {
   const { onDrop, throttleMs = 16, getScrapMutators } = options;
 
+  // Centralized mouse tracking from dragStore
+  const cursorPositionPx = useDragStore(state => state.mouseTracking.globalMousePosition);
+  const subscribeToMouse = useDragStore(state => state.subscribeToMouse);
+  const unsubscribeFromMouse = useDragStore(state => state.unsubscribeFromMouse);
+  const updateGlobalMousePosition = useDragStore(state => state.updateGlobalMousePosition);
+
   const [draggedScrapId, setDraggedScrapId] = useState<string | null>(null);
-  const [cursorPositionPx, setCursorPositionPx] = useState<{ x: number; y: number } | null>(null);
   
   // Track lagged position for dense scrap
   const [draggedScrapPositionPx, setDraggedScrapPositionPx] = useState<{ x: number; y: number } | null>(null);
@@ -68,7 +76,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
 
   const startDragAt = useCallback((scrapId: string, startClientX: number, startClientY: number, targetEl?: HTMLElement | null) => {
     setDraggedScrapId(scrapId);
-    setCursorPositionPx({ x: startClientX, y: startClientY });
+    updateGlobalMousePosition({ x: startClientX, y: startClientY });
     setDraggedScrapPositionPx({ x: startClientX, y: startClientY }); // Initialize lagged position
     momentumRef.current = { vx: 0, vy: 0 }; // Reset momentum
 
@@ -82,12 +90,11 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     lastEventTimeRef.current = performance.now();
     lastPointerRef.current = { x: startClientX, y: startClientY };
     velocityPxPerSecRef.current = { vx: 0, vy: 0 };
-  }, []);
+  }, [updateGlobalMousePosition]);
 
   const endDrag = useCallback(() => {
     if (!draggedScrapId || !cursorPositionPx) {
       setDraggedScrapId(null);
-      setCursorPositionPx(null);
       setDraggedScrapPositionPx(null);
       return;
     }
@@ -102,7 +109,6 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     const scrapId = draggedScrapId;
 
     setDraggedScrapId(null);
-    setCursorPositionPx(null);
     setDraggedScrapPositionPx(null);
     momentumRef.current = { vx: 0, vy: 0 }; // Reset momentum
 
@@ -140,7 +146,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
 
     lastEventTimeRef.current = now;
     lastPointerRef.current = { x: clientX, y: clientY };
-    setCursorPositionPx({ x: clientX, y: clientY });
+    updateGlobalMousePosition({ x: clientX, y: clientY });
 
     // For normal scrap, update position immediately
     // For dense scrap, the position will be updated by the clock subscription
@@ -159,9 +165,18 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
         return prevPosition;
       }
     });
-  }, [draggedScrapId, throttleMs, getScrapMutators]);
+  }, [draggedScrapId, throttleMs, getScrapMutators, updateGlobalMousePosition]);
 
-  // Mouse events
+  // Subscribe to global mouse tracking (always active for this hook)
+  useEffect(() => {
+    subscribeToMouse('useScrapDrag');
+    return () => {
+      unsubscribeFromMouse('useScrapDrag');
+    };
+  }, [subscribeToMouse, unsubscribeFromMouse]);
+
+  // During active drag, we still need our own mouse listener for velocity tracking
+  // The global tracker handles position, but we need to track velocity/momentum locally
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => handlePointerMove(e.clientX, e.clientY);
     const onMouseUp = () => endDrag();

@@ -7,8 +7,9 @@
  * - Window drag (positioning/deletion)
  * - Collision detection state
  * - Pending deletion state
+ * - Global mouse position tracking
  * 
- * This replaces multiple useState hooks with a single source of truth.
+ * This replaces multiple useState hooks and event listeners with a single source of truth.
  */
 
 import { create } from 'zustand';
@@ -21,7 +22,12 @@ interface DragState {
   draggedAppId: string | null;
   draggedAppType: string | null;
   draggedWindowTitle: string | null;
-  mousePosition: { x: number; y: number } | null;
+}
+
+interface MouseTrackingState {
+  globalMousePosition: { x: number; y: number } | null;
+  isTrackingMouse: boolean;
+  trackingSubscribers: Set<string>; // Track which components are using mouse tracking
 }
 
 interface PendingDeleteState {
@@ -32,6 +38,9 @@ interface PendingDeleteState {
 interface DragStoreState {
   // Core drag state
   dragState: DragState;
+  
+  // Global mouse tracking
+  mouseTracking: MouseTrackingState;
   
   // Collision detection state
   overId_cursor: UniqueIdentifier | null;
@@ -56,15 +65,28 @@ interface DragActions {
   }) => void;
   
   /**
-   * Update mouse position during drag
-   * @param position - Current mouse coordinates
-   */
-  updateMousePosition: (position: { x: number; y: number }) => void;
-  
-  /**
    * End drag operation and reset state
    */
   endDrag: () => void;
+  
+  // ===== GLOBAL MOUSE TRACKING =====
+  /**
+   * Subscribe to global mouse tracking
+   * @param subscriberId - Unique identifier for the subscriber
+   */
+  subscribeToMouse: (subscriberId: string) => void;
+  
+  /**
+   * Unsubscribe from global mouse tracking
+   * @param subscriberId - Unique identifier for the subscriber
+   */
+  unsubscribeFromMouse: (subscriberId: string) => void;
+  
+  /**
+   * Update global mouse position (called by global listener)
+   * @param position - Current mouse coordinates
+   */
+  updateGlobalMousePosition: (position: { x: number; y: number }) => void;
   
   // ===== COLLISION DETECTION =====
   /**
@@ -107,8 +129,13 @@ const initialDragState: DragState = {
   isDragging: false,
   draggedAppId: null,
   draggedAppType: null,
-  draggedWindowTitle: null,
-  mousePosition: null
+  draggedWindowTitle: null
+};
+
+const initialMouseTracking: MouseTrackingState = {
+  globalMousePosition: null,
+  isTrackingMouse: false,
+  trackingSubscribers: new Set<string>()
 };
 
 const initialPendingDelete: PendingDeleteState = {
@@ -118,6 +145,7 @@ const initialPendingDelete: PendingDeleteState = {
 
 const initialState: DragStoreState = {
   dragState: initialDragState,
+  mouseTracking: initialMouseTracking,
   overId_cursor: null,
   overId_item: null,
   isOverTerminalDropZone: false,
@@ -136,7 +164,16 @@ const initialState: DragStoreState = {
  * const overId_cursor = useDragStore(state => state.overId_cursor);
  * const overId_item = useDragStore(state => state.overId_item);
  * 
- * // Use actions
+ * // Subscribe to global mouse tracking
+ * const mousePosition = useDragStore(state => state.mouseTracking.globalMousePosition);
+ * const subscribeToMouse = useDragStore(state => state.subscribeToMouse);
+ * const unsubscribeFromMouse = useDragStore(state => state.unsubscribeFromMouse);
+ * useEffect(() => {
+ *   subscribeToMouse('my-component');
+ *   return () => unsubscribeFromMouse('my-component');
+ * }, []);
+ * 
+ * // Use drag actions
  * const startDrag = useDragStore(state => state.startDrag);
  * startDrag('app', { appId: 'myApp' });
  */
@@ -151,17 +188,7 @@ export const useDragStore = create<DragStore>((set, get) => ({
         isDragging: true,
         draggedAppId: dragType === 'app' ? payload.appId || null : null,
         draggedAppType: dragType === 'window' ? payload.appType || null : null,
-        draggedWindowTitle: dragType === 'window' ? payload.windowTitle || null : null,
-        mousePosition: null
-      }
-    }));
-  },
-  
-  updateMousePosition: (position) => {
-    set(state => ({
-      dragState: {
-        ...state.dragState,
-        mousePosition: position
+        draggedWindowTitle: dragType === 'window' ? payload.windowTitle || null : null
       }
     }));
   },
@@ -172,6 +199,44 @@ export const useDragStore = create<DragStore>((set, get) => ({
       overId_cursor: null,
       overId_item: null,
       isOverTerminalDropZone: false
+    }));
+  },
+  
+  subscribeToMouse: (subscriberId) => {
+    set(state => {
+      const newSubscribers = new Set(state.mouseTracking.trackingSubscribers);
+      newSubscribers.add(subscriberId);
+      return {
+        mouseTracking: {
+          ...state.mouseTracking,
+          trackingSubscribers: newSubscribers,
+          isTrackingMouse: true
+        }
+      };
+    });
+  },
+  
+  unsubscribeFromMouse: (subscriberId) => {
+    set(state => {
+      const newSubscribers = new Set(state.mouseTracking.trackingSubscribers);
+      newSubscribers.delete(subscriberId);
+      return {
+        mouseTracking: {
+          ...state.mouseTracking,
+          trackingSubscribers: newSubscribers,
+          isTrackingMouse: newSubscribers.size > 0,
+          globalMousePosition: newSubscribers.size > 0 ? state.mouseTracking.globalMousePosition : null
+        }
+      };
+    });
+  },
+  
+  updateGlobalMousePosition: (position) => {
+    set(state => ({
+      mouseTracking: {
+        ...state.mouseTracking,
+        globalMousePosition: position
+      }
     }));
   },
   

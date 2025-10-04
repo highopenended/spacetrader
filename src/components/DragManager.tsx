@@ -48,6 +48,7 @@ const DragManager: React.FC<DragManagerProps> = ({
   // Get drag state directly from store
   const dragState = useDragStore(state => state.dragState);
   const isOverTerminalDropZone = useDragStore(state => state.isOverTerminalDropZone);
+  const mousePosition = useDragStore(state => state.mouseTracking.globalMousePosition);
 
   // DragOverlay content helper (purely visual, for ghost image of app being dragged)
   const renderDragOverlay_AppGhost = () => {
@@ -86,8 +87,8 @@ const DragManager: React.FC<DragManagerProps> = ({
           dropAnimation={{ duration: 0, easing: 'ease' }}
           style={{
             position: 'fixed' as const,
-            left: dragState.mousePosition ? dragState.mousePosition.x - 6 : 0, // Center 12px indicator on cursor
-            top: dragState.mousePosition ? dragState.mousePosition.y - 6 : 0,
+            left: mousePosition ? mousePosition.x - 6 : 0, // Center 12px indicator on cursor
+            top: mousePosition ? mousePosition.y - 6 : 0,
             transform: 'none', // Override @dnd-kit's transform
             pointerEvents: 'none' as const
           }}
@@ -132,7 +133,6 @@ const DragManager: React.FC<DragManagerProps> = ({
         const appConfig = apps.find(app => app.id === appId);
         if (appConfig) {
           // Open window at drop coordinates (centered on drop point)
-          const mousePosition = dragState.mousePosition;
           if (mousePosition) {
             openOrCloseWindow(appId, appConfig.name, undefined, mousePosition);
           } else {

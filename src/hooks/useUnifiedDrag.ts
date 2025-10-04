@@ -30,20 +30,6 @@ interface UnifiedDragDependencies {
   openOrCloseWindow: (appType: string, title: string, content?: React.ReactNode, dropPosition?: { x: number; y: number }) => void;
 }
 
-// ===== UTILITY FUNCTIONS =====
-
-// Throttle function for mouse tracking
-const throttle = (func: Function, limit: number) => {
-  let inThrottle: boolean;
-  return function(this: any, ...args: any[]) {
-    if (!inThrottle) {
-      func.apply(this, args);
-      inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
-    }
-  };
-};
-
 // ===== MAIN HOOK =====
 
 export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
@@ -67,14 +53,12 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
   
   // Drag store actions
   const startDrag = useDragStore(state => state.startDrag);
-  const updateMousePosition = useDragStore(state => state.updateMousePosition);
   const endDrag = useDragStore(state => state.endDrag);
   const updateCollision = useDragStore(state => state.updateCollision);
   const setPendingDelete = useDragStore(state => state.setPendingDelete);
   const clearPendingDelete = useDragStore(state => state.clearPendingDelete);
 
   const pendingDeleteRef = useRef<{ appId: string | null; prevOrder: string[] }>({ appId: null, prevOrder: [] });
-  const mouseMoveHandlerRef = useRef<((e: MouseEvent) => void) | null>(null);
   
   useEffect(() => {
     pendingDeleteRef.current = pendingDelete;
@@ -118,26 +102,9 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
     return collisions;
   }, []);
 
-  // ===== OPTIMIZED MOUSE TRACKING =====
-  const createMouseMoveHandler = useCallback((type: 'window' | 'app') => {
-    return throttle((e: MouseEvent) => {
-      // Track mouse position for both window and app drags
-      updateMousePosition({ x: e.clientX, y: e.clientY });
-    }, 16); // ~60fps throttling
-  }, [updateMousePosition]);
-
   // ===== DRAG HANDLERS =====
   const handleDragStart = useCallback((event: any) => {
     const { active } = event;
-    
-    // CRITICAL: Get initial mouse position from the drag start event
-    // This MUST be set immediately for collision detection to work correctly.
-    // DO NOT remove this or collision detection will break for window drags!
-    // The red drag node positioning relies on having accurate coordinates from drag start.
-    const initialMousePosition = { 
-      x: event.activatorEvent?.clientX || 0, 
-      y: event.activatorEvent?.clientY || 0 
-    };
     
     if (active.data?.current?.type === 'window-drag-node') {
       // Window drag
@@ -146,45 +113,13 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
         appType,
         windowTitle
       });
-      
-      // Set initial mouse position immediately - REQUIRED for collision detection!
-      updateMousePosition(initialMousePosition);
-      
-      // Create and store throttled mouse move handler
-      const mouseMoveHandler = createMouseMoveHandler('window');
-      mouseMoveHandlerRef.current = mouseMoveHandler;
-      document.addEventListener('mousemove', mouseMoveHandler);
-      
-      // Store cleanup function
-      (window as any).__windowDragMouseMoveCleanup = () => {
-        if (mouseMoveHandlerRef.current) {
-          document.removeEventListener('mousemove', mouseMoveHandlerRef.current);
-          mouseMoveHandlerRef.current = null;
-        }
-      };
     } else {
       // App drag
       startDrag('app', {
         appId: active.id
       });
-      
-      // Set initial mouse position immediately for app drags too
-      updateMousePosition(initialMousePosition);
-      
-      // Create and store throttled mouse move handler for app drags
-      const mouseMoveHandler = createMouseMoveHandler('app');
-      mouseMoveHandlerRef.current = mouseMoveHandler;
-      document.addEventListener('mousemove', mouseMoveHandler);
-      
-      // Store cleanup function
-      (window as any).__appDragMouseMoveCleanup = () => {
-        if (mouseMoveHandlerRef.current) {
-          document.removeEventListener('mousemove', mouseMoveHandlerRef.current);
-          mouseMoveHandlerRef.current = null;
-        }
-      };
     }
-  }, [createMouseMoveHandler, startDrag, updateMousePosition]);
+  }, [startDrag]);
 
   const handleDragOver = useCallback((event: any) => {
     const newOverId_cursor = event.over?.id ?? null;
@@ -274,16 +209,6 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
 
   const handleDragEnd = useCallback((event: any) => {
     const { active, over } = event;
-    
-    // Clean up mouse tracking for both window and app drags
-    if ((window as any).__windowDragMouseMoveCleanup) {
-      (window as any).__windowDragMouseMoveCleanup();
-      delete (window as any).__windowDragMouseMoveCleanup;
-    }
-    if ((window as any).__appDragMouseMoveCleanup) {
-      (window as any).__appDragMouseMoveCleanup();
-      delete (window as any).__appDragMouseMoveCleanup;
-    }
     
     // Reset state
     endDrag();

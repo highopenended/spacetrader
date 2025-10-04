@@ -1,0 +1,148 @@
+/**
+ * MouseDebugReadout Styles
+ * 
+ * Styling for the mouse debug display component.
+ * Matches ClockDebugReadout style using the game's gritty 80s analog scifi dystopia theme.
+ */
+
+.mouse-debug-readout {
+  position: fixed;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.9);
+  border: 0.1rem solid #00ff00;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  color: #00ff00;
+  text-shadow: 0 0 0.25rem #00ff00;
+  min-width: 8rem;
+  backdrop-filter: blur(0.25rem);
+}
+
+.mouse-debug-readout--top-left {
+  top: 0.5rem;
+  left: 18rem; /* Position after ClockDebugReadout */
+}
+
+.mouse-debug-readout--top-right {
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.mouse-debug-readout--bottom-left {
+  bottom: 0.5rem;
+  left: 14rem; /* Position next to ClockDebugReadout with extra spacing */
+}
+
+.mouse-debug-readout--bottom-right {
+  bottom: 0.5rem;
+  right: 0.5rem;
+}
+
+.mouse-debug-readout__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 0.05rem solid #00ff00;
+}
+
+.mouse-debug-readout__title {
+  font-weight: bold;
+  font-size: 0.8rem;
+  letter-spacing: 0.05rem;
+}
+
+.mouse-debug-readout__status {
+  font-size: 0.65rem;
+  font-weight: bold;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.15rem;
+  text-align: center;
+  min-width: 3.5rem;
+}
+
+.mouse-debug-readout__status.status-tracking {
+  background: rgba(0, 255, 0, 0.2);
+  color: #00ff00;
+  border: 0.05rem solid #00ff00;
+}
+
+.mouse-debug-readout__status.status-idle {
+  background: rgba(128, 128, 128, 0.2);
+  color: #888888;
+  border: 0.05rem solid #888888;
+  text-shadow: 0 0 0.25rem #888888;
+}
+
+.mouse-debug-readout__metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.15rem;
+  /* 2 rows: X/Y, Subs/Drag */
+}
+
+.mouse-debug-readout__metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.65rem;
+}
+
+.mouse-debug-readout__metric .metric-label {
+  color: #888888;
+  margin-right: 0.25rem;
+  min-width: 2rem;
+}
+
+.mouse-debug-readout__metric .metric-value {
+  color: #00ff00;
+  font-weight: bold;
+  text-align: right;
+  min-width: 2.5rem;
+}
+
+.mouse-debug-readout__metric .metric-value.metric-active {
+  color: #ffff00;
+  text-shadow: 0 0 0.25rem #ffff00;
+}
+
+/* Hover effects */
+.mouse-debug-readout:hover {
+  background: rgba(0, 0, 0, 0.95);
+  border-color: #00ff88;
+  box-shadow: 0 0 0.5rem rgba(0, 255, 0, 0.3);
+}
+
+/* Animation for status changes */
+.mouse-debug-readout__status {
+  transition: all 0.2s ease-in-out;
+}
+
+.mouse-debug-readout__metric .metric-value {
+  transition: color 0.2s ease-in-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .mouse-debug-readout {
+    font-size: 0.7rem;
+    padding: 0.4rem;
+    min-width: 7rem;
+  }
+  
+  .mouse-debug-readout--bottom-left {
+    left: 11rem; /* Adjust for smaller screens */
+  }
+  
+  .mouse-debug-readout__metrics {
+    gap: 0.1rem;
+  }
+  
+  .mouse-debug-readout__metric {
+    font-size: 0.6rem;
+  }
+}
+
