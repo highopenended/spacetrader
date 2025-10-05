@@ -18,7 +18,7 @@ import { useScrapDropTargets } from '../../../hooks/useScrapDropTargets';
 import { useScrapPhysics } from '../../../hooks/useScrapPhysics';
 import { useScrapDrag } from '../../../hooks/useScrapDrag';
 import { useClockSubscription } from '../../../hooks/useClockSubscription';
-import { SCRAP_BASELINE_BOTTOM_VH, vhFromPx } from '../../../constants/physicsConstants';
+import { SCRAP_BASELINE_BOTTOM_VP, vpFromPx } from '../../../constants/physicsConstants';
 import { MutatorRegistry } from '../../../constants/mutatorRegistry';
 import { DOM_IDS } from '../../../constants/domIds';
 import { ScrapRegistry } from '../../../constants/scrapRegistry';
@@ -137,7 +137,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       const leftPx = Math.max(0, releasePositionPx.x - (elementSizePx?.width || 0) / 2);
       const bottomPx = Math.max(0, window.innerHeight - (releasePositionPx.y + (elementSizePx?.height || 0) / 2));
       const newXvw = Math.max(0, Math.min(100, leftPx * vwPerPx));
-      const yAboveBaselineVh = Math.max(0, vhFromPx(bottomPx) - SCRAP_BASELINE_BOTTOM_VH);
+      const yAboveBaselineVp = Math.max(0, vpFromPx(bottomPx) - SCRAP_BASELINE_BOTTOM_VP);
 
       setSpawnState(prev => ({
         ...prev,
@@ -150,7 +150,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       const gravityMultiplier = isDense ? 1.5 : 1.0;
       const momentumMultiplier = isDense ? 0.3 : 1.0;
 
-      launchAirborneFromRelease(scrapId, releaseVelocityPxPerSec, yAboveBaselineVh, gravityMultiplier, momentumMultiplier);
+      launchAirborneFromRelease(scrapId, releaseVelocityPxPerSec, yAboveBaselineVp, gravityMultiplier, momentumMultiplier);
     }
   });
 
@@ -286,8 +286,8 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     // Defaults from physics/baseline
     let xVw = scrap.x;
     const airborne = getAirborneState(scrap.id);
-    const baseBottomVh = SCRAP_BASELINE_BOTTOM_VH;
-    let bottomVh = airborne?.isAirborne ? baseBottomVh + Math.max(0, airborne.yVh) : baseBottomVh;
+    const baseBottomVp = SCRAP_BASELINE_BOTTOM_VP;
+    let bottomVp = airborne?.isAirborne ? baseBottomVp + Math.max(0, airborne.yVp) : baseBottomVp;
 
     // If dragging, override from drag style (may be px or vw/vh)
     const dragStyle = getDragStyle(scrap.id);
@@ -306,14 +306,14 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       }
 
       if (typeof bottom === 'string') {
-        if (bottom.endsWith('vh')) bottomVh = parseFloat(bottom);
-        else if (bottom.endsWith('px')) bottomVh = parseFloat(bottom) * vhPerPx;
+        if (bottom.endsWith('vh')) bottomVp = parseFloat(bottom);
+        else if (bottom.endsWith('px')) bottomVp = parseFloat(bottom) * vhPerPx;
       } else if (typeof bottom === 'number') {
-        bottomVh = bottom * vhPerPx;
+        bottomVp = bottom * vhPerPx;
       }
     }
 
-    return { xVw, bottomVh };
+    return { xVw, bottomVh: bottomVp };
   }, [getAirborneState, getDragStyle]);
 
   // Subscribe to global clock for game loop
@@ -366,15 +366,15 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
       .map((scrap) => {
       const airborne = getAirborneState(scrap.id);
-      const baseBottomVh = SCRAP_BASELINE_BOTTOM_VH;
-      const bottomVh = airborne?.isAirborne ? baseBottomVh + Math.max(0, airborne.yVh) : baseBottomVh;
+      const baseBottomVp = SCRAP_BASELINE_BOTTOM_VP;
+      const bottomVp = airborne?.isAirborne ? baseBottomVp + Math.max(0, airborne.yVp) : baseBottomVp;
       const item: ScrapWithStyle = {
         ...scrap,
         style: {
           // Anchoring model: left (vw) + bottom (vh), transform: none
           left: `${scrap.x}vw`,
           transform: 'none',
-          bottom: `${bottomVh}vh`
+          bottom: `${bottomVp}vh`
         }
       };
       const draggingStyle = getDragStyle(scrap.id);

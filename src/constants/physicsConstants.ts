@@ -1,27 +1,27 @@
 /**
  * Physics constants for Work Mode scrap interactions.
  * Units:
- * - Vertical positions/velocities use vh (viewport height) and vh/s
- * - Horizontal positions/velocities use vw (viewport width) and vw/s
- * Rationale: viewport-relative units keep behavior stable across zoom/resolution.
+ * - All positions/velocities use vp (viewport-min) and vp/s
+ * - vp = viewport units based on minimum dimension (width or height)
+ * Rationale: unified viewport-relative units keep behavior stable across zoom/resolution and aspect ratio.
  */
 
 import { GlobalField } from '../types/physicsTypes';
 
-// ===== LEGACY PHYSICS CONSTANTS (for airborne scrap after release) =====
-// These will remain for the post-release physics system
+// ===== UNIFIED PHYSICS CONSTANTS (for airborne scrap after release) =====
+// All units use vp (viewport-min) for consistent behavior across aspect ratios
+// NOTE: Old vh/vw constants below are deprecated but kept for reference
 
-// Baseline height (vh) for the assembly line; scrap sits at this bottom value when grounded (matches .scrap-item bottom in CSS)
-export const SCRAP_BASELINE_BOTTOM_VH = 22;
+// Baseline height (vp) for the assembly line; scrap sits at this bottom value when grounded (matches .scrap-item bottom in CSS)
+export const SCRAP_BASELINE_BOTTOM_VP = 22;
 
-// Gravity in vh/s^2 (negative => downward). Tuned for snappy but weighty falls
-export const GRAVITY_VH_PER_S2 = -250;
+// Gravity in vp/s^2 (negative => downward). Tuned for snappy but weighty falls
+export const GRAVITY_VP_PER_S2 = -250;
 
-// Vertical speed caps (vh/s) to avoid unrealistic upward or downward spikes
-export const MAX_UPWARD_SPEED_VH_PER_S = 200;
-export const MAX_DOWNWARD_SPEED_VH_PER_S = -600;
-// Horizontal speed cap (vw/s) to prevent screen-crossing darts
-export const MAX_HORIZONTAL_SPEED_VW_PER_S = 40;
+// Speed caps (vp/s) to avoid unrealistic upward, downward, or horizontal spikes
+export const MAX_UPWARD_SPEED_VP_PER_S = 200;
+export const MAX_DOWNWARD_SPEED_VP_PER_S = -600;
+export const MAX_HORIZONTAL_SPEED_VP_PER_S = 40; // Keep same as original vw limit for balanced throws
 
 // Global throw strength scaling (~20% reduction) for better control/feel
 export const MOMENTUM_SCALE = 0.5;
@@ -32,10 +32,15 @@ export const MOMENTUM_VALID_WINDOW_MS = 120;
 // Ignore tiny jitter below this speed (px/s) so "still" releases don't throw
 export const VELOCITY_MIN_THRESHOLD_PX_PER_S = 80;
 
-// Conversion helpers between px and vh (fallback assumes ~800px height when window is unavailable)
-export const pxPerVh = () => (typeof window !== 'undefined' ? window.innerHeight / 100 : 8);
-export const vhFromPx = (px: number) => px / pxPerVh();
-export const pxFromVh = (vh: number) => vh * pxPerVh();
+// Conversion helpers between px and vp (viewport-min units)
+// Uses minimum dimension (width or height) for consistent behavior across aspect ratios
+export const pxPerVp = () => {
+  if (typeof window === 'undefined') return 8; // Fallback for SSR
+  const minDimension = Math.min(window.innerWidth, window.innerHeight);
+  return minDimension / 100;
+};
+export const vpFromPx = (px: number) => px / pxPerVp();
+export const pxFromVp = (vp: number) => vp * pxPerVp();
 
 // ===== NEW FIELD-BASED PHYSICS CONSTANTS =====
 
