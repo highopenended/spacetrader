@@ -18,7 +18,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Z_LAYERS } from '../constants/zLayers';
-import { VELOCITY_MIN_THRESHOLD_PX_PER_S } from '../constants/physicsConstants';
+import { VELOCITY_MIN_THRESHOLD_PX_PER_S, MANIPULATOR_CURSOR_FOLLOW_RATE, MANIPULATOR_GAP_CLOSURE_RATE } from '../constants/physicsConstants';
 import { useClockSubscription } from './useClockSubscription';
 import { useDragStore, useGameStore } from '../stores';
 import { calculateScrapMass, calculateEffectiveLoad, calculateFollowSpeed } from '../utils/physicsUtils';
@@ -63,12 +63,6 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
   // Grabbed object state (only re-renders when grabbed object changes)
   const grabbedObject = useDragStore(state => state.grabbedObject);
   
-  // Physics state (only re-renders when fields change - rare)
-  const physics = useDragStore(state => state.physics);
-  
-  // Player state (only re-renders when manipulator upgraded - rare)
-  const playerState = useGameStore(state => state.playerState);
-  
   // Non-reactive mouse position getter (doesn't cause re-renders)
   const getMousePosition = useCallback(() => 
     useDragStore.getState().mouseTracking.globalMousePosition, 
@@ -76,6 +70,9 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
 
   // Track element size for rendering
   const elementSizeRef = useRef<{ width: number; height: number }>({ width: 0, height: 0 });
+  
+  // Track previous cursor position for delta calculations
+  const previousCursorPosRef = useRef<{ x: number; y: number } | null>(null);
 
   const startDragAt = useCallback((scrapId: string, startClientX: number, startClientY: number, targetEl?: HTMLElement | null) => {
     // Get scrap object
@@ -90,6 +87,9 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     
     // Update global mouse position
     updateGlobalMousePosition({ x: startClientX, y: startClientY });
+    
+    // Initialize cursor position tracking for delta calculations
+    previousCursorPosRef.current = { x: startClientX, y: startClientY };
     
     // Grab object in store with physics tracking
     grabObject(scrap, { x: startClientX, y: startClientY }, mass);
@@ -106,6 +106,9 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
   const endDrag = useCallback(() => {
     // Release object from store
     const releasedState = releaseObject();
+    
+    // Clear cursor position tracking
+    previousCursorPosRef.current = null;
     
     if (!releasedState || !releasedState.scrapId) {
       return;
@@ -204,64 +207,106 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
   useClockSubscription(
     'scrap-drag-physics',
     (deltaTime, scaledDeltaTime, tickCount) => {
+      // Read fresh state from stores (not stale closures)
+      const currentGrabbedObject = useDragStore.getState().grabbedObject;
+      const currentPhysics = useDragStore.getState().physics;
+      const currentPlayerState = useGameStore.getState().playerState;
+      
+      if (!currentGrabbedObject.scrapId) return;
+      
       const cursorPos = getMousePosition();
       if (!cursorPos) return;
       
       const dtSeconds = Math.max(0, deltaTime / 1000);
       
-      // Calculate drag direction from current position to cursor
-      const dx = cursorPos.x - grabbedObject.position.x;
-      const dy = cursorPos.y - grabbedObject.position.y;
+      // Calculate cursor movement since last frame
+      let cursorDeltaX = 0;
+      let cursorDeltaY = 0;
       
+      if (previousCursorPosRef.current) {
+        cursorDeltaX = cursorPos.x - previousCursorPosRef.current.x;
+        cursorDeltaY = cursorPos.y - previousCursorPosRef.current.y;
+      }
+      
+      // Calculate distance and direction to cursor (for physics calculations)
+      const dx = cursorPos.x - currentGrabbedObject.position.x;
+      const dy = cursorPos.y - currentGrabbedObject.position.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       
-      // If very close to cursor, snap to it
-      if (distance < 0.5) {
+      // If very close to cursor and not moving, snap to it
+      const cursorSpeed = Math.sqrt(cursorDeltaX * cursorDeltaX + cursorDeltaY * cursorDeltaY);
+      if (distance < 2 && cursorSpeed < 1) {
         updateGrabbedObjectPosition(
           cursorPos,
           { vx: 0, vy: 0 },
-          grabbedObject.effectiveLoadResult || {
-            loadUp: grabbedObject.mass,
-            loadDown: grabbedObject.mass,
-            loadLeft: grabbedObject.mass,
-            loadRight: grabbedObject.mass,
-            effectiveLoad: grabbedObject.mass,
+          currentGrabbedObject.effectiveLoadResult || {
+            loadUp: currentGrabbedObject.mass,
+            loadDown: currentGrabbedObject.mass,
+            loadLeft: currentGrabbedObject.mass,
+            loadRight: currentGrabbedObject.mass,
+            effectiveLoad: currentGrabbedObject.mass,
             manipulatorEffectiveness: 1.0
           }
         );
+        previousCursorPosRef.current = { x: cursorPos.x, y: cursorPos.y };
         return;
       }
       
       // Normalized drag direction (screen coords: +Y is down)
       const dragDirection = {
-        x: dx / distance,
-        y: dy / distance
+        x: distance > 0 ? dx / distance : 0,
+        y: distance > 0 ? dy / distance : 0
       };
       
       // Build physics context
       const physicsContext: PhysicsContext = {
-        globalFields: physics.globalFields,
-        pointSourceFields: physics.pointSourceFields,
-        manipulatorStrength: playerState.manipulatorStrength,
-        manipulatorMaxLoad: playerState.manipulatorMaxLoad,
-        scrapMass: grabbedObject.mass,
+        globalFields: currentPhysics.globalFields,
+        pointSourceFields: currentPhysics.pointSourceFields,
+        manipulatorStrength: currentPlayerState.manipulatorStrength,
+        manipulatorMaxLoad: currentPlayerState.manipulatorMaxLoad,
+        scrapMass: currentGrabbedObject.mass,
         dragDirection
       };
       
       // Calculate effective load
-      const effectiveLoadResult = calculateEffectiveLoad(physicsContext, grabbedObject.position);
+      const effectiveLoadResult = calculateEffectiveLoad(physicsContext, currentGrabbedObject.position);
       
-      // Calculate follow speed multiplier
+      // Calculate follow speed multiplier based on manipulator effectiveness
       const followSpeed = calculateFollowSpeed(effectiveLoadResult.manipulatorEffectiveness);
       
-      // Calculate new position (lerp toward cursor based on follow speed)
-      const newX = grabbedObject.position.x + dx * followSpeed;
-      const newY = grabbedObject.position.y + dy * followSpeed;
+      // === HYBRID MOVEMENT SYSTEM ===
+      // Two independent components that combine for natural-feeling lag:
+      
+      // 1. CURSOR DELTA FOLLOWING: Scale cursor movement with adjustable lag
+      //    - At 100% effectiveness: always follows cursor exactly (no lag)
+      //    - Below 100%: lag is scaled by MANIPULATOR_CURSOR_FOLLOW_RATE
+      //    - Rate = 1.0: normal lag, Rate = 2.0: double lag, Rate = 0.5: half lag
+      const ineffectiveness = 1.0 - followSpeed;
+      const scaledIneffectiveness = ineffectiveness * MANIPULATOR_CURSOR_FOLLOW_RATE;
+      const finalFollowRate = 1.0 - scaledIneffectiveness;
+      const deltaMovementX = cursorDeltaX * finalFollowRate;
+      const deltaMovementY = cursorDeltaY * finalFollowRate;
+      
+      // 2. DISTANCE-BASED ATTRACTION: Independent lerp toward cursor
+      //    - Always pulls scrap toward cursor, even when cursor stops
+      //    - Tunable via MANIPULATOR_GAP_CLOSURE_RATE constant
+      //    - Strength increases with distance (linear relationship)
+      //    - Scaled by effectiveness AND time (framerate-independent)
+      const gapClosureRate = MANIPULATOR_GAP_CLOSURE_RATE * followSpeed * dtSeconds;
+      const closureFactorX = dx * gapClosureRate;
+      const closureFactorY = dy * gapClosureRate;
+      
+      // Combine both movements
+      const newX = currentGrabbedObject.position.x + deltaMovementX + closureFactorX;
+      const newY = currentGrabbedObject.position.y + deltaMovementY + closureFactorY;
+      
+      // Update cursor position tracking for next frame
+      previousCursorPosRef.current = { x: cursorPos.x, y: cursorPos.y };
       
       // Calculate velocity for release physics (px/s)
       const velocity = {
-        vx: (newX - grabbedObject.position.x) / dtSeconds,
-        vy: (newY - grabbedObject.position.y) / dtSeconds
+        vx: (newX - currentGrabbedObject.position.x) / dtSeconds,
+        vy: (newY - currentGrabbedObject.position.y) / dtSeconds
       };
       
       // Update grabbed object in store

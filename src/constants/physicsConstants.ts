@@ -79,4 +79,31 @@ export const DEFAULT_MANIPULATOR_MAX_LOAD = 4.5;
  */
 export const DEFAULT_SCRAP_BASE_MASS = 1;
 
+/**
+ * Manipulator Cursor Following Rate
+ * 
+ * Multiplier for the lag/ineffectiveness when effectiveness is below 100%.
+ * Controls how quickly you can create distance between cursor and scrap.
+ * At 100% effectiveness, this has NO effect (scrap always follows exactly).
+ * Below 100% effectiveness, this scales the lag amount:
+ * - 1.0: Normal lag (ineffectiveness as calculated by physics)
+ * - 2.0: Double lag (easier to put distance between cursor and scrap)
+ * - 0.5: Half lag (harder to put distance, more responsive feel)
+ * - 0.0: No lag from ineffectiveness (always follows cursor exactly, ignores effectiveness)
+ */
+export const MANIPULATOR_CURSOR_FOLLOW_RATE = 2;
+
+/**
+ * Manipulator Gap Closure Rate
+ * 
+ * Base rate at which the manipulator pulls scrap toward cursor position (per second).
+ * This creates a distance-based attraction that continues even when cursor stops.
+ * Controls how quickly scrap catches up when you hold cursor still.
+ * - Higher values (10-15): Fast catch-up, minimal visible lag
+ * - Lower values (3-5): Slow catch-up, pronounced lag
+ * - 8.0: Balanced catch-up speed
+ * Scaled by manipulator effectiveness and distance.
+ */
+export const MANIPULATOR_GAP_CLOSURE_RATE = 6.0;
+
 
