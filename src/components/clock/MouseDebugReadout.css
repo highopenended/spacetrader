@@ -81,7 +81,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.15rem;
-  /* 2 rows: X/Y, Subs/Drag */
+  /* Base: 2 rows (X/Y, Subs/Drag) */
+  /* Physics active: 6 rows total (X/Y, Subs/Drag, Mass/Grip, Load/Eff, ↑/↓, ←/→) */
 }
 
 .mouse-debug-readout__metric {
@@ -107,6 +108,15 @@
 .mouse-debug-readout__metric .metric-value.metric-active {
   color: #ffff00;
   text-shadow: 0 0 0.25rem #ffff00;
+}
+
+.mouse-debug-readout__metric .metric-value.metric-warning {
+  color: #ff4444;
+  text-shadow: 0 0 0.25rem #ff4444;
+}
+
+.mouse-debug-readout__metric .metric-value.metric-small {
+  font-size: 0.6rem;
 }
 
 /* Hover effects */

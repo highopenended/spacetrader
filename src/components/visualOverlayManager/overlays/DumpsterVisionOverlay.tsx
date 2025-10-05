@@ -51,6 +51,10 @@ import { useClockSubscription } from '../../../hooks/useClockSubscription';
  * - **Memory Management**: Cleans up DOM elements and refs on unmount
  * - **Accessibility**: All dynamic elements marked with `aria-hidden="true"`
  */
+
+
+
+// I also want to add another upgrade that shows vector fields
 const DumpsterVisionOverlay: React.FC<VisualOverlayProps> = ({ isExiting, animationState }) => {
   // ===== REFS & STATE =====
   const labelRefs = React.useRef<Map<string, HTMLDivElement>>(new Map());

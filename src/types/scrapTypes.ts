@@ -36,6 +36,7 @@ export interface ScrapType {
   label: string;                 // Display name
   description: string;           // Flavor text
   baseValue: number;             // Base credit value
+  baseMass: number;              // Base mass for physics calculations (default: 1)
   appearance: string;            // Icon/emoji for display
   weight: number;                // Spawn probability weight
   alwaysMutators?: MutatorId[];  // Mutators that always apply to this scrap type

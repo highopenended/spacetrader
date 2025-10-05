@@ -105,7 +105,7 @@ export const MutatorRegistry = {
     label: 'Dense',
     appearance: '⚓',
     creditMultiplier: 1.2,
-    dragSpeedMultiplier: 0.2, // Very slow drag - 20% of normal speed
+    massModifier: 1, // Adds +1 to base mass
     onInteract: ({ gameState, scrap }: ScrapInteractionContext) => {
       // TODO: handle dense material logic here
       console.log('Dense scrap interaction - implement weight/handling logic');

@@ -1,25 +1,29 @@
 /**
  * useScrapDrag
  *
- * Lightweight pointer-based drag management for scrap items.
- * - Tracks which scrap is being dragged
- * - Tracks cursor position via centralized dragStore and computes release velocity
+ * Physics-based scrap drag management with field calculations.
+ * - Tracks which scrap is being dragged via centralized dragStore
+ * - Separates cursor position from grabbed object position for realistic physics
+ * - Calculates effective load based on mass, manipulator strength, and active fields
  * - Exposes props for draggable elements and a style helper when dragging
- * - Calls an onDrop callback with release position and velocity
+ * - Calls an onDrop callback with release position and velocity from physics system
  *
  * Anchoring model (critical for no-jump drops):
  * - We position the dragged element using left (px) and bottom (px) with transform: none
  * - Rendering in WorkScreen also uses left/bottom with transform: none
- * - On drop, we convert the centered cursor to left/bottom consistently so there is no anchor switch
+ * - On drop, we convert the centered position to left/bottom consistently so there is no anchor switch
  * 
- * Uses centralized mouse tracking from dragStore to eliminate duplicate event listeners.
+ * Uses centralized mouse tracking and grabbed object physics from dragStore.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Z_LAYERS } from '../constants/zLayers';
-import { MOMENTUM_VALID_WINDOW_MS, VELOCITY_MIN_THRESHOLD_PX_PER_S, GRAVITY_VH_PER_S2 } from '../constants/physicsConstants';
+import { VELOCITY_MIN_THRESHOLD_PX_PER_S } from '../constants/physicsConstants';
 import { useClockSubscription } from './useClockSubscription';
-import { useDragStore } from '../stores';
+import { useDragStore, useGameStore } from '../stores';
+import { calculateScrapMass, calculateEffectiveLoad, calculateFollowSpeed } from '../utils/physicsUtils';
+import { PhysicsContext } from '../types/physicsTypes';
+import { ScrapObject } from '../types/scrapTypes';
 
 export interface ScrapDragDropInfo {
   scrapId: string;
@@ -30,13 +34,13 @@ export interface ScrapDragDropInfo {
 
 export interface UseScrapDragOptions {
   onDrop?: (info: ScrapDragDropInfo) => void;
-  throttleMs?: number; // default ~16ms (~60fps)
-  getScrapMutators?: (scrapId: string) => string[]; // Function to get mutators for a scrap
+  getScrap?: (scrapId: string) => ScrapObject | undefined; // Function to get full scrap object
 }
 
 export interface UseScrapDragApi {
   draggedScrapId: string | null;
   cursorPositionPx: { x: number; y: number } | null;
+  grabbedObjectPosition: { x: number; y: number } | null;
   getDraggableProps: (scrapId: string) => {
     onMouseDown: (e: React.MouseEvent) => void;
     onTouchStart: (e: React.TouchEvent) => void;
@@ -46,126 +50,97 @@ export interface UseScrapDragApi {
 }
 
 export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi => {
-  const { onDrop, throttleMs = 16, getScrapMutators } = options;
+  const { onDrop, getScrap } = options;
 
-  // Centralized mouse tracking from dragStore
-  const cursorPositionPx = useDragStore(state => state.mouseTracking.globalMousePosition);
+  // Store actions (don't cause re-renders)
   const subscribeToMouse = useDragStore(state => state.subscribeToMouse);
   const unsubscribeFromMouse = useDragStore(state => state.unsubscribeFromMouse);
   const updateGlobalMousePosition = useDragStore(state => state.updateGlobalMousePosition);
-
-  const [draggedScrapId, setDraggedScrapId] = useState<string | null>(null);
+  const grabObject = useDragStore(state => state.grabObject);
+  const updateGrabbedObjectPosition = useDragStore(state => state.updateGrabbedObjectPosition);
+  const releaseObject = useDragStore(state => state.releaseObject);
   
-  // Track lagged position for dense scrap
-  const [draggedScrapPositionPx, setDraggedScrapPositionPx] = useState<{ x: number; y: number } | null>(null);
+  // Grabbed object state (only re-renders when grabbed object changes)
+  const grabbedObject = useDragStore(state => state.grabbedObject);
   
-  // Track momentum for dense scrap (for swinging behavior)
-  const momentumRef = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
+  // Physics state (only re-renders when fields change - rare)
+  const physics = useDragStore(state => state.physics);
+  
+  // Player state (only re-renders when manipulator upgraded - rare)
+  const playerState = useGameStore(state => state.playerState);
+  
+  // Non-reactive mouse position getter (doesn't cause re-renders)
+  const getMousePosition = useCallback(() => 
+    useDragStore.getState().mouseTracking.globalMousePosition, 
+  []);
 
-  // Track when drag started to compute pointer velocity
-  const lastEventTimeRef = useRef<number>(0);
-  const lastPointerRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const velocityPxPerSecRef = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
+  // Track element size for rendering
   const elementSizeRef = useRef<{ width: number; height: number }>({ width: 0, height: 0 });
 
-  // Momentum recency filter (keep momentum only if release is soon after last significant movement)
-  const lastActiveVelocityRef = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
-  const lastActiveTimeRef = useRef<number>(0);
-
-  const isThrottledRef = useRef(false);
-
   const startDragAt = useCallback((scrapId: string, startClientX: number, startClientY: number, targetEl?: HTMLElement | null) => {
-    setDraggedScrapId(scrapId);
+    // Get scrap object
+    const scrap = getScrap?.(scrapId);
+    if (!scrap) {
+      console.warn(`useScrapDrag: Could not find scrap ${scrapId}`);
+      return;
+    }
+    
+    // Calculate scrap mass
+    const mass = calculateScrapMass(scrap);
+    
+    // Update global mouse position
     updateGlobalMousePosition({ x: startClientX, y: startClientY });
-    setDraggedScrapPositionPx({ x: startClientX, y: startClientY }); // Initialize lagged position
-    momentumRef.current = { vx: 0, vy: 0 }; // Reset momentum
-
+    
+    // Grab object in store with physics tracking
+    grabObject(scrap, { x: startClientX, y: startClientY }, mass);
+    
+    // Track element size for rendering
     if (targetEl) {
       const rect = targetEl.getBoundingClientRect();
       elementSizeRef.current = { width: rect.width, height: rect.height };
     } else {
       elementSizeRef.current = { width: 24, height: 24 };
     }
-
-    lastEventTimeRef.current = performance.now();
-    lastPointerRef.current = { x: startClientX, y: startClientY };
-    velocityPxPerSecRef.current = { vx: 0, vy: 0 };
-  }, [updateGlobalMousePosition]);
+  }, [updateGlobalMousePosition, grabObject, getScrap]);
 
   const endDrag = useCallback(() => {
-    if (!draggedScrapId || !cursorPositionPx) {
-      setDraggedScrapId(null);
-      setDraggedScrapPositionPx(null);
+    // Release object from store
+    const releasedState = releaseObject();
+    
+    if (!releasedState || !releasedState.scrapId) {
       return;
     }
 
-    // Use scrap position instead of cursor position for drop detection and physics
-    const releasePositionPx = draggedScrapPositionPx || cursorPositionPx;
-    // Use last significant movement only if within recent time window; else zero out momentum
-    const now = performance.now();
-    const timeSinceActive = now - lastActiveTimeRef.current;
-    const useMomentum = timeSinceActive <= MOMENTUM_VALID_WINDOW_MS;
-    const releaseVelocityPxPerSec = useMomentum ? lastActiveVelocityRef.current : { vx: 0, vy: 0 };
-    const scrapId = draggedScrapId;
-
-    setDraggedScrapId(null);
-    setDraggedScrapPositionPx(null);
-    momentumRef.current = { vx: 0, vy: 0 }; // Reset momentum
+    // Use velocity from physics system (calculated every frame)
+    let releaseVelocityPxPerSec = releasedState.velocity;
+    
+    // Apply minimum velocity threshold to ignore micro-wiggles
+    const speed = Math.sqrt(
+      releaseVelocityPxPerSec.vx * releaseVelocityPxPerSec.vx + 
+      releaseVelocityPxPerSec.vy * releaseVelocityPxPerSec.vy
+    );
+    
+    // If moving very slowly at release (< 20px/s), treat as stationary
+    if (speed < VELOCITY_MIN_THRESHOLD_PX_PER_S) {
+      releaseVelocityPxPerSec = { vx: 0, vy: 0 };
+    }
 
     if (onDrop) {
-      onDrop({ scrapId, releasePositionPx, releaseVelocityPxPerSec, elementSizePx: elementSizeRef.current });
+      onDrop({ 
+        scrapId: releasedState.scrapId, 
+        releasePositionPx: releasedState.position, 
+        releaseVelocityPxPerSec, 
+        elementSizePx: elementSizeRef.current 
+      });
     }
-  }, [draggedScrapId, cursorPositionPx, draggedScrapPositionPx, onDrop]);
+  }, [releaseObject, onDrop]);
 
   const handlePointerMove = useCallback((clientX: number, clientY: number) => {
-    if (!draggedScrapId) return;
-    if (isThrottledRef.current) return;
-
-    isThrottledRef.current = true;
-    setTimeout(() => {
-      isThrottledRef.current = false;
-    }, throttleMs);
-
-    const now = performance.now();
-    const dtMs = now - lastEventTimeRef.current;
-    const dt = dtMs > 0 ? dtMs / 1000 : 0.016; // seconds
-
-    const last = lastPointerRef.current;
-    const dx = clientX - last.x;
-    const dy = clientY - last.y;
-
-    // Update velocity in px/s
-    if (dt > 0) {
-      velocityPxPerSecRef.current = { vx: dx / dt, vy: dy / dt };
-      const speed = Math.hypot(velocityPxPerSecRef.current.vx, velocityPxPerSecRef.current.vy);
-      if (speed >= VELOCITY_MIN_THRESHOLD_PX_PER_S) {
-        lastActiveVelocityRef.current = velocityPxPerSecRef.current;
-        lastActiveTimeRef.current = now;
-      }
-    }
-
-    lastEventTimeRef.current = now;
-    lastPointerRef.current = { x: clientX, y: clientY };
+    if (!grabbedObject.scrapId) return;
+    
+    // Update global mouse position (physics system will read this in clock subscription)
     updateGlobalMousePosition({ x: clientX, y: clientY });
-
-    // For normal scrap, update position immediately
-    // For dense scrap, the position will be updated by the clock subscription
-    setDraggedScrapPositionPx(prevPosition => {
-      if (!prevPosition) return { x: clientX, y: clientY };
-      
-      // Check if scrap has dense mutator
-      const mutators = getScrapMutators?.(draggedScrapId) || [];
-      const isDense = mutators.includes('dense');
-      
-      if (!isDense) {
-        // Normal scrap follows cursor exactly
-        return { x: clientX, y: clientY };
-      } else {
-        // Dense scrap position will be updated by clock subscription
-        return prevPosition;
-      }
-    });
-  }, [draggedScrapId, throttleMs, getScrapMutators, updateGlobalMousePosition]);
+  }, [grabbedObject.scrapId, updateGlobalMousePosition]);
 
   // Subscribe to global mouse tracking (always active for this hook)
   useEffect(() => {
@@ -175,12 +150,11 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     };
   }, [subscribeToMouse, unsubscribeFromMouse]);
 
-  // During active drag, we still need our own mouse listener for velocity tracking
-  // The global tracker handles position, but we need to track velocity/momentum locally
+  // During active drag, we need mouse listener for velocity tracking
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => handlePointerMove(e.clientX, e.clientY);
     const onMouseUp = () => endDrag();
-    if (draggedScrapId) {
+    if (grabbedObject.scrapId) {
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseup', onMouseUp);
     }
@@ -188,7 +162,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     };
-  }, [draggedScrapId, handlePointerMove, endDrag]);
+  }, [grabbedObject.scrapId, handlePointerMove, endDrag]);
 
   // Touch events
   useEffect(() => {
@@ -198,7 +172,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       handlePointerMove(t.clientX, t.clientY);
     };
     const onTouchEnd = () => endDrag();
-    if (draggedScrapId) {
+    if (grabbedObject.scrapId) {
       document.addEventListener('touchmove', onTouchMove, { passive: false });
       document.addEventListener('touchend', onTouchEnd);
       document.addEventListener('touchcancel', onTouchEnd);
@@ -208,7 +182,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       document.removeEventListener('touchend', onTouchEnd);
       document.removeEventListener('touchcancel', onTouchEnd);
     };
-  }, [draggedScrapId, handlePointerMove, endDrag]);
+  }, [grabbedObject.scrapId, handlePointerMove, endDrag]);
 
   const getDraggableProps = useCallback((scrapId: string) => ({
     onMouseDown: (e: React.MouseEvent) => {
@@ -223,86 +197,92 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     }
   }), [startDragAt]);
 
-  const isDragging = useCallback((scrapId: string) => draggedScrapId === scrapId, [draggedScrapId]);
+  const isDragging = useCallback((scrapId: string) => grabbedObject.scrapId === scrapId, [grabbedObject.scrapId]);
 
-  // Clock subscription for dense scrap lag movement
+  // Clock subscription for physics-based grabbed object movement
+  // Only enabled when actually grabbing an object (prevents unnecessary frame updates)
   useClockSubscription(
-    'scrap-drag-lag',
+    'scrap-drag-physics',
     (deltaTime, scaledDeltaTime, tickCount) => {
-      if (!draggedScrapId || !cursorPositionPx || !draggedScrapPositionPx) return;
+      const cursorPos = getMousePosition();
+      if (!cursorPos) return;
       
-      const mutators = getScrapMutators?.(draggedScrapId) || [];
-      const isDense = mutators.includes('dense');
-      
-      if (!isDense) return;
-      
-      // Momentum-based swinging movement for dense scrap
       const dtSeconds = Math.max(0, deltaTime / 1000);
       
-      // Convert pixels to physics units for calculations
-      const vhPerPx = 100 / window.innerHeight;
-      const vwPerPx = 100 / window.innerWidth;
+      // Calculate drag direction from current position to cursor
+      const dx = cursorPos.x - grabbedObject.position.x;
+      const dy = cursorPos.y - grabbedObject.position.y;
       
-      // Physics constants
-      const gravityResistance = Math.abs(GRAVITY_VH_PER_S2) * 0.002;
-      const inertiaResistance = 0.6;
-      const springStrength = 200; // How strongly it's pulled toward target
-      const damping = 0.8; // How much momentum is dampened (0.8 = 20% momentum lost per frame)
+      const distance = Math.sqrt(dx * dx + dy * dy);
       
-      // Calculate force toward target (like a spring)
-      const deltaX = cursorPositionPx.x - draggedScrapPositionPx.x;
-      const deltaY = cursorPositionPx.y - draggedScrapPositionPx.y;
-      
-      // Convert to physics units
-      const deltaXvw = deltaX * vwPerPx;
-      const deltaYvh = deltaY * vhPerPx;
-      
-      // Apply spring force toward target
-      const springForceX = deltaXvw * springStrength;
-      const springForceY = deltaYvh * springStrength;
-      
-      // Apply inertia resistance to horizontal force
-      const horizontalSpringForce = springForceX * (1 - inertiaResistance);
-      
-      // Update momentum (integrate forces)
-      momentumRef.current.vx += horizontalSpringForce * dtSeconds;
-      momentumRef.current.vy += springForceY * dtSeconds;
-      
-      // Apply gravity resistance to vertical momentum accumulation
-      // Note: In screen coordinates, positive Y is DOWN, negative Y is UP
-      if (momentumRef.current.vy > 0) { // Moving DOWN in screen coords (gravity helps)
-        momentumRef.current.vy *= (1 + gravityResistance * 0.3); // Increase downward momentum
-      } else { // Moving UP in screen coords (fighting gravity)
-        momentumRef.current.vy *= (1 - gravityResistance * 0.5); // Reduce upward momentum
+      // If very close to cursor, snap to it
+      if (distance < 0.5) {
+        updateGrabbedObjectPosition(
+          cursorPos,
+          { vx: 0, vy: 0 },
+          grabbedObject.effectiveLoadResult || {
+            loadUp: grabbedObject.mass,
+            loadDown: grabbedObject.mass,
+            loadLeft: grabbedObject.mass,
+            loadRight: grabbedObject.mass,
+            effectiveLoad: grabbedObject.mass,
+            manipulatorEffectiveness: 1.0
+          }
+        );
+        return;
       }
       
-      // Apply damping (lose momentum over time)
-      momentumRef.current.vx *= damping;
-      momentumRef.current.vy *= damping;
+      // Normalized drag direction (screen coords: +Y is down)
+      const dragDirection = {
+        x: dx / distance,
+        y: dy / distance
+      };
       
-      // Update position based on momentum
-      const newXvw = draggedScrapPositionPx.x * vwPerPx + momentumRef.current.vx * dtSeconds;
-      const newYvh = draggedScrapPositionPx.y * vhPerPx + momentumRef.current.vy * dtSeconds;
+      // Build physics context
+      const physicsContext: PhysicsContext = {
+        globalFields: physics.globalFields,
+        pointSourceFields: physics.pointSourceFields,
+        manipulatorStrength: playerState.manipulatorStrength,
+        manipulatorMaxLoad: playerState.manipulatorMaxLoad,
+        scrapMass: grabbedObject.mass,
+        dragDirection
+      };
       
-      // Convert back to pixels
-      const newX = newXvw / vwPerPx;
-      const newY = newYvh / vhPerPx;
+      // Calculate effective load
+      const effectiveLoadResult = calculateEffectiveLoad(physicsContext, grabbedObject.position);
       
-      setDraggedScrapPositionPx({ x: newX, y: newY });
+      // Calculate follow speed multiplier
+      const followSpeed = calculateFollowSpeed(effectiveLoadResult.manipulatorEffectiveness);
+      
+      // Calculate new position (lerp toward cursor based on follow speed)
+      const newX = grabbedObject.position.x + dx * followSpeed;
+      const newY = grabbedObject.position.y + dy * followSpeed;
+      
+      // Calculate velocity for release physics (px/s)
+      const velocity = {
+        vx: (newX - grabbedObject.position.x) / dtSeconds,
+        vy: (newY - grabbedObject.position.y) / dtSeconds
+      };
+      
+      // Update grabbed object in store
+      updateGrabbedObjectPosition(
+        { x: newX, y: newY },
+        velocity,
+        effectiveLoadResult
+      );
     },
     {
       priority: 2, // After main game loop but before rendering
-      name: 'Scrap Drag Lag Movement'
+      name: 'Scrap Drag Physics',
+      enabled: !!grabbedObject.scrapId // Only run when actually grabbing scrap
     }
   );
 
   const getDragStyle = useCallback((scrapId: string): React.CSSProperties | undefined => {
-    if (!isDragging(scrapId) || !cursorPositionPx) return undefined;
+    if (!isDragging(scrapId)) return undefined;
     
-    // Use lagged position for dense scrap, cursor position for normal scrap
-    const mutators = getScrapMutators?.(scrapId) || [];
-    const isDense = mutators.includes('dense');
-    const positionToUse = (isDense && draggedScrapPositionPx) ? draggedScrapPositionPx : cursorPositionPx;
+    // Use grabbed object position from physics system
+    const positionToUse = grabbedObject.position;
     
     const width = elementSizeRef.current.width || 0;
     const height = elementSizeRef.current.height || 0;
@@ -317,15 +297,16 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       pointerEvents: 'none',
       transition: 'none'
     };
-  }, [isDragging, cursorPositionPx, draggedScrapPositionPx, getScrapMutators]);
+  }, [isDragging, grabbedObject.position]);
 
   return useMemo(() => ({
-    draggedScrapId,
-    cursorPositionPx,
+    draggedScrapId: grabbedObject.scrapId,
+    cursorPositionPx: getMousePosition(), // Read on-demand, doesn't cause re-renders
+    grabbedObjectPosition: grabbedObject.scrapId ? grabbedObject.position : null,
     getDraggableProps,
     isDragging,
     getDragStyle
-  }), [draggedScrapId, cursorPositionPx, getDraggableProps, isDragging, getDragStyle]);
+  }), [grabbedObject.scrapId, grabbedObject.position, getDraggableProps, isDragging, getDragStyle, getMousePosition]);
 };
 
 export default useScrapDrag;

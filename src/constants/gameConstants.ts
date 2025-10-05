@@ -27,6 +27,7 @@
 
 import { GameTime, GamePhase, GameMode, PlayerState } from '../types/gameState';
 import { DEFAULT_INSTALLED_APPS } from './appListConstants';
+import { DEFAULT_MANIPULATOR_STRENGTH, DEFAULT_MANIPULATOR_MAX_LOAD } from './physicsConstants';
 
 // Initial game state constants
 export const INITIAL_CREDITS = 10000;
@@ -46,7 +47,9 @@ export const INITIAL_PLAYER_STATE: PlayerState = {
   isProtectedFromRadiation: false,
   isProtectedFromCorrosive: false,
   isProtectedFromExplosive: false,
-  isProtectedFromQuantum: false
+  isProtectedFromQuantum: false,
+  manipulatorStrength: DEFAULT_MANIPULATOR_STRENGTH,
+  manipulatorMaxLoad: DEFAULT_MANIPULATOR_MAX_LOAD
 };
 
 // Complete initial game state (for unified hook)

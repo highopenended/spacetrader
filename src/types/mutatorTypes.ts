@@ -26,7 +26,7 @@ export interface ScrapMutator {
   onInteract?: (context: ScrapInteractionContext) => void; // Interaction logic
   rarity: number;                // Spawn probability (0-1)
   description: string;           // Flavor text
-  dragSpeedMultiplier?: number;  // Drag speed modifier (1.0 = normal, 0.1 = very slow)
+  massModifier?: number;         // Additive mass modifier (e.g., +1 for dense mutator)
   impactThreshold?: number;      // Velocity threshold for breaking on impact
   shakeThreshold?: number;       // Acceleration threshold for breaking from shaking
 }

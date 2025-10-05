@@ -65,6 +65,11 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     getHorizontalVelocity
   } = useScrapPhysics();
 
+  // Helper function to get scrap object
+  const getScrap = useCallback((scrapId: string) => {
+    return spawnState.activeScrap.find(s => s.id === scrapId);
+  }, [spawnState.activeScrap]);
+
   // Helper function to get mutators for a scrap
   const getScrapMutators = useCallback((scrapId: string): string[] => {
     const scrap = spawnState.activeScrap.find(s => s.id === scrapId);
@@ -74,7 +79,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   // Drag handling for scrap items
   const [beingCollectedIds, setBeingCollectedIds] = useState<Set<string>>(new Set());
   const { getDraggableProps, getDragStyle, draggedScrapId } = useScrapDrag({
-    getScrapMutators,
+    getScrap,
     onDrop: ({ scrapId, releasePositionPx, releaseVelocityPxPerSec, elementSizePx }) => {
 			// Resolve drop target centrally
 			const target = resolveScrapDropTarget(releasePositionPx);

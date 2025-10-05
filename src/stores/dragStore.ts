@@ -8,12 +8,16 @@
  * - Collision detection state
  * - Pending deletion state
  * - Global mouse position tracking
+ * - Scrap grab physics (grabbed object tracking with field-based physics)
  * 
  * This replaces multiple useState hooks and event listeners with a single source of truth.
  */
 
 import { create } from 'zustand';
 import { UniqueIdentifier } from '@dnd-kit/core';
+import { GlobalField, PointSourceField, EffectiveLoadResult } from '../types/physicsTypes';
+import { ScrapObject } from '../types/scrapTypes';
+import { DEFAULT_GRAVITY_FIELD } from '../constants/physicsConstants';
 
 // ===== TYPES =====
 
@@ -35,6 +39,32 @@ interface PendingDeleteState {
   prevOrder: string[];
 }
 
+/**
+ * Grabbed Object State - Tracks currently grabbed scrap with physics
+ * 
+ * Separates cursor position from object position to allow for realistic physics.
+ * The object can lag behind or fail to follow the cursor based on physics calculations.
+ */
+interface GrabbedObjectState {
+  scrapId: string | null;              // ID of grabbed scrap (null if nothing grabbed)
+  scrap: ScrapObject | null;           // The actual scrap object
+  position: { x: number; y: number };  // Current scrap position (px, separate from cursor)
+  velocity: { vx: number; vy: number }; // Current velocity (px/s)
+  mass: number;                        // Calculated mass (baseMass + modifiers)
+  effectiveLoadResult: EffectiveLoadResult | null; // Latest physics calculation result
+}
+
+/**
+ * Physics State - Active fields and manipulator properties
+ * 
+ * Contains all physics configuration needed for force calculations.
+ * Fields can be added/removed dynamically (e.g., from mutators or upgrades).
+ */
+interface PhysicsState {
+  globalFields: GlobalField[];         // Global fields like gravity
+  pointSourceFields: PointSourceField[]; // Point source fields like magnets
+}
+
 interface DragStoreState {
   // Core drag state
   dragState: DragState;
@@ -49,6 +79,12 @@ interface DragStoreState {
   
   // Deletion management
   pendingDelete: PendingDeleteState;
+  
+  // Grabbed object physics (for scrap dragging)
+  grabbedObject: GrabbedObjectState;
+  
+  // Physics fields
+  physics: PhysicsState;
 }
 
 interface DragActions {
@@ -115,6 +151,70 @@ interface DragActions {
    */
   clearPendingDelete: () => void;
   
+  // ===== GRABBED OBJECT PHYSICS =====
+  /**
+   * Grab a scrap object and start physics tracking
+   * @param scrap - The scrap object being grabbed
+   * @param initialPosition - Initial position of the scrap (px)
+   * @param mass - Calculated mass of the scrap
+   */
+  grabObject: (scrap: ScrapObject, initialPosition: { x: number; y: number }, mass: number) => void;
+  
+  /**
+   * Update grabbed object position and velocity based on physics
+   * @param newPosition - New position after physics calculations (px)
+   * @param velocity - Current velocity (px/s)
+   * @param effectiveLoadResult - Latest physics calculation result
+   */
+  updateGrabbedObjectPosition: (
+    newPosition: { x: number; y: number },
+    velocity: { vx: number; vy: number },
+    effectiveLoadResult: EffectiveLoadResult
+  ) => void;
+  
+  /**
+   * Release grabbed object
+   * @returns Released scrap state (for physics handoff to airborne system)
+   */
+  releaseObject: () => GrabbedObjectState | null;
+  
+  // ===== PHYSICS FIELDS =====
+  /**
+   * Set active global fields
+   * @param fields - Array of global fields to apply
+   */
+  setGlobalFields: (fields: GlobalField[]) => void;
+  
+  /**
+   * Set active point source fields
+   * @param fields - Array of point source fields to apply
+   */
+  setPointSourceFields: (fields: PointSourceField[]) => void;
+  
+  /**
+   * Add a global field to the active set
+   * @param field - Global field to add
+   */
+  addGlobalField: (field: GlobalField) => void;
+  
+  /**
+   * Remove a global field by ID
+   * @param fieldId - ID of field to remove
+   */
+  removeGlobalField: (fieldId: string) => void;
+  
+  /**
+   * Add a point source field to the active set
+   * @param field - Point source field to add
+   */
+  addPointSourceField: (field: PointSourceField) => void;
+  
+  /**
+   * Remove a point source field by ID
+   * @param fieldId - ID of field to remove
+   */
+  removePointSourceField: (fieldId: string) => void;
+  
   // ===== RESET =====
   /**
    * Reset all drag state to initial values
@@ -143,13 +243,29 @@ const initialPendingDelete: PendingDeleteState = {
   prevOrder: []
 };
 
+const initialGrabbedObject: GrabbedObjectState = {
+  scrapId: null,
+  scrap: null,
+  position: { x: 0, y: 0 },
+  velocity: { vx: 0, vy: 0 },
+  mass: 1,
+  effectiveLoadResult: null
+};
+
+const initialPhysics: PhysicsState = {
+  globalFields: [DEFAULT_GRAVITY_FIELD],
+  pointSourceFields: []
+};
+
 const initialState: DragStoreState = {
   dragState: initialDragState,
   mouseTracking: initialMouseTracking,
   overId_cursor: null,
   overId_item: null,
   isOverTerminalDropZone: false,
-  pendingDelete: initialPendingDelete
+  pendingDelete: initialPendingDelete,
+  grabbedObject: initialGrabbedObject,
+  physics: initialPhysics
 };
 
 /**
@@ -263,6 +379,97 @@ export const useDragStore = create<DragStore>((set, get) => ({
     set({
       pendingDelete: initialPendingDelete
     });
+  },
+  
+  // ===== GRABBED OBJECT PHYSICS =====
+  grabObject: (scrap, initialPosition, mass) => {
+    set({
+      grabbedObject: {
+        scrapId: scrap.id,
+        scrap,
+        position: initialPosition,
+        velocity: { vx: 0, vy: 0 },
+        mass,
+        effectiveLoadResult: null
+      }
+    });
+  },
+  
+  updateGrabbedObjectPosition: (newPosition, velocity, effectiveLoadResult) => {
+    set(state => ({
+      grabbedObject: {
+        ...state.grabbedObject,
+        position: newPosition,
+        velocity,
+        effectiveLoadResult
+      }
+    }));
+  },
+  
+  releaseObject: () => {
+    const state = get();
+    const released = state.grabbedObject.scrapId ? { ...state.grabbedObject } : null;
+    
+    set({
+      grabbedObject: initialGrabbedObject
+    });
+    
+    return released;
+  },
+  
+  // ===== PHYSICS FIELDS =====
+  setGlobalFields: (fields) => {
+    set(state => ({
+      physics: {
+        ...state.physics,
+        globalFields: fields
+      }
+    }));
+  },
+  
+  setPointSourceFields: (fields) => {
+    set(state => ({
+      physics: {
+        ...state.physics,
+        pointSourceFields: fields
+      }
+    }));
+  },
+  
+  addGlobalField: (field) => {
+    set(state => ({
+      physics: {
+        ...state.physics,
+        globalFields: [...state.physics.globalFields, field]
+      }
+    }));
+  },
+  
+  removeGlobalField: (fieldId) => {
+    set(state => ({
+      physics: {
+        ...state.physics,
+        globalFields: state.physics.globalFields.filter(f => f.id !== fieldId)
+      }
+    }));
+  },
+  
+  addPointSourceField: (field) => {
+    set(state => ({
+      physics: {
+        ...state.physics,
+        pointSourceFields: [...state.physics.pointSourceFields, field]
+      }
+    }));
+  },
+  
+  removePointSourceField: (fieldId) => {
+    set(state => ({
+      physics: {
+        ...state.physics,
+        pointSourceFields: state.physics.pointSourceFields.filter(f => f.id !== fieldId)
+      }
+    }));
   },
   
   resetDragState: () => {

@@ -12,7 +12,8 @@ export const ScrapRegistry = {
   metalScrap: { 
     id: 'metalScrap', 
     label: 'Metal Scrap', 
-    baseValue: 2, 
+    baseValue: 2,
+    baseMass: 1,
     appearance: '🔩', 
     weight: 70, 
     description: "Just some common metal scrap. Usually pretty low value." 
@@ -20,7 +21,8 @@ export const ScrapRegistry = {
   circuitry: { 
     id: 'circuitry', 
     label: 'Circuitry', 
-    baseValue: 5, 
+    baseValue: 5,
+    baseMass: 1,
     appearance: '🖥️', 
     weight: 5, 
     states: {
@@ -46,7 +48,8 @@ export const ScrapRegistry = {
   heavyPlating: { 
     id: 'heavyPlating', 
     label: 'Heavy Plating', 
-    baseValue: 20, 
+    baseValue: 20,
+    baseMass: 1,
     appearance: '🛡️', 
     weight: 5, 
     alwaysMutators: ['dense'] as MutatorId[], // Heavy plating is always dense
@@ -55,7 +58,8 @@ export const ScrapRegistry = {
   cryotube: { 
     id: 'cryotube', 
     label: 'Cryotube', 
-    baseValue: 20, 
+    baseValue: 20,
+    baseMass: 1,
     appearance: '🫙', 
     weight: 10, 
     neverMutators: ['dense'] as MutatorId[], // Cryotube can never be dense
@@ -82,7 +86,8 @@ export const ScrapRegistry = {
   corpCreds: { 
     id: 'corpCreds', 
     label: 'Corporate Credentials', 
-    baseValue: 150, 
+    baseValue: 150,
+    baseMass: 1,
     appearance: '🪪', 
     weight: 1, 
     description: "High-value corporate access cards. Extremely rare and worth a fortune on the black market. Or maybe you could keep them for yourself..?" 
@@ -90,7 +95,8 @@ export const ScrapRegistry = {
   biomassSample: { 
     id: 'biomassSample', 
     label: 'Biomass Sample', 
-    baseValue: 15, 
+    baseValue: 15,
+    baseMass: 1,
     appearance: '🧬', 
     weight: 5, 
     description: "Looks like some kind of organic material. The guys in the lab would love this. Guess they'll get the shredded version later..." 
@@ -98,7 +104,8 @@ export const ScrapRegistry = {
   brokenDroneCore: { 
     id: 'brokenDroneCore', 
     label: 'Broken Drone Core', 
-    baseValue: 60, 
+    baseValue: 60,
+    baseMass: 1,
     appearance: '🤖', 
     weight: 4, 
     description: "Damaged AI core from automated drones. Contains valuable quantum processors. Probably not haunted." 

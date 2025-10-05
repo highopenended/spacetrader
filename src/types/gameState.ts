@@ -53,6 +53,10 @@ export interface PlayerState {
   isProtectedFromExplosive: boolean;
   isProtectedFromQuantum: boolean;
   
+  // Manipulator (cursor) properties for scrap physics
+  manipulatorStrength: number;   // Base strength for moving scrap (default: 1.5)
+  manipulatorMaxLoad: number;    // Maximum effective load (default: 4.5)
+  
   // Additional player properties can be added here
   // health?: number;
   // experience?: number;

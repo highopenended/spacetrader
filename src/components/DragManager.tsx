@@ -48,7 +48,9 @@ const DragManager: React.FC<DragManagerProps> = ({
   // Get drag state directly from store
   const dragState = useDragStore(state => state.dragState);
   const isOverTerminalDropZone = useDragStore(state => state.isOverTerminalDropZone);
-  const mousePosition = useDragStore(state => state.mouseTracking.globalMousePosition);
+  
+  // Non-reactive mouse position getter (doesn't cause re-renders)
+  const getMousePosition = () => useDragStore.getState().mouseTracking.globalMousePosition;
 
   // DragOverlay content helper (purely visual, for ghost image of app being dragged)
   const renderDragOverlay_AppGhost = () => {
@@ -81,14 +83,15 @@ const DragManager: React.FC<DragManagerProps> = ({
   const renderDragOverlay_DragNode = () => {
     // DRAG NODE SYSTEM: Tiny mouse-cursor-sized indicator for window deletion
     if (dragState.isDragging && dragState.draggedAppType) {
+      const mousePos = getMousePosition();
       return (
         <DragOverlay 
           zIndex={2000}
           dropAnimation={{ duration: 0, easing: 'ease' }}
           style={{
             position: 'fixed' as const,
-            left: mousePosition ? mousePosition.x - 6 : 0, // Center 12px indicator on cursor
-            top: mousePosition ? mousePosition.y - 6 : 0,
+            left: mousePos ? mousePos.x - 6 : 0, // Center 12px indicator on cursor
+            top: mousePos ? mousePos.y - 6 : 0,
             transform: 'none', // Override @dnd-kit's transform
             pointerEvents: 'none' as const
           }}
@@ -133,8 +136,9 @@ const DragManager: React.FC<DragManagerProps> = ({
         const appConfig = apps.find(app => app.id === appId);
         if (appConfig) {
           // Open window at drop coordinates (centered on drop point)
-          if (mousePosition) {
-            openOrCloseWindow(appId, appConfig.name, undefined, mousePosition);
+          const mousePos = getMousePosition();
+          if (mousePos) {
+            openOrCloseWindow(appId, appConfig.name, undefined, mousePos);
           } else {
             openOrCloseWindow(appId, appConfig.name);
           }

@@ -6,6 +6,11 @@
  * Rationale: viewport-relative units keep behavior stable across zoom/resolution.
  */
 
+import { GlobalField } from '../types/physicsTypes';
+
+// ===== LEGACY PHYSICS CONSTANTS (for airborne scrap after release) =====
+// These will remain for the post-release physics system
+
 // Baseline height (vh) for the assembly line; scrap sits at this bottom value when grounded (matches .scrap-item bottom in CSS)
 export const SCRAP_BASELINE_BOTTOM_VH = 22;
 
@@ -24,12 +29,54 @@ export const MOMENTUM_SCALE = 0.5;
 // Momentum capture thresholds (drag hook): preserve momentum only if release
 // occurs within this window after last meaningful motion (ms)
 export const MOMENTUM_VALID_WINDOW_MS = 120;
-// Ignore tiny jitter below this speed (px/s) so “still” releases don’t throw
+// Ignore tiny jitter below this speed (px/s) so "still" releases don't throw
 export const VELOCITY_MIN_THRESHOLD_PX_PER_S = 80;
 
 // Conversion helpers between px and vh (fallback assumes ~800px height when window is unavailable)
 export const pxPerVh = () => (typeof window !== 'undefined' ? window.innerHeight / 100 : 8);
 export const vhFromPx = (px: number) => px / pxPerVh();
 export const pxFromVh = (vh: number) => vh * pxPerVh();
+
+// ===== NEW FIELD-BASED PHYSICS CONSTANTS =====
+
+/**
+ * Default Gravity Field
+ * 
+ * Applied during scrap dragging. Strength is tuned so default manipulator
+ * can easily ignore it (manipulatorStrength of 1.5 can handle baseMass of 1 
+ * plus gravity of 0.3 when dragging upward).
+ */
+export const DEFAULT_GRAVITY_FIELD: GlobalField = {
+  type: 'global',
+  id: 'default-gravity',
+  direction: 'down',
+  strength: 0.3, // Weak enough for default manipulator to overcome
+  description: 'Default downward gravitational force'
+};
+
+/**
+ * Default Manipulator Strength
+ * 
+ * Base strength for moving scrap. At strength 1.5, can handle:
+ * - baseMass 1 moving horizontally (effectiveLoad = 1)
+ * - baseMass 1 moving upward against gravity (effectiveLoad = 1.3)
+ * - baseMass 1 moving downward with gravity (effectiveLoad = 0.7)
+ */
+export const DEFAULT_MANIPULATOR_STRENGTH = 1.5;
+
+/**
+ * Default Manipulator Max Load
+ * 
+ * Absolute maximum load the manipulator can handle. Beyond this, scrap won't move.
+ * Set to 3x strength to allow for heavy objects or strong opposing fields.
+ */
+export const DEFAULT_MANIPULATOR_MAX_LOAD = 4.5;
+
+/**
+ * Default Scrap Base Mass
+ * 
+ * Standard mass for most scrap objects. Mutators and scrap type can modify this.
+ */
+export const DEFAULT_SCRAP_BASE_MASS = 1;
 
 

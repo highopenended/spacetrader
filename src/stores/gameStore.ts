@@ -9,7 +9,7 @@
  */
 
 import { create } from 'zustand';
-import { GameTime, GamePhase, GameMode } from '../types/gameState';
+import { GameTime, GamePhase, GameMode, PlayerState } from '../types/gameState';
 import { advanceGameTime, getNextGamePhase } from '../utils/gameStateUtils';
 import { INITIAL_GAME_STATE } from '../constants/gameConstants';
 import { APP_REGISTRY } from '../constants/appListConstants';
@@ -22,6 +22,9 @@ interface GameState {
   gameTime: GameTime;
   isPaused: boolean;
   lastUpdate: number;
+  
+  // Player state
+  playerState: PlayerState;
   
   // App management
   installedApps: InstalledApp[];
@@ -70,6 +73,10 @@ interface GameActions {
   resetToDefaults: () => void;
   getAvailableApps: () => AppDefinition[];
 
+  // ===== PLAYER STATE MANAGEMENT =====
+  setManipulatorStrength: (strength: number) => void;
+  setManipulatorMaxLoad: (maxLoad: number) => void;
+
   // ===== COMPUTED VALUE UPDATES =====
   updateComputedValues: () => void;
 
@@ -89,6 +96,7 @@ const initialGameState: GameState = {
   gameTime: INITIAL_GAME_STATE.gameTime,
   isPaused: INITIAL_GAME_STATE.isPaused,
   lastUpdate: INITIAL_GAME_STATE.lastUpdate,
+  playerState: INITIAL_GAME_STATE.playerState,
   installedApps: INITIAL_GAME_STATE.installedApps,
   gameMode: INITIAL_GAME_STATE.gameMode,
   workSessionStartTime: 0,
@@ -350,6 +358,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return Object.values(APP_REGISTRY).filter(
       app => !installedIds.includes(app.id)
     );
+  },
+
+  // ===== PLAYER STATE MANAGEMENT =====
+  setManipulatorStrength: (strength: number) => {
+    set(state => ({
+      playerState: {
+        ...state.playerState,
+        manipulatorStrength: Math.max(0, strength)
+      }
+    }));
+  },
+
+  setManipulatorMaxLoad: (maxLoad: number) => {
+    set(state => ({
+      playerState: {
+        ...state.playerState,
+        manipulatorMaxLoad: Math.max(0, maxLoad)
+      }
+    }));
   },
 
   // ===== COMPUTED VALUE UPDATES =====
