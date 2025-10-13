@@ -19,8 +19,8 @@ export const APP_WINDOW_DEFAULTS: Record<string, { width: number; height: number
   jobTitle: { width: 300, height: 180 },
   credits: { width: 300, height: 150 },
   cacheSync: { width: 350, height: 350 },
-  chronoTrack: { width: 350, height: 200 },
-  dumpsterVision: { width: 250, height: 282 }
+  chronoTrack: { width: 350, height: 300 },
+  dumpsterVision: { width: 250, height: 290 }
 };
 
 // App-specific minimum window sizes
@@ -30,6 +30,6 @@ export const APP_WINDOW_MIN_SIZES: Record<string, { width: number; height: numbe
   jobTitle: { width: 250, height: 180 },
   credits: { width: 300, height: 150 },
   cacheSync: { width: 350, height: 350 },
-  chronoTrack: { width: 350, height: 200 },
-  dumpsterVision: { width: 250, height: 282 }
+  chronoTrack: { width: 350, height: 300 },
+  dumpsterVision: { width: 250, height: 290 }
 }; 

@@ -13,7 +13,7 @@ import { GlobalField } from '../types/physicsTypes';
 // NOTE: Old vh/vw constants below are deprecated but kept for reference
 
 // Baseline height (vp) for the assembly line; scrap sits at this bottom value when grounded (matches .scrap-item bottom in CSS)
-export const SCRAP_BASELINE_BOTTOM_VP = 22;
+export const SCRAP_BASELINE_BOTTOM_VP = 12;
 
 // Gravity in vp/s^2 (negative => downward). Tuned for snappy but weighty falls
 export const GRAVITY_VP_PER_S2 = -250;
