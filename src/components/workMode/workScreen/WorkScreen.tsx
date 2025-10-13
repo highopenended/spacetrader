@@ -25,6 +25,7 @@ import { ScrapRegistry } from '../../../constants/scrapRegistry';
 import WorkModePurgeZone from '../workModePurgeZone/WorkModePurgeZone';
 import { useGameStore, useUpgradesStore, useAnchorsStore } from '../../../stores';
 import { Anchor } from '../../../stores/anchorsStore';
+import { checkRectOverlap, viewportToRect, domRectToRect } from '../../../utils/collisionUtils';
 
 interface WorkScreenProps {
   updateCredits?: (amount: number) => void;
@@ -81,7 +82,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   const { getDraggableProps, getDragStyle, draggedScrapId } = useScrapDrag({
     getScrap,
     onDrop: ({ scrapId, releasePositionPx, releaseVelocityPxPerSec, elementSizePx }) => {
-			// Resolve drop target centrally
+			// Resolve drop target (only purge zone now - bin uses continuous collision)
 			const target = resolveScrapDropTarget(releasePositionPx);
 			if (target === 'purgeZone') {
 				// Hide immediately to avoid any visual snap-back
@@ -103,36 +104,8 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
 				});
 				return;
 			}
-			// If released inside bin, collect and credit
-			if (target === 'bin') {
-        // Hide immediately to avoid any visual snap-back
-        setBeingCollectedIds(prev => {
-          const next = new Set(prev);
-          next.add(scrapId);
-          return next;
-        });
-        setSpawnState(prev => {
-          const { spawnState: newState, collectedScrap } = collectScrap(scrapId, prev);
-          if (collectedScrap && updateCredits) {
-            const creditToAdd = calculateScrapValue(collectedScrap);
-            updateCredits(creditToAdd);
-          }
-          return newState;
-        });
-        // Clear immediately after state update completes
-        queueMicrotask(() => {
-          setBeingCollectedIds(prev => {
-            const next = new Set(prev);
-            next.delete(scrapId);
-            return next;
-          });
-        });
-        setCollectedCount(prev => prev + 1);
-        return;
-      }
 
-      // Else, launch airborne and keep visual position consistent with drag center
-      // Keep exactly the same anchoring as drag (left+bottom without transforms)
+      // Launch airborne with physics (bin collection handled by continuous collision)
       const vwPerPx = 1 / (window.innerWidth / 100);
       const leftPx = Math.max(0, releasePositionPx.x - (elementSizePx?.width || 0) / 2);
       const bottomPx = Math.max(0, window.innerHeight - (releasePositionPx.y + (elementSizePx?.height || 0) / 2));
@@ -316,6 +289,48 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     return { xVw, bottomVh: bottomVp };
   }, [getAirborneState, getDragStyle]);
 
+  // Check scrap-bin collisions and collect any overlapping scrap
+  const checkBinCollisions = useCallback(() => {
+    if (!dropZoneRef.current) return;
+    if (!scrapSize) return;
+    
+    const binRect = domRectToRect(dropZoneRef.current.getBoundingClientRect());
+    
+    setSpawnState(prevState => {
+      let newState = prevState;
+      let creditsToAdd = 0;
+      
+      // Check each active scrap for collision with bin
+      for (const scrap of prevState.activeScrap) {
+        if (scrap.isCollected) continue;
+        
+        // Get current rendered position (handles drag override and airborne state)
+        const { xVw, bottomVh } = getRenderedPosition(scrap);
+        const scrapRect = viewportToRect(xVw, bottomVh, scrapSize.widthVw, scrapSize.heightVh);
+        
+        // Check collision
+        if (checkRectOverlap(scrapRect, binRect)) {
+          // Collect this scrap
+          const result = collectScrap(scrap.id, newState);
+          newState = result.spawnState;
+          
+          if (result.collectedScrap && updateCredits) {
+            creditsToAdd += calculateScrapValue(result.collectedScrap);
+          }
+          
+          setCollectedCount(prev => prev + 1);
+        }
+      }
+      
+      // Apply credits once after all collections
+      if (creditsToAdd > 0 && updateCredits) {
+        updateCredits(creditsToAdd);
+      }
+      
+      return newState;
+    });
+  }, [dropZoneRef, scrapSize, getRenderedPosition, updateCredits]);
+
   // Subscribe to global clock for game loop
   useClockSubscription(
     'workscreen-gameloop',
@@ -333,6 +348,9 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       stepAirborne(dtSeconds);
       updateScrapPositions(scaledDeltaTime);
       checkScrapSpawning(scaledTimeRef.current); // Use scaled time for spawn timing
+
+      // Check bin collisions every frame (continuous collision detection)
+      checkBinCollisions();
 
       // Cleanup collected scrap every 6 frames (≈100ms at 60fps)
       if (frameCountRef.current % 6 === 0) {

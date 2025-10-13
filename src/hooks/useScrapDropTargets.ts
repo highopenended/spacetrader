@@ -1,23 +1,23 @@
 /**
  * useScrapDropTargets
  *
- * Central resolver for scrap drop targets (purge zone, scrap bin).
- * Returns a ref for the bin drop zone and a function to resolve the target
- * from a screen-space point. Keeps WorkScreen free of ad-hoc DOM queries.
+ * Central resolver for scrap drop targets (purge zone only).
+ * Returns a ref for the bin (for collision detection) and a function to check purge zone.
+ * Bin collection is handled by continuous collision detection, not drop events.
  */
 
 import { useCallback } from 'react';
 import { useDropZoneBounds } from './useDropZoneBounds';
 import { DOM_IDS } from '../constants/domIds';
 
-export type ScrapDropTarget = 'purgeZone' | 'bin' | null;
+export type ScrapDropTarget = 'purgeZone' | null;
 
 export const useScrapDropTargets = () => {
-  // Reuse existing bounds helper for the bin
-  const { dropZoneRef: binRef, isPointInside: isPointInsideBin } = useDropZoneBounds();
+  // Keep bin ref for collision detection (not for drop events)
+  const { dropZoneRef: binRef } = useDropZoneBounds();
 
   const resolveScrapDropTarget = useCallback((pointPx: { x: number; y: number }): ScrapDropTarget => {
-    // Check purge zones first (higher priority) - work mode, then window
+    // Check purge zones - work mode, then window
     const workModePurgeZoneEl = document.getElementById(DOM_IDS.PURGE_ZONE_WORKMODE);
     if (workModePurgeZoneEl) {
       const rect = workModePurgeZoneEl.getBoundingClientRect();
@@ -44,13 +44,8 @@ export const useScrapDropTargets = () => {
       }
     }
 
-    // Then check bin
-    if (isPointInsideBin(pointPx.x, pointPx.y)) {
-      return 'bin';
-    }
-
     return null;
-  }, [isPointInsideBin]);
+  }, []);
 
   return { binRef, resolveScrapDropTarget };
 };
