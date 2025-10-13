@@ -48,9 +48,6 @@ const DragManager: React.FC<DragManagerProps> = ({
   // Get drag state directly from store
   const dragState = useDragStore(state => state.dragState);
   const isOverTerminalDropZone = useDragStore(state => state.isOverTerminalDropZone);
-  
-  // Non-reactive mouse position getter (doesn't cause re-renders)
-  const getMousePosition = () => useDragStore.getState().mouseTracking.globalMousePosition;
 
   // DragOverlay content helper (purely visual, for ghost image of app being dragged)
   const renderDragOverlay_AppGhost = () => {
@@ -80,42 +77,6 @@ const DragManager: React.FC<DragManagerProps> = ({
     return null;
   };
 
-  const renderDragOverlay_DragNode = () => {
-    // DRAG NODE SYSTEM: Tiny mouse-cursor-sized indicator for window deletion
-    if (dragState.isDragging && dragState.draggedAppType) {
-      const mousePos = getMousePosition();
-      return (
-        <DragOverlay 
-          zIndex={2000}
-          dropAnimation={{ duration: 0, easing: 'ease' }}
-          style={{
-            position: 'fixed' as const,
-            left: mousePos ? mousePos.x - 6 : 0, // Center 12px indicator on cursor
-            top: mousePos ? mousePos.y - 6 : 0,
-            transform: 'none', // Override @dnd-kit's transform
-            pointerEvents: 'none' as const
-          }}
-        >
-          <div
-            className="purge-node-drag-indicator"
-            style={{
-              width: '12px',
-              height: '12px',
-              background: 'linear-gradient(135deg, #ff4444 0%, #aa2222 100%)',
-              border: '1px solid #ff6666',
-              borderRadius: '2px',
-              boxShadow: '0 0 8px rgba(255, 68, 68, 0.6)',
-              opacity: 0.9,
-              pointerEvents: 'none'
-            }}
-            title={`Deleting: ${dragState.draggedWindowTitle}`}
-          />
-        </DragOverlay>
-      );
-    }
-
-    return null;
-  };
 
   // Create DndContext configuration
   const dndContextProps = {
@@ -135,8 +96,8 @@ const DragManager: React.FC<DragManagerProps> = ({
         const appId = active.id;
         const appConfig = apps.find(app => app.id === appId);
         if (appConfig) {
-          // Open window at drop coordinates (centered on drop point)
-          const mousePos = getMousePosition();
+          // Open window at drop coordinates (use event coordinates)
+          const mousePos = useDragStore.getState().mouseTracking.globalMousePosition;
           if (mousePos) {
             openOrCloseWindow(appId, appConfig.name, undefined, mousePos);
           } else {
@@ -151,7 +112,6 @@ const DragManager: React.FC<DragManagerProps> = ({
     <DndContext {...dndContextProps}>
       {children}
       {renderDragOverlay_AppGhost()}
-      {renderDragOverlay_DragNode()}
     </DndContext>
   );
 };

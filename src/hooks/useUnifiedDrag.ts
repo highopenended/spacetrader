@@ -13,7 +13,7 @@
 import { useCallback, useRef, useEffect, useMemo } from 'react';
 import { DOM_IDS } from '../constants/domIds';
 import { useSensor, PointerSensor } from '@dnd-kit/core';
-import { rectIntersection } from '@dnd-kit/core';
+import { rectIntersection, pointerWithin } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { useUIStore, useDragStore } from '../stores';
 
@@ -73,33 +73,20 @@ export const useUnifiedDrag = (dependencies: UnifiedDragDependencies) => {
 
   // ===== COLLISION DETECTION =====
   const customCollisionDetection = useCallback((args: any) => {
-    const collisions = rectIntersection(args);
-    
-    // Block PurgeZone window from detecting its own window purge zone (but allow work mode purge zone)
-    if (args.active?.data?.current?.type === 'window-drag-node' && 
-        args.active?.data?.current?.appType === 'purgeZone') {
-      const filteredCollisions = collisions.filter(c => 
-        c.id !== DOM_IDS.PURGE_ZONE_WINDOW
-      );
-      const terminalDock = filteredCollisions.find(c => c.id === DOM_IDS.TERMINAL_DOCK);
-      if (terminalDock) return [terminalDock];
-      return filteredCollisions;
-    }
-    
-    // Window drag priority
+    // For window drags, use cursor-based collision detection
     if (args.active?.data?.current?.type === 'window-drag-node') {
-      const purgeZone = collisions.find(c => 
-        c.id === DOM_IDS.PURGE_ZONE_WINDOW || c.id === DOM_IDS.PURGE_ZONE_WORKMODE
-      );
-      const terminalDock = collisions.find(c => c.id === DOM_IDS.TERMINAL_DOCK);
+      const cursorCollisions = pointerWithin(args);
       
-      if (purgeZone) return [purgeZone];
-      if (terminalDock) return [terminalDock];
-      return collisions;
+      // Block PurgeZone window from detecting its own window purge zone
+      if (args.active?.data?.current?.appType === 'purgeZone') {
+        return cursorCollisions.filter(c => c.id !== DOM_IDS.PURGE_ZONE_WINDOW);
+      }
+      
+      return cursorCollisions;
     }
     
-    // App list drag - allow all collisions
-    return collisions;
+    // For app list drags, use standard rect-based collision detection
+    return rectIntersection(args);
   }, []);
 
   // ===== DRAG HANDLERS =====
