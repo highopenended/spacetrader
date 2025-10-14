@@ -76,7 +76,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     stepAirborne,
     launchAirborneFromRelease,
     getHorizontalVelocity,
-    getVelocity,
+    getAveragedVelocity,
     setVelocity,
     adjustPosition
   } = useScrapPhysics();
@@ -377,8 +377,16 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
               if (!isAirborne(scrap.id)) return; // Only check airborne scrap
               
               const { xVw, bottomVh } = getRenderedPosition(scrap);
-              const velocity = getVelocity(scrap.id);
+              
+              // Use AVERAGED velocity over last 5 frames for stable, accurate collision response
+              const velocity = getAveragedVelocity(scrap.id);
               if (!velocity) return;
+              
+              // Get previous position for swept collision detection
+              const airborneState = getAirborneState(scrap.id);
+              const prevBottomVh = airborneState?.prevYVp !== undefined
+                ? SCRAP_BASELINE_BOTTOM_VP + airborneState.prevYVp
+                : undefined;
               
               const collision = checkBarrierCollision(
                 xVw,
@@ -386,29 +394,36 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
                 scrapSize.widthVw,
                 scrapSize.heightVh,
                 velocity,
-                barrier
+                barrier,
+                prevBottomVh
               );
               
               if (collision.collided) {
-                // Push scrap out of barrier along collision normal
-                // Normal is in VW/VH units, penetration is in same mixed units
-                const correctionXVw = collision.normal.x * collision.penetration;
-                const correctionYVh = collision.normal.y * collision.penetration;
-                
-                // Update X position (horizontal in VW)
-                const newX = scrap.x + correctionXVw;
-                newState = {
-                  ...newState,
-                  activeScrap: newState.activeScrap.map(s => 
-                    s.id === scrap.id ? { ...s, x: newX } : s
-                  )
-                };
-                
-                // Update Y position (vertical in VP for airborne system)
-                // Convert VH to VP: VP uses viewport-min as base
-                const minDimension = Math.min(window.innerWidth, window.innerHeight);
-                const correctionYVp = (correctionYVh / 100) * window.innerHeight / minDimension * 100;
-                adjustPosition(scrap.id, correctionYVp);
+                // If swept collision provided a corrected position, use it directly
+                if (collision.correctedPositionVh !== undefined) {
+                  // Swept collision: place scrap at the collision point
+                  const correctedYVp = collision.correctedPositionVh - SCRAP_BASELINE_BOTTOM_VP;
+                  adjustPosition(scrap.id, correctedYVp - (airborneState?.yVp || 0));
+                } else {
+                  // Standard collision: push scrap out along normal
+                  const correctionXVw = collision.normal.x * collision.penetration;
+                  const correctionYVh = collision.normal.y * collision.penetration;
+                  
+                  // Update X position (horizontal in VW)
+                  const newX = scrap.x + correctionXVw;
+                  newState = {
+                    ...newState,
+                    activeScrap: newState.activeScrap.map(s => 
+                      s.id === scrap.id ? { ...s, x: newX } : s
+                    )
+                  };
+                  
+                  // Update Y position (vertical in VP for airborne system)
+                  // Convert VH to VP: VP uses viewport-min as base
+                  const minDimension = Math.min(window.innerWidth, window.innerHeight);
+                  const correctionYVp = (correctionYVh / 100) * window.innerHeight / minDimension * 100;
+                  adjustPosition(scrap.id, correctionYVp);
+                }
                 
                 // Apply reflected velocity
                 setVelocity(scrap.id, collision.newVelocity.vx, collision.newVelocity.vy);
@@ -447,8 +462,8 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       {
         id: 'test-barrier-1',
         position: {
-          xVw: 50,        // Center horizontally
-          bottomVh: 40    // Middle of screen vertically
+          xVw: 30,        // Left side of screen
+          bottomVh: 25    // Lower on screen for easier testing
         },
         width: 20,        // 20vw wide
         height: 0.5,      // 0.5vw thick

@@ -34,5 +34,6 @@ export interface BarrierCollision {
   normal: { x: number; y: number }; // Surface normal vector (unit vector)
   penetration: number;             // How far scrap penetrated (vp units)
   newVelocity: { vx: number; vy: number }; // Reflected velocity (vp/s)
+  correctedPositionVh?: number;    // If swept collision, the Y position to place scrap at
 }
 

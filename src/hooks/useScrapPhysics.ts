@@ -15,6 +15,8 @@ export interface AirborneState {
   yVp: number; // vertical offset above baseline (vp). 0 == baseline
   vyVpPerSec: number;
   vxVpPerSec: number;
+  prevYVp?: number; // Previous Y position (for swept collision detection)
+  velocityHistory?: Array<{ vx: number; vy: number }>; // Last few frames of velocity for stable collision response
   gravityMultiplier?: number; // Custom gravity multiplier for this scrap
   momentumMultiplier?: number; // Custom momentum multiplier for this scrap
 }
@@ -25,6 +27,7 @@ export interface UseScrapPhysicsApi {
   isAirborne: (scrapId: string) => boolean;
   getHorizontalVelocity: (scrapId: string) => number;
   getVelocity: (scrapId: string) => { vx: number; vy: number } | null;
+  getAveragedVelocity: (scrapId: string) => { vx: number; vy: number } | null;
 
   // Commands
   launchAirborneFromRelease: (
@@ -57,6 +60,22 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
   const getVelocity = useCallback((scrapId: string) => {
     const state = statesRef.current.get(scrapId);
     if (!state) return null;
+    return { vx: state.vxVpPerSec, vy: state.vyVpPerSec };
+  }, []);
+
+  const getAveragedVelocity = useCallback((scrapId: string) => {
+    const state = statesRef.current.get(scrapId);
+    if (!state) return null;
+    
+    // If we have velocity history, average it for more stable collision response
+    if (state.velocityHistory && state.velocityHistory.length > 0) {
+      const history = state.velocityHistory;
+      const avgVx = history.reduce((sum, v) => sum + v.vx, 0) / history.length;
+      const avgVy = history.reduce((sum, v) => sum + v.vy, 0) / history.length;
+      return { vx: avgVx, vy: avgVy };
+    }
+    
+    // Fallback to current velocity
     return { vx: state.vxVpPerSec, vy: state.vyVpPerSec };
   }, []);
 
@@ -145,6 +164,9 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
       const gravityMultiplier = state.gravityMultiplier || 1.0;
       const effectiveGravity = GRAVITY_VP_PER_S2 * gravityMultiplier;
 
+      // Store previous Y for swept collision detection
+      const prevY = state.yVp;
+
       // Integrate
       let vy = state.vyVpPerSec + effectiveGravity * dtSeconds;
       vy = clamp(vy, MAX_DOWNWARD_SPEED_VP_PER_S, MAX_UPWARD_SPEED_VP_PER_S);
@@ -163,6 +185,7 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
           yVp: 0, 
           vyVpPerSec: 0, 
           vxVpPerSec: 0,
+          prevYVp: prevY,
           gravityMultiplier: state.gravityMultiplier,
           momentumMultiplier: state.momentumMultiplier
         });
@@ -171,7 +194,18 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
       }
 
       if (y !== state.yVp || vy !== state.vyVpPerSec) {
-        statesRef.current.set(id, { ...state, yVp: y, vyVpPerSec: vy });
+        // Update velocity history (keep last 5 frames for averaging)
+        const newHistory = state.velocityHistory || [];
+        newHistory.push({ vx: state.vxVpPerSec, vy: vy });
+        if (newHistory.length > 5) newHistory.shift();
+        
+        statesRef.current.set(id, { 
+          ...state, 
+          yVp: y, 
+          vyVpPerSec: vy, 
+          prevYVp: prevY,
+          velocityHistory: newHistory
+        });
         changed = true;
       }
     });
@@ -192,7 +226,8 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
       getAirborneState, 
       isAirborne, 
       getHorizontalVelocity, 
-      getVelocity, 
+      getVelocity,
+      getAveragedVelocity, 
       launchAirborneFromRelease, 
       setVelocity,
       adjustPosition, 
@@ -200,7 +235,7 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
       stepAirborne, 
       consumeHorizontalDeltas 
     }),
-    [consumeHorizontalDeltas, getAirborneState, getHorizontalVelocity, getVelocity, isAirborne, landScrap, launchAirborneFromRelease, setVelocity, adjustPosition, stepAirborne]
+    [consumeHorizontalDeltas, getAirborneState, getHorizontalVelocity, getVelocity, getAveragedVelocity, isAirborne, landScrap, launchAirborneFromRelease, setVelocity, adjustPosition, stepAirborne]
   );
 };
 
