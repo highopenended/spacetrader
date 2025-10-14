@@ -24,6 +24,7 @@ export interface UseScrapPhysicsApi {
   getAirborneState: (scrapId: string) => AirborneState | undefined;
   isAirborne: (scrapId: string) => boolean;
   getHorizontalVelocity: (scrapId: string) => number;
+  getVelocity: (scrapId: string) => { vx: number; vy: number } | null;
 
   // Commands
   launchAirborneFromRelease: (
@@ -33,6 +34,8 @@ export interface UseScrapPhysicsApi {
     customGravityMultiplier?: number,
     customMomentumMultiplier?: number
   ) => void;
+  setVelocity: (scrapId: string, vxVpPerSec: number, vyVpPerSec: number) => void;
+  adjustPosition: (scrapId: string, deltaYVp: number) => void;
   landScrap: (scrapId: string) => void;
 
   // Integration step (call from rAF): returns true if any state changed
@@ -50,6 +53,12 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
   const getAirborneState = useCallback((scrapId: string) => statesRef.current.get(scrapId), []);
   const isAirborne = useCallback((scrapId: string) => !!statesRef.current.get(scrapId)?.isAirborne, []);
   const getHorizontalVelocity = useCallback((scrapId: string) => statesRef.current.get(scrapId)?.vxVpPerSec || 0, []);
+  
+  const getVelocity = useCallback((scrapId: string) => {
+    const state = statesRef.current.get(scrapId);
+    if (!state) return null;
+    return { vx: state.vxVpPerSec, vy: state.vyVpPerSec };
+  }, []);
 
   const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
 
@@ -81,6 +90,35 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
     },
     []
   );
+
+  const setVelocity = useCallback((scrapId: string, vxVpPerSec: number, vyVpPerSec: number) => {
+    const state = statesRef.current.get(scrapId);
+    if (!state || !state.isAirborne) return;
+    
+    // Apply velocity clamping
+    const clampedVx = clamp(vxVpPerSec, -MAX_HORIZONTAL_SPEED_VP_PER_S, MAX_HORIZONTAL_SPEED_VP_PER_S);
+    const clampedVy = clamp(vyVpPerSec, MAX_DOWNWARD_SPEED_VP_PER_S, MAX_UPWARD_SPEED_VP_PER_S);
+    
+    statesRef.current.set(scrapId, {
+      ...state,
+      vxVpPerSec: clampedVx,
+      vyVpPerSec: clampedVy
+    });
+    setVersion(v => v + 1);
+  }, []);
+
+  const adjustPosition = useCallback((scrapId: string, deltaYVp: number) => {
+    const state = statesRef.current.get(scrapId);
+    if (!state || !state.isAirborne) return;
+    
+    const newY = Math.max(0, state.yVp + deltaYVp);
+    
+    statesRef.current.set(scrapId, {
+      ...state,
+      yVp: newY
+    });
+    setVersion(v => v + 1);
+  }, []);
 
   const landScrap = useCallback((scrapId: string) => {
     const s = statesRef.current.get(scrapId);
@@ -150,8 +188,19 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
   }, []);
 
   return useMemo(
-    () => ({ getAirborneState, isAirborne, getHorizontalVelocity, launchAirborneFromRelease, landScrap, stepAirborne, consumeHorizontalDeltas }),
-    [consumeHorizontalDeltas, getAirborneState, getHorizontalVelocity, isAirborne, landScrap, launchAirborneFromRelease, stepAirborne] // Only depend on version to trigger re-renders when state changes
+    () => ({ 
+      getAirborneState, 
+      isAirborne, 
+      getHorizontalVelocity, 
+      getVelocity, 
+      launchAirborneFromRelease, 
+      setVelocity,
+      adjustPosition, 
+      landScrap, 
+      stepAirborne, 
+      consumeHorizontalDeltas 
+    }),
+    [consumeHorizontalDeltas, getAirborneState, getHorizontalVelocity, getVelocity, isAirborne, landScrap, launchAirborneFromRelease, setVelocity, adjustPosition, stepAirborne]
   );
 };
 

@@ -1,0 +1,7 @@
+.barrier {
+  pointer-events: none;
+  user-select: none;
+  z-index: 99; /* Below scrap (101) but above assembly line (100) */
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+}
+

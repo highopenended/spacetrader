@@ -16,3 +16,4 @@ export { useQuickBarStore } from './quickBarStore';
 export { useDragStore } from './dragStore';
 export { useAnchorsStore } from './anchorsStore';
 export { useClockStore } from './clockStore';
+export { useBarrierStore } from './barrierStore';

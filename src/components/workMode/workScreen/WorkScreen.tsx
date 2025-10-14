@@ -23,9 +23,11 @@ import { MutatorRegistry } from '../../../constants/mutatorRegistry';
 import { DOM_IDS } from '../../../constants/domIds';
 import { ScrapRegistry } from '../../../constants/scrapRegistry';
 import WorkModePurgeZone from '../workModePurgeZone/WorkModePurgeZone';
-import { useGameStore, useUpgradesStore, useAnchorsStore } from '../../../stores';
+import { useGameStore, useUpgradesStore, useAnchorsStore, useBarrierStore } from '../../../stores';
 import { Anchor } from '../../../stores/anchorsStore';
 import { checkRectOverlap, viewportToRect, domRectToRect } from '../../../utils/collisionUtils';
+import { checkBarrierCollision } from '../../../utils/barrierCollisionUtils';
+import Barrier from '../barrier/Barrier';
 
 interface WorkScreenProps {
   updateCredits?: (amount: number) => void;
@@ -39,6 +41,16 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   // Get anchors store actions for DumpsterVision overlay
   const setAnchors = useAnchorsStore(state => state.setAnchors);
   const clearAnchors = useAnchorsStore(state => state.clearAnchors);
+  
+  // Get barrier store actions (use version for reactive updates, not getAllBarriers)
+  const barriersVersion = useBarrierStore(state => state.version);
+  const setBarriers = useBarrierStore(state => state.setBarriers);
+  
+  // Get barriers for rendering (memoized, only updates when version changes)
+  const barriers = useMemo(() => {
+    return useBarrierStore.getState().getAllBarriers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [barriersVersion]);
   
   // Timer display state
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
@@ -63,7 +75,10 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     getAirborneState,
     stepAirborne,
     launchAirborneFromRelease,
-    getHorizontalVelocity
+    getHorizontalVelocity,
+    getVelocity,
+    setVelocity,
+    adjustPosition
   } = useScrapPhysics();
 
   // Helper function to get scrap object
@@ -349,6 +364,62 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       updateScrapPositions(scaledDeltaTime);
       checkScrapSpawning(scaledTimeRef.current); // Use scaled time for spawn timing
 
+      // Check barrier collisions for airborne scrap (after physics, before bin)
+      if (scrapSize) {
+        const activeBarriers = useBarrierStore.getState().getAllBarriers();
+        for (const barrier of activeBarriers) {
+          if (!barrier.enabled) continue;
+          
+          setSpawnState(prevState => {
+            let newState = prevState;
+            
+            prevState.activeScrap.forEach(scrap => {
+              if (!isAirborne(scrap.id)) return; // Only check airborne scrap
+              
+              const { xVw, bottomVh } = getRenderedPosition(scrap);
+              const velocity = getVelocity(scrap.id);
+              if (!velocity) return;
+              
+              const collision = checkBarrierCollision(
+                xVw,
+                bottomVh,
+                scrapSize.widthVw,
+                scrapSize.heightVh,
+                velocity,
+                barrier
+              );
+              
+              if (collision.collided) {
+                // Push scrap out of barrier along collision normal
+                // Normal is in VW/VH units, penetration is in same mixed units
+                const correctionXVw = collision.normal.x * collision.penetration;
+                const correctionYVh = collision.normal.y * collision.penetration;
+                
+                // Update X position (horizontal in VW)
+                const newX = scrap.x + correctionXVw;
+                newState = {
+                  ...newState,
+                  activeScrap: newState.activeScrap.map(s => 
+                    s.id === scrap.id ? { ...s, x: newX } : s
+                  )
+                };
+                
+                // Update Y position (vertical in VP for airborne system)
+                // Convert VH to VP: VP uses viewport-min as base
+                const minDimension = Math.min(window.innerWidth, window.innerHeight);
+                const correctionYVp = (correctionYVh / 100) * window.innerHeight / minDimension * 100;
+                adjustPosition(scrap.id, correctionYVp);
+                
+                // Apply reflected velocity
+                setVelocity(scrap.id, collision.newVelocity.vx, collision.newVelocity.vy);
+              }
+            });
+            
+            return newState;
+          });
+        }
+      }
+
       // Check bin collisions every frame (continuous collision detection)
       checkBinCollisions();
 
@@ -369,6 +440,25 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       name: 'WorkScreen Game Loop'
     }
   );
+
+  // Initialize test barrier on mount
+  useEffect(() => {
+    setBarriers([
+      {
+        id: 'test-barrier-1',
+        position: {
+          xVw: 50,        // Center horizontally
+          bottomVh: 40    // Middle of screen vertically
+        },
+        width: 20,        // 20vw wide
+        height: 0.5,      // 0.5vw thick
+        rotation: 0,      // Flat horizontal barrier
+        restitution: 0.7, // 70% bounce
+        friction: 0.2,    // Low friction
+        enabled: true
+      }
+    ]);
+  }, [setBarriers]);
 
   // Clear anchors when component unmounts
   useEffect(() => {
@@ -483,6 +573,11 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       
       {/* Conditional work mode purge zone */}
       {showWorkModePurgeZone && <WorkModePurgeZone />}
+      
+      {/* Render barriers */}
+      {barriers.map((barrier) => (
+        <Barrier key={barrier.id} barrier={barrier} />
+      ))}
       
       {/* Render active scrap objects */}
       {scrapItems.map((item) => (
