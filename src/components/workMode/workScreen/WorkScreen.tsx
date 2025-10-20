@@ -457,36 +457,36 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   );
 
   // Initialize test barrier on mount
-  useEffect(() => {
-    setBarriers([
-      {
-        id: 'test-barrier-1',
-        position: {
-          xVw: 30,        // Left side of screen
-          bottomVh: 25    // Lower on screen for easier testing
-        },
-        width: 20,        // 20vw wide
-        height: 0.5,      // 0.5vw thick
-        rotation: 15,      // Flat horizontal barrier
-        restitution: 0.7, // 70% bounce
-        friction: 0.2,    // Low friction
-        enabled: true
-      },
-      {
-        id: 'test-barrier-2',
-        position: {
-          xVw: 60,        // Left side of screen
-          bottomVh: 45    // Lower on screen for easier testing
-        },
-        width: 20,        // 20vw wide
-        height: 0.5,      // 0.5vw thick
-        rotation: -15,     // Slight upward angle
-        restitution: 0.9, // Very high bounce
-        friction: 0.1,    // Low friction
-        enabled: true
-      },
-    ]);
-  }, [setBarriers]);
+  // useEffect(() => {
+  //   setBarriers([
+  //     {
+  //       id: 'test-barrier-1',
+  //       position: {
+  //         xVw: 30,        // Left side of screen
+  //         bottomVh: 25    // Lower on screen for easier testing
+  //       },
+  //       width: 20,        // 20vw wide
+  //       height: 0.5,      // 0.5vw thick
+  //       rotation: 15,      // Flat horizontal barrier
+  //       restitution: 0.7, // 70% bounce
+  //       friction: 0.2,    // Low friction
+  //       enabled: true
+  //     },
+  //     {
+  //       id: 'test-barrier-2',
+  //       position: {
+  //         xVw: 60,        // Left side of screen
+  //         bottomVh: 45    // Lower on screen for easier testing
+  //       },
+  //       width: 20,        // 20vw wide
+  //       height: 0.5,      // 0.5vw thick
+  //       rotation: -15,     // Slight upward angle
+  //       restitution: 0.9, // Very high bounce
+  //       friction: 0.1,    // Low friction
+  //       enabled: true
+  //     },
+  //   ]);
+  // }, [setBarriers]);
 
   // Clear anchors when component unmounts
   useEffect(() => {

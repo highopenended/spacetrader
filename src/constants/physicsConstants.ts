@@ -85,30 +85,67 @@ export const DEFAULT_MANIPULATOR_MAX_LOAD = 4.5;
 export const DEFAULT_SCRAP_BASE_MASS = 1;
 
 /**
- * Manipulator Cursor Following Rate
+ * @deprecated - No longer used with spring-based physics model
+ * Manipulator Cursor Following Rate (OBSOLETE)
  * 
- * Multiplier for the lag/ineffectiveness when effectiveness is below 100%.
- * Controls how quickly you can create distance between cursor and scrap.
- * At 100% effectiveness, this has NO effect (scrap always follows exactly).
- * Below 100% effectiveness, this scales the lag amount:
- * - 1.0: Normal lag (ineffectiveness as calculated by physics)
- * - 2.0: Double lag (easier to put distance between cursor and scrap)
- * - 0.5: Half lag (harder to put distance, more responsive feel)
- * - 0.0: No lag from ineffectiveness (always follows cursor exactly, ignores effectiveness)
+ * Previously controlled lag scaling for position-based drag system.
+ * Replaced by spring-damper physics (SPRING_STIFFNESS + DRAG_DAMPING).
+ * Will be removed in future cleanup.
  */
 export const MANIPULATOR_CURSOR_FOLLOW_RATE = 2;
 
 /**
- * Manipulator Gap Closure Rate
+ * @deprecated - No longer used with spring-based physics model
+ * Manipulator Gap Closure Rate (OBSOLETE)
  * 
- * Base rate at which the manipulator pulls scrap toward cursor position (per second).
- * This creates a distance-based attraction that continues even when cursor stops.
- * Controls how quickly scrap catches up when you hold cursor still.
- * - Higher values (10-15): Fast catch-up, minimal visible lag
- * - Lower values (3-5): Slow catch-up, pronounced lag
- * - 8.0: Balanced catch-up speed
- * Scaled by manipulator effectiveness and distance.
+ * Previously controlled distance-based attraction in position-based drag system.
+ * Replaced by spring force in spring-damper physics (SPRING_STIFFNESS).
+ * Will be removed in future cleanup.
  */
 export const MANIPULATOR_GAP_CLOSURE_RATE = 6.0;
+
+/**
+ * Maximum Scrap Drag Speed
+ * 
+ * Speed limit for dragged scrap movement to prevent tunneling and physics breakage.
+ * Applied to velocity magnitude during integration, acting as a safety ceiling.
+ * - Mainly constrains light/high-effectiveness scrap during rapid cursor movements
+ * - Heavy/low-effectiveness scrap naturally stays below limit due to physics
+ * - Higher values (3000+): More permissive, allows very fast throws
+ * - Lower values (600-1500): Tighter control, more predictable interactions
+ * - 3000: High speed - very responsive, allows dramatic swings
+ */
+export const MAX_SCRAP_DRAG_SPEED_PX_PER_S = 3000;
+
+/**
+ * Spring Stiffness (Manipulator Pull Strength)
+ * 
+ * How strongly the manipulator pulls scrap toward cursor position (force per pixel of distance).
+ * This is the "spring constant" in the spring-damper physics model.
+ * - Higher values (25-40): Very strong pull, tight following, minimal swing
+ * - Medium values (15-25): Strong pull, responsive with some momentum
+ * - Lower values (8-12): Balanced feel, noticeable momentum with control
+ * - Very low (3-6): Loose feel, dramatic pendulum swings
+ * - 20.0: Strong spring - fast response with controlled momentum
+ * 
+ * Scaled by manipulator effectiveness: low effectiveness = weak spring = heavy swinging
+ */
+export const SPRING_STIFFNESS = 20.0;
+
+/**
+ * Drag Damping (Velocity Decay)
+ * 
+ * Per-frame velocity damping factor to prevent infinite oscillation.
+ * Applied as: velocity *= DRAG_DAMPING each frame
+ * - 1.0: No damping (would oscillate forever)
+ * - 0.95-0.98: Very light damping, long momentum trails
+ * - 0.90-0.94: Light damping, maintains velocity well
+ * - 0.85-0.90: Balanced damping, natural feel
+ * - 0.7-0.8: Heavy damping, quick stops
+ * - 0.93: Light damping - maintains momentum, responsive feel
+ * 
+ * Works with spring stiffness to create natural spring-damper behavior.
+ */
+export const DRAG_DAMPING = 0.93;
 
 

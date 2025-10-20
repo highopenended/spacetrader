@@ -8,6 +8,7 @@
 
 import React from 'react';
 import { useDragStore, useGameStore } from '../../stores';
+import { MAX_SCRAP_DRAG_SPEED_PX_PER_S } from '../../constants/physicsConstants';
 import './MouseDebugReadout.css';
 
 interface MouseDebugReadoutProps {
@@ -47,6 +48,20 @@ const MouseDebugReadout: React.FC<MouseDebugReadoutProps> = ({
   // Check if we have grabbed object physics data
   const hasPhysicsData = grabbedObject.scrapId && grabbedObject.effectiveLoadResult;
   const effectiveLoad = grabbedObject.effectiveLoadResult;
+  
+  // Calculate current drag speed from velocity
+  const currentSpeed = isDragging && grabbedObject.velocity
+    ? Math.sqrt(grabbedObject.velocity.vx ** 2 + grabbedObject.velocity.vy ** 2)
+    : 0;
+  const speedPercentage = (currentSpeed / MAX_SCRAP_DRAG_SPEED_PX_PER_S) * 100;
+  
+  // Calculate distance from cursor to grabbed object (for spring physics debugging)
+  const cursorDistance = isDragging && globalMousePosition && grabbedObject.scrapId
+    ? Math.sqrt(
+        (globalMousePosition.x - grabbedObject.position.x) ** 2 + 
+        (globalMousePosition.y - grabbedObject.position.y) ** 2
+      )
+    : 0;
 
   return (
     <div className={`mouse-debug-readout mouse-debug-readout--${position}`}>
@@ -85,6 +100,26 @@ const MouseDebugReadout: React.FC<MouseDebugReadoutProps> = ({
           <span className="metric-label">Drag:</span>
           <span className={`metric-value ${isDragging ? 'metric-active' : ''}`}>
             {isDragging ? 'YES' : 'NO'}
+          </span>
+        </div>
+        
+        <div className="mouse-debug-readout__metric">
+          <span className="metric-label">Spd:</span>
+          <span className={`metric-value ${
+            speedPercentage > 90 ? 'metric-warning' : 
+            speedPercentage > 70 ? 'metric-active' : ''
+          }`}>
+            {isDragging ? `${currentSpeed.toFixed(0)}` : '---'}
+          </span>
+        </div>
+        
+        <div className="mouse-debug-readout__metric">
+          <span className="metric-label">Dist:</span>
+          <span className={`metric-value ${
+            cursorDistance > 100 ? 'metric-warning' : 
+            cursorDistance > 50 ? 'metric-active' : ''
+          }`}>
+            {isDragging ? `${cursorDistance.toFixed(0)}` : '---'}
           </span>
         </div>
         

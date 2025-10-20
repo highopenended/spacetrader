@@ -252,12 +252,81 @@ export const calculateEffectiveLoad = (
 };
 
 /**
- * Calculate follow speed multiplier based on manipulator effectiveness
+ * Calculate total force vector from all active fields
  * 
- * Determines how quickly the grabbed scrap follows the cursor.
- * - 100% effectiveness = instant follow (multiplier 1.0)
- * - 0% effectiveness = no movement (multiplier 0.0)
- * - Partial effectiveness = scaled movement
+ * Converts global and point source fields into a combined force vector (Fx, Fy).
+ * This is used during physics integration to apply environmental forces like gravity.
+ * 
+ * @param context - Physics context with all active fields
+ * @param position - Current position of the object (px)
+ * @returns Force vector {fx, fy} in pixels (force = strength * mass for global fields)
+ */
+export const calculateFieldForces = (
+  context: PhysicsContext,
+  position: { x: number; y: number }
+): { fx: number; fy: number } => {
+  let fx = 0;
+  let fy = 0;
+  
+  // Apply global fields (like gravity)
+  // Screen coordinates: +X is right, +Y is down
+  for (const field of context.globalFields) {
+    const forceMagnitude = field.strength * context.scrapMass;
+    
+    switch (field.direction) {
+      case 'down':
+        fy += forceMagnitude;  // Positive Y is down
+        break;
+      case 'up':
+        fy -= forceMagnitude;  // Negative Y is up
+        break;
+      case 'right':
+        fx += forceMagnitude;  // Positive X is right
+        break;
+      case 'left':
+        fx -= forceMagnitude;  // Negative X is left
+        break;
+    }
+  }
+  
+  // Apply point source fields (like magnets)
+  for (const field of context.pointSourceFields) {
+    // Calculate distance from field source
+    const dx = field.position.x - position.x;
+    const dy = field.position.y - position.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Check max range
+    if (field.maxRange && distance > field.maxRange) {
+      continue;
+    }
+    
+    // Prevent division by zero
+    if (distance < 1) {
+      continue;
+    }
+    
+    // Calculate force magnitude with falloff
+    const forceMagnitude = field.strength / Math.pow(distance, field.falloffExponent);
+    
+    // Normalize direction vector and apply force
+    // Positive strength = attractor (pulls toward source)
+    // Negative strength = repulsor (pushes away from source)
+    fx += (dx / distance) * forceMagnitude;
+    fy += (dy / distance) * forceMagnitude;
+  }
+  
+  return { fx, fy };
+};
+
+/**
+ * @deprecated - No longer used with spring-based physics model
+ * Calculate follow speed multiplier based on manipulator effectiveness (OBSOLETE)
+ * 
+ * Previously used in position-based drag system to scale cursor following.
+ * Replaced by spring force scaling in spring-damper physics model.
+ * Effectiveness now directly scales spring stiffness instead.
+ * Will be removed in future cleanup.
  * 
  * @param manipulatorEffectiveness - Effectiveness value from 0 to 1
  * @returns Speed multiplier from 0 to 1

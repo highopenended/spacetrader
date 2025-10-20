@@ -1,12 +1,20 @@
 /**
  * useScrapDrag
  *
- * Physics-based scrap drag management with field calculations.
- * - Tracks which scrap is being dragged via centralized dragStore
- * - Separates cursor position from grabbed object position for realistic physics
+ * Force-based spring physics for scrap dragging with realistic momentum.
+ * - Uses spring-damper model: scrap acts like it's attached to cursor by elastic string
+ * - Maintains persistent velocity state for natural momentum and pendulum effects
  * - Calculates effective load based on mass, manipulator strength, and active fields
+ * - Spring force scales with effectiveness: low effectiveness = weak spring = heavy swinging
  * - Exposes props for draggable elements and a style helper when dragging
  * - Calls an onDrop callback with release position and velocity from physics system
+ *
+ * Physics Model:
+ * - Spring force pulls scrap toward cursor (proportional to distance × stiffness × effectiveness)
+ * - Damping force opposes velocity (prevents infinite oscillation)
+ * - Forces → acceleration → velocity integration → position integration
+ * - Speed limit applied to velocity magnitude (prevents tunneling)
+ * - Result: Natural pendulum swings when direction changes rapidly
  *
  * Anchoring model (critical for no-jump drops):
  * - We position the dragged element using left (px) and bottom (px) with transform: none
@@ -18,10 +26,10 @@
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Z_LAYERS } from '../constants/zLayers';
-import { VELOCITY_MIN_THRESHOLD_PX_PER_S, MANIPULATOR_CURSOR_FOLLOW_RATE, MANIPULATOR_GAP_CLOSURE_RATE } from '../constants/physicsConstants';
+import { VELOCITY_MIN_THRESHOLD_PX_PER_S, SPRING_STIFFNESS, DRAG_DAMPING, MAX_SCRAP_DRAG_SPEED_PX_PER_S } from '../constants/physicsConstants';
 import { useClockSubscription } from './useClockSubscription';
 import { useDragStore, useGameStore } from '../stores';
-import { calculateScrapMass, calculateEffectiveLoad, calculateFollowSpeed } from '../utils/physicsUtils';
+import { calculateScrapMass, calculateEffectiveLoad, calculateFieldForces } from '../utils/physicsUtils';
 import { PhysicsContext } from '../types/physicsTypes';
 import { ScrapObject } from '../types/scrapTypes';
 
@@ -91,16 +99,22 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     // Initialize cursor position tracking for delta calculations
     previousCursorPosRef.current = { x: startClientX, y: startClientY };
     
-    // Grab object in store with physics tracking
-    grabObject(scrap, { x: startClientX, y: startClientY }, mass);
+    // Get scrap's actual current position (center point) from DOM
+    // This prevents instant teleport - physics will close the gap naturally
+    let scrapCenterX = startClientX;
+    let scrapCenterY = startClientY;
     
-    // Track element size for rendering
     if (targetEl) {
       const rect = targetEl.getBoundingClientRect();
+      scrapCenterX = rect.left + rect.width / 2;
+      scrapCenterY = rect.top + rect.height / 2;
       elementSizeRef.current = { width: rect.width, height: rect.height };
     } else {
       elementSizeRef.current = { width: 24, height: 24 };
     }
+    
+    // Grab object at its actual position (not cursor position!)
+    grabObject(scrap, { x: scrapCenterX, y: scrapCenterY }, mass);
   }, [updateGlobalMousePosition, grabObject, getScrap]);
 
   const endDrag = useCallback(() => {
@@ -233,9 +247,14 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       const dy = cursorPos.y - currentGrabbedObject.position.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       
-      // If very close to cursor and not moving, snap to it
+      // If very close to cursor, not moving, and velocity is low, snap to it
+      // This prevents jitter when holding still and provides tight control at rest
       const cursorSpeed = Math.sqrt(cursorDeltaX * cursorDeltaX + cursorDeltaY * cursorDeltaY);
-      if (distance < 2 && cursorSpeed < 1) {
+      const scrapSpeed = Math.sqrt(
+        currentGrabbedObject.velocity.vx * currentGrabbedObject.velocity.vx + 
+        currentGrabbedObject.velocity.vy * currentGrabbedObject.velocity.vy
+      );
+      if (distance < 2 && cursorSpeed < 1 && scrapSpeed < 10) {
         updateGrabbedObjectPosition(
           cursorPos,
           { vx: 0, vy: 0 },
@@ -271,43 +290,59 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       // Calculate effective load
       const effectiveLoadResult = calculateEffectiveLoad(physicsContext, currentGrabbedObject.position);
       
-      // Calculate follow speed multiplier based on manipulator effectiveness
-      const followSpeed = calculateFollowSpeed(effectiveLoadResult.manipulatorEffectiveness);
+      // === SPRING-DAMPER PHYSICS MODEL ===
+      // Scrap acts like it's attached to cursor by an elastic string
+      // This creates natural momentum and pendulum effects
       
-      // === HYBRID MOVEMENT SYSTEM ===
-      // Two independent components that combine for natural-feeling lag:
+      // Get current velocity from grabbed object state
+      let vx = currentGrabbedObject.velocity.vx;
+      let vy = currentGrabbedObject.velocity.vy;
       
-      // 1. CURSOR DELTA FOLLOWING: Scale cursor movement with adjustable lag
-      //    - At 100% effectiveness: always follows cursor exactly (no lag)
-      //    - Below 100%: lag is scaled by MANIPULATOR_CURSOR_FOLLOW_RATE
-      //    - Rate = 1.0: normal lag, Rate = 2.0: double lag, Rate = 0.5: half lag
-      const ineffectiveness = 1.0 - followSpeed;
-      const scaledIneffectiveness = ineffectiveness * MANIPULATOR_CURSOR_FOLLOW_RATE;
-      const finalFollowRate = 1.0 - scaledIneffectiveness;
-      const deltaMovementX = cursorDeltaX * finalFollowRate;
-      const deltaMovementY = cursorDeltaY * finalFollowRate;
+      // Calculate spring force: F = k * distance * effectiveness
+      // Spring pulls scrap toward cursor, strength proportional to distance
+      // Effectiveness scales spring stiffness (low effectiveness = weak spring = heavy swinging)
+      const effectiveStiffness = SPRING_STIFFNESS * effectiveLoadResult.manipulatorEffectiveness;
+      const springForceX = dx * effectiveStiffness;
+      const springForceY = dy * effectiveStiffness;
       
-      // 2. DISTANCE-BASED ATTRACTION: Independent lerp toward cursor
-      //    - Always pulls scrap toward cursor, even when cursor stops
-      //    - Tunable via MANIPULATOR_GAP_CLOSURE_RATE constant
-      //    - Strength increases with distance (linear relationship)
-      //    - Scaled by effectiveness AND time (framerate-independent)
-      const gapClosureRate = MANIPULATOR_GAP_CLOSURE_RATE * followSpeed * dtSeconds;
-      const closureFactorX = dx * gapClosureRate;
-      const closureFactorY = dy * gapClosureRate;
+      // Calculate field forces (gravity, magnets, etc.)
+      const fieldForces = calculateFieldForces(physicsContext, currentGrabbedObject.position);
       
-      // Combine both movements
-      const newX = currentGrabbedObject.position.x + deltaMovementX + closureFactorX;
-      const newY = currentGrabbedObject.position.y + deltaMovementY + closureFactorY;
+      // Combine all forces
+      const totalForceX = springForceX + fieldForces.fx;
+      const totalForceY = springForceY + fieldForces.fy;
+      
+      // Calculate acceleration: a = F / m
+      const mass = currentGrabbedObject.mass;
+      const accelerationX = totalForceX / mass;
+      const accelerationY = totalForceY / mass;
+      
+      // Integrate velocity: v = v + a * dt
+      vx += accelerationX * dtSeconds;
+      vy += accelerationY * dtSeconds;
+      
+      // Apply damping: v = v * damping (prevents infinite oscillation)
+      vx *= DRAG_DAMPING;
+      vy *= DRAG_DAMPING;
+      
+      // === SPEED LIMITING ===
+      // Clamp velocity magnitude to prevent tunneling and physics breakage
+      const speed = Math.sqrt(vx * vx + vy * vy);
+      if (speed > MAX_SCRAP_DRAG_SPEED_PX_PER_S) {
+        const scale = MAX_SCRAP_DRAG_SPEED_PX_PER_S / speed;
+        vx *= scale;
+        vy *= scale;
+      }
+      
+      // Integrate position: p = p + v * dt
+      const newX = currentGrabbedObject.position.x + vx * dtSeconds;
+      const newY = currentGrabbedObject.position.y + vy * dtSeconds;
       
       // Update cursor position tracking for next frame
       previousCursorPosRef.current = { x: cursorPos.x, y: cursorPos.y };
       
-      // Calculate velocity for release physics (px/s)
-      const velocity = {
-        vx: (newX - currentGrabbedObject.position.x) / dtSeconds,
-        vy: (newY - currentGrabbedObject.position.y) / dtSeconds
-      };
+      // Velocity state to persist for next frame and release physics
+      const velocity = { vx, vy };
       
       // Update grabbed object in store
       updateGrabbedObjectPosition(
