@@ -18,7 +18,8 @@ import { useScrapDropTargets } from '../../../hooks/useScrapDropTargets';
 import { useScrapPhysics } from '../../../hooks/useScrapPhysics';
 import { useScrapDrag } from '../../../hooks/useScrapDrag';
 import { useClockSubscription } from '../../../hooks/useClockSubscription';
-import { SCRAP_BASELINE_BOTTOM_VP, vpFromPx } from '../../../constants/physicsConstants';
+import { SCRAP_BASELINE_BOTTOM_WU } from '../../../constants/physicsConstants';
+import { screenToWorld, worldToScreen, WORLD_HEIGHT } from '../../../constants/cameraConstants';
 import { MutatorRegistry } from '../../../constants/mutatorRegistry';
 import { DOM_IDS } from '../../../constants/domIds';
 import { ScrapRegistry } from '../../../constants/scrapRegistry';
@@ -96,7 +97,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   const [beingCollectedIds, setBeingCollectedIds] = useState<Set<string>>(new Set());
   const { getDraggableProps, getDragStyle, draggedScrapId } = useScrapDrag({
     getScrap,
-    onDrop: ({ scrapId, releasePositionPx, releaseVelocityPxPerSec, elementSizePx }) => {
+    onDrop: ({ scrapId, releasePositionPx, releaseVelocityWuPerSec, elementSizePx }) => {
 			// Resolve drop target (only purge zone now - bin uses continuous collision)
 			const target = resolveScrapDropTarget(releasePositionPx);
 			if (target === 'purgeZone') {
@@ -121,11 +122,21 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
 			}
 
       // Launch airborne with physics (bin collection handled by continuous collision)
-      const vwPerPx = 1 / (window.innerWidth / 100);
+      // Convert release position to world units
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const worldPos = screenToWorld(releasePositionPx.x, releasePositionPx.y, viewportWidth, viewportHeight);
+      
+      // Convert X world position to VW for stream movement (use release X)
+      const vwPerPx = 1 / (viewportWidth / 100);
       const leftPx = Math.max(0, releasePositionPx.x - (elementSizePx?.width || 0) / 2);
-      const bottomPx = Math.max(0, window.innerHeight - (releasePositionPx.y + (elementSizePx?.height || 0) / 2));
       const newXvw = Math.max(0, Math.min(100, leftPx * vwPerPx));
-      const yAboveBaselineVp = Math.max(0, vpFromPx(bottomPx) - SCRAP_BASELINE_BOTTOM_VP);
+      
+      // Calculate Y offset above baseline in world units
+      // World coordinates have +Y DOWN (top=0), but physics needs +Y UP (height above ground)
+      // Convert: worldPos.y=0 (top) → WORLD_HEIGHT from bottom, worldPos.y=WORLD_HEIGHT (bottom) → 0 from bottom
+      const worldYFromBottom = WORLD_HEIGHT - worldPos.y;
+      const yAboveBaselineWu = Math.max(0, worldYFromBottom - SCRAP_BASELINE_BOTTOM_WU);
 
       setSpawnState(prev => ({
         ...prev,
@@ -138,7 +149,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       const gravityMultiplier = isDense ? 1.5 : 1.0;
       const momentumMultiplier = isDense ? 0.3 : 1.0;
 
-      launchAirborneFromRelease(scrapId, releaseVelocityPxPerSec, yAboveBaselineVp, gravityMultiplier, momentumMultiplier);
+      launchAirborneFromRelease(scrapId, releaseVelocityWuPerSec, yAboveBaselineWu, gravityMultiplier, momentumMultiplier);
     }
   });
 
@@ -274,8 +285,14 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     // Defaults from physics/baseline
     let xVw = scrap.x;
     const airborne = getAirborneState(scrap.id);
-    const baseBottomVp = SCRAP_BASELINE_BOTTOM_VP;
-    let bottomVp = airborne?.isAirborne ? baseBottomVp + Math.max(0, airborne.yVp) : baseBottomVp;
+    // Convert world unit baseline to VH for rendering
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const minDimension = Math.min(viewportWidth, viewportHeight);
+    const baseBottomVh = (SCRAP_BASELINE_BOTTOM_WU * minDimension / 10) * (100 / viewportHeight);
+    let bottomVh = airborne?.isAirborne 
+      ? baseBottomVh + ((airborne.yWu * minDimension / 10) * (100 / viewportHeight))
+      : baseBottomVh;
 
     // If dragging, override from drag style (may be px or vw/vh)
     const dragStyle = getDragStyle(scrap.id);
@@ -294,14 +311,14 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       }
 
       if (typeof bottom === 'string') {
-        if (bottom.endsWith('vh')) bottomVp = parseFloat(bottom);
-        else if (bottom.endsWith('px')) bottomVp = parseFloat(bottom) * vhPerPx;
+        if (bottom.endsWith('vh')) bottomVh = parseFloat(bottom);
+        else if (bottom.endsWith('px')) bottomVh = parseFloat(bottom) * vhPerPx;
       } else if (typeof bottom === 'number') {
-        bottomVp = bottom * vhPerPx;
+        bottomVh = bottom * vhPerPx;
       }
     }
 
-    return { xVw, bottomVh: bottomVp };
+    return { xVw, bottomVh: bottomVh };
   }, [getAirborneState, getDragStyle]);
 
   // Check scrap-bin collisions and collect any overlapping scrap
@@ -384,9 +401,14 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
               
               // Get previous position for swept collision detection
               const airborneState = getAirborneState(scrap.id);
-              const prevBottomVh = airborneState?.prevYVp !== undefined
-                ? SCRAP_BASELINE_BOTTOM_VP + airborneState.prevYVp
-                : undefined;
+              let prevBottomVh: number | undefined = undefined;
+              if (airborneState?.prevYWu !== undefined) {
+                // Convert world unit prevY to VH
+                const viewportHeight = window.innerHeight;
+                const minDimension = Math.min(window.innerWidth, window.innerHeight);
+                const prevYOffsetVh = (airborneState.prevYWu * minDimension / 10) * (100 / viewportHeight);
+                prevBottomVh = ((SCRAP_BASELINE_BOTTOM_WU * minDimension / 10) * (100 / viewportHeight)) + prevYOffsetVh;
+              }
               
               const collision = checkBarrierCollision(
                 xVw,
@@ -402,8 +424,13 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
                 // If swept collision provided a corrected position, use it directly
                 if (collision.correctedPositionVh !== undefined) {
                   // Swept collision: place scrap at the collision point
-                  const correctedYVp = collision.correctedPositionVh - SCRAP_BASELINE_BOTTOM_VP;
-                  adjustPosition(scrap.id, correctedYVp - (airborneState?.yVp || 0));
+                  // Convert from VH back to world units for adjustPosition
+                  const viewportHeight = window.innerHeight;
+                  const minDimension = Math.min(window.innerWidth, window.innerHeight);
+                  const baselineBottomVh = (SCRAP_BASELINE_BOTTOM_WU * minDimension / 10) * (100 / viewportHeight);
+                  const correctedYOffsetVh = collision.correctedPositionVh - baselineBottomVh;
+                  const correctedYWu = (correctedYOffsetVh / 100) * viewportHeight / (minDimension / 10);
+                  adjustPosition(scrap.id, correctedYWu - (airborneState?.yWu || 0));
                 } else {
                   // Standard collision: push scrap out along normal
                   const correctionXVw = collision.normal.x * collision.penetration;
@@ -502,15 +529,21 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
       .map((scrap) => {
       const airborne = getAirborneState(scrap.id);
-      const baseBottomVp = SCRAP_BASELINE_BOTTOM_VP;
-      const bottomVp = airborne?.isAirborne ? baseBottomVp + Math.max(0, airborne.yVp) : baseBottomVp;
+      // Convert world unit baseline to VH for rendering
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const minDimension = Math.min(viewportWidth, viewportHeight);
+      const baseBottomVh = (SCRAP_BASELINE_BOTTOM_WU * minDimension / 10) * (100 / viewportHeight);
+      const bottomVh = airborne?.isAirborne 
+        ? baseBottomVh + ((airborne.yWu * minDimension / 10) * (100 / viewportHeight))
+        : baseBottomVh;
       const item: ScrapWithStyle = {
         ...scrap,
         style: {
           // Anchoring model: left (vw) + bottom (vh), transform: none
           left: `${scrap.x}vw`,
           transform: 'none',
-          bottom: `${bottomVp}vh`
+          bottom: `${bottomVh}vh`
         }
       };
       const draggingStyle = getDragStyle(scrap.id);

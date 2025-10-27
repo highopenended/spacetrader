@@ -1,46 +1,102 @@
 /**
  * Physics constants for Work Mode scrap interactions.
- * Units:
- * - All positions/velocities use vp (viewport-min) and vp/s
- * - vp = viewport units based on minimum dimension (width or height)
- * Rationale: unified viewport-relative units keep behavior stable across zoom/resolution and aspect ratio.
+ * 
+ * WORLD UNITS SYSTEM:
+ * - All physics calculations use world units (wu)
+ * - World size: 20w × 10h (width × height)
+ * - Positions: world units (0-20 X, 0-10 Y)
+ * - Velocities: world units per second (wu/s)
+ * - Forces: world units (arbitrary scale matched to mass)
+ * 
+ * Rationale: World units provide consistent physics behavior across all
+ * screen sizes, resolutions, and aspect ratios. The camera system handles
+ * conversion between world units and screen pixels.
+ * 
+ * Coordinate conversion is handled by src/constants/cameraConstants.ts:
+ * - screenToWorld() - converts screen pixels to world coordinates
+ * - worldToScreen() - converts world coordinates to screen pixels
  */
 
 import { GlobalField } from '../types/physicsTypes';
 
-// ===== UNIFIED PHYSICS CONSTANTS (for airborne scrap after release) =====
-// All units use vp (viewport-min) for consistent behavior across aspect ratios
-// NOTE: Old vh/vw constants below are deprecated but kept for reference
+// ===== AIRBORNE PHYSICS CONSTANTS (after release) =====
 
-// Baseline height (vp) for the assembly line; scrap sits at this bottom value when grounded (matches .scrap-item bottom in CSS)
-export const SCRAP_BASELINE_BOTTOM_VP = 12;
+/**
+ * Scrap Baseline Height (world units)
+ * 
+ * Vertical position where grounded scrap sits on the assembly line.
+ * Measured from bottom of world (Y=0) upward.
+ * 
+ * 1.2 wu = 12% of world height (10 wu)
+ */
+export const SCRAP_BASELINE_BOTTOM_WU = 1.2;
 
-// Gravity in vp/s^2 (negative => downward). Tuned for snappy but weighty falls
-export const GRAVITY_VP_PER_S2 = -250;
+/**
+ * Gravity Acceleration (world units per second squared)
+ * 
+ * Downward acceleration applied to airborne scrap.
+ * Negative value = downward direction.
+ * 
+ * -25 wu/s² provides snappy but weighty falls for a 10 wu tall world.
+ */
+export const GRAVITY_WU_PER_S2 = -25;
 
-// Speed caps (vp/s) to avoid unrealistic upward, downward, or horizontal spikes
-export const MAX_UPWARD_SPEED_VP_PER_S = 200;
-export const MAX_DOWNWARD_SPEED_VP_PER_S = -600;
-export const MAX_HORIZONTAL_SPEED_VP_PER_S = 40; // Keep same as original vw limit for balanced throws
+/**
+ * Maximum Upward Velocity (world units per second)
+ * 
+ * Speed cap for upward throws to prevent unrealistic launches.
+ * 
+ * 20 wu/s = can traverse full world height (10 wu) in 0.5 seconds
+ */
+export const MAX_UPWARD_SPEED_WU_PER_S = 20;
 
-// Global throw strength scaling (~20% reduction) for better control/feel
+/**
+ * Maximum Downward Velocity (world units per second)
+ * 
+ * Terminal velocity for falling scrap (negative = downward).
+ * 
+ * -60 wu/s = reasonable terminal velocity for game feel
+ */
+export const MAX_DOWNWARD_SPEED_WU_PER_S = -60;
+
+/**
+ * Maximum Horizontal Velocity (world units per second)
+ * 
+ * Speed cap for horizontal throws to maintain game balance.
+ * 
+ * 4 wu/s = can traverse 20% of world width per second
+ */
+export const MAX_HORIZONTAL_SPEED_WU_PER_S = 4;
+
+/**
+ * Momentum Scale Factor (dimensionless)
+ * 
+ * Global scaling for throw strength. Applied to release velocity
+ * to tune game feel and control.
+ * 
+ * 0.5 = 50% momentum transfer for balanced throwing
+ */
 export const MOMENTUM_SCALE = 0.5;
 
-// Momentum capture thresholds (drag hook): preserve momentum only if release
-// occurs within this window after last meaningful motion (ms)
+/**
+ * Momentum Valid Window (milliseconds)
+ * 
+ * Time window for capturing throw momentum. Only velocities within
+ * this window after last motion are preserved on release.
+ * 
+ * 120 ms prevents stale velocity from being used for throws
+ */
 export const MOMENTUM_VALID_WINDOW_MS = 120;
-// Ignore tiny jitter below this speed (px/s) so "still" releases don't throw
-export const VELOCITY_MIN_THRESHOLD_PX_PER_S = 80;
 
-// Conversion helpers between px and vp (viewport-min units)
-// Uses minimum dimension (width or height) for consistent behavior across aspect ratios
-export const pxPerVp = () => {
-  if (typeof window === 'undefined') return 8; // Fallback for SSR
-  const minDimension = Math.min(window.innerWidth, window.innerHeight);
-  return minDimension / 100;
-};
-export const vpFromPx = (px: number) => px / pxPerVp();
-export const pxFromVp = (vp: number) => vp * pxPerVp();
+/**
+ * Velocity Minimum Threshold (world units per second)
+ * 
+ * Minimum speed threshold for throw detection. Releases slower than
+ * this are treated as stationary drops (zero velocity).
+ * 
+ * 0.8 wu/s filters out micro-jitter and unintentional throws
+ */
+export const VELOCITY_MIN_THRESHOLD_WU_PER_S = 0.8;
 
 // ===== NEW FIELD-BASED PHYSICS CONSTANTS =====
 
@@ -86,51 +142,56 @@ export const DEFAULT_SCRAP_BASE_MASS = 1;
 
 
 
+// ===== DRAG PHYSICS CONSTANTS (during manipulation) =====
+
 /**
- * Maximum Scrap Drag Speed (in viewport units)
+ * Maximum Scrap Drag Speed (world units per second)
  * 
  * Speed limit for dragged scrap movement to prevent tunneling and physics breakage.
  * Applied to velocity magnitude during integration, acting as a safety ceiling.
- * Scaled by viewport size at runtime (maxSpeed * pxPerVp()) for consistent behavior across screen sizes.
+ * 
  * - Mainly constrains light/high-effectiveness scrap during rapid cursor movements
  * - Heavy/low-effectiveness scrap naturally stays below limit due to physics
- * - Higher values (300+): More permissive, allows very fast throws
- * - Lower values (60-150): Tighter control, more predictable interactions
- * - 300: High speed - very responsive, allows dramatic swings
+ * - Higher values (40+): More permissive, allows very fast drags
+ * - Lower values (15-25): Tighter control, more predictable interactions
  * 
- * Note: This is in viewport units. Gets converted to px/s at runtime based on screen size.
+ * 30 wu/s = can traverse 1.5× world width per second (fast but controlled)
  */
-export const MAX_SCRAP_DRAG_SPEED_VP_PER_S = 300;
+export const MAX_SCRAP_DRAG_SPEED_WU_PER_S = 30;
 
 /**
- * Spring Stiffness (Manipulator Pull Strength)
+ * Spring Stiffness (world units)
  * 
- * How strongly the manipulator pulls scrap toward cursor position (force per viewport unit of distance).
+ * How strongly the manipulator pulls scrap toward cursor position.
  * This is the "spring constant" in the spring-damper physics model.
- * Scaled by viewport size at runtime (k / pxPerVp()) for consistent behavior across screen sizes.
- * - Higher values (25-40): Very strong pull, tight following, minimal swing
- * - Medium values (15-25): Strong pull, responsive with some momentum
- * - Lower values (8-12): Balanced feel, noticeable momentum with control
- * - Very low (3-6): Loose feel, dramatic pendulum swings
- * - 20.0: Strong spring - fast response with controlled momentum
+ * Force = distance × SPRING_STIFFNESS × effectiveness
  * 
- * Scaled by manipulator effectiveness: low effectiveness = weak spring = heavy swinging
+ * - Higher values (80-120): Very strong pull, tight following, minimal swing
+ * - Medium values (50-80): Strong pull, responsive with some momentum
+ * - Lower values (30-50): Balanced feel, noticeable momentum with control
+ * - Very low (10-30): Loose feel, dramatic pendulum swings
+ * 
+ * 60 wu = fast response with controlled momentum for 20w × 10h world
+ * 
+ * Note: Scaled by manipulator effectiveness (low effectiveness = weak spring = heavy swinging)
  */
-export const SPRING_STIFFNESS = 600.0;
+export const SPRING_STIFFNESS_WU = 60;
 
 /**
- * Drag Damping (Velocity Decay)
+ * Drag Damping (dimensionless)
  * 
  * Per-frame velocity damping factor to prevent infinite oscillation.
  * Applied as: velocity *= DRAG_DAMPING each frame
+ * 
  * - 1.0: No damping (would oscillate forever)
  * - 0.95-0.98: Very light damping, long momentum trails
  * - 0.90-0.94: Light damping, maintains velocity well
  * - 0.85-0.90: Balanced damping, natural feel
  * - 0.7-0.8: Heavy damping, quick stops
- * - 0.93: Light damping - maintains momentum, responsive feel
  * 
- * Works with spring stiffness to create natural spring-damper behavior.
+ * 0.96 = light damping, maintains momentum, responsive feel
+ * 
+ * Note: Works with spring stiffness to create natural spring-damper behavior
  */
 export const DRAG_DAMPING = 0.96;
 

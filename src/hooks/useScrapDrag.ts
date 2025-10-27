@@ -16,17 +16,23 @@
  * - Speed limit applied to velocity magnitude (prevents tunneling)
  * - Result: Natural pendulum swings when direction changes rapidly
  *
- * Anchoring model (critical for no-jump drops):
- * - We position the dragged element using left (px) and bottom (px) with transform: none
- * - Rendering in WorkScreen also uses left/bottom with transform: none
- * - On drop, we convert the centered position to left/bottom consistently so there is no anchor switch
+ * WORLD UNITS:
+ * - All physics calculations use world units (wu) for device-independent behavior
+ * - Camera system (screenToWorld/worldToScreen) handles pixel ↔ world conversions
+ * - Positions stored in world units, converted to screen pixels for rendering
  * 
  * Uses centralized mouse tracking and grabbed object physics from dragStore.
  */
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Z_LAYERS } from '../constants/zLayers';
-import { VELOCITY_MIN_THRESHOLD_PX_PER_S, SPRING_STIFFNESS, DRAG_DAMPING, MAX_SCRAP_DRAG_SPEED_VP_PER_S, pxPerVp } from '../constants/physicsConstants';
+import { 
+  VELOCITY_MIN_THRESHOLD_WU_PER_S, 
+  SPRING_STIFFNESS_WU, 
+  DRAG_DAMPING, 
+  MAX_SCRAP_DRAG_SPEED_WU_PER_S 
+} from '../constants/physicsConstants';
+import { screenToWorld, worldToScreen } from '../constants/cameraConstants';
 import { useClockSubscription } from './useClockSubscription';
 import { useDragStore, useGameStore } from '../stores';
 import { calculateScrapMass, calculateEffectiveLoad, calculateFieldForces } from '../utils/physicsUtils';
@@ -35,9 +41,9 @@ import { ScrapObject } from '../types/scrapTypes';
 
 export interface ScrapDragDropInfo {
   scrapId: string;
-  releasePositionPx: { x: number; y: number };
-  releaseVelocityPxPerSec: { vx: number; vy: number };
-  elementSizePx: { width: number; height: number };
+  releasePositionPx: { x: number; y: number }; // Screen pixels for drop detection
+  releaseVelocityWuPerSec: { vx: number; vy: number }; // World units per second for physics
+  elementSizePx: { width: number; height: number }; // Screen pixels for rendering
 }
 
 export interface UseScrapDragOptions {
@@ -113,8 +119,14 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       elementSizeRef.current = { width: 24, height: 24 };
     }
     
-    // Grab object at its actual position (not cursor position!)
-    grabObject(scrap, { x: scrapCenterX, y: scrapCenterY }, mass);
+    // Grab object at its actual position in world units (convert from screen pixels)
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const worldPos = screenToWorld(scrapCenterX, scrapCenterY, viewportWidth, viewportHeight);
+    
+    // Store in world units for physics, but convert back to pixels for drag store (temporary)
+    // TODO: Update dragStore to use world units internally
+    grabObject(scrap, worldPos, mass);
   }, [updateGlobalMousePosition, grabObject, getScrap]);
 
   const endDrag = useCallback(() => {
@@ -128,25 +140,30 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       return;
     }
 
-    // Use velocity from physics system (calculated every frame)
-    let releaseVelocityPxPerSec = releasedState.velocity;
+    // Velocity is already in world units from physics system
+    let releaseVelocityWuPerSec = releasedState.velocity;
     
-    // Apply minimum velocity threshold to ignore micro-wiggles
+    // Apply minimum velocity threshold to ignore micro-wiggles (in world units)
     const speed = Math.sqrt(
-      releaseVelocityPxPerSec.vx * releaseVelocityPxPerSec.vx + 
-      releaseVelocityPxPerSec.vy * releaseVelocityPxPerSec.vy
+      releaseVelocityWuPerSec.vx * releaseVelocityWuPerSec.vx + 
+      releaseVelocityWuPerSec.vy * releaseVelocityWuPerSec.vy
     );
     
-    // If moving very slowly at release (< 20px/s), treat as stationary
-    if (speed < VELOCITY_MIN_THRESHOLD_PX_PER_S) {
-      releaseVelocityPxPerSec = { vx: 0, vy: 0 };
+    // If moving very slowly at release, treat as stationary
+    if (speed < VELOCITY_MIN_THRESHOLD_WU_PER_S) {
+      releaseVelocityWuPerSec = { vx: 0, vy: 0 };
     }
 
     if (onDrop) {
+      // Convert world position back to screen pixels for drop detection
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const screenPos = worldToScreen(releasedState.position.x, releasedState.position.y, viewportWidth, viewportHeight);
+      
       onDrop({ 
         scrapId: releasedState.scrapId, 
-        releasePositionPx: releasedState.position, 
-        releaseVelocityPxPerSec, 
+        releasePositionPx: screenPos, 
+        releaseVelocityWuPerSec, 
         elementSizePx: elementSizeRef.current 
       });
     }
@@ -233,30 +250,44 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       
       const dtSeconds = Math.max(0, deltaTime / 1000);
       
-      // Calculate cursor movement since last frame
+      // Get viewport size for coordinate conversions
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      // Convert cursor position to world units for physics calculations
+      const cursorWorldPos = screenToWorld(cursorPos.x, cursorPos.y, viewportWidth, viewportHeight);
+      
+      // Calculate cursor movement since last frame (in world units)
       let cursorDeltaX = 0;
       let cursorDeltaY = 0;
       
       if (previousCursorPosRef.current) {
-        cursorDeltaX = cursorPos.x - previousCursorPosRef.current.x;
-        cursorDeltaY = cursorPos.y - previousCursorPosRef.current.y;
+        const prevCursorWorldPos = screenToWorld(
+          previousCursorPosRef.current.x, 
+          previousCursorPosRef.current.y, 
+          viewportWidth, 
+          viewportHeight
+        );
+        cursorDeltaX = cursorWorldPos.x - prevCursorWorldPos.x;
+        cursorDeltaY = cursorWorldPos.y - prevCursorWorldPos.y;
       }
       
-      // Calculate distance and direction to cursor (for physics calculations)
-      const dx = cursorPos.x - currentGrabbedObject.position.x;
-      const dy = cursorPos.y - currentGrabbedObject.position.y;
+      // Calculate distance and direction to cursor (all in world units)
+      const dx = cursorWorldPos.x - currentGrabbedObject.position.x;
+      const dy = cursorWorldPos.y - currentGrabbedObject.position.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       
       // If very close to cursor, not moving, and velocity is low, snap to it
       // This prevents jitter when holding still and provides tight control at rest
+      // Thresholds in world units (2 wu ≈ 0.2 meters at current scale)
       const cursorSpeed = Math.sqrt(cursorDeltaX * cursorDeltaX + cursorDeltaY * cursorDeltaY);
       const scrapSpeed = Math.sqrt(
         currentGrabbedObject.velocity.vx * currentGrabbedObject.velocity.vx + 
         currentGrabbedObject.velocity.vy * currentGrabbedObject.velocity.vy
       );
-      if (distance < 2 && cursorSpeed < 1 && scrapSpeed < 10) {
+      if (distance < 0.2 && cursorSpeed < 0.1 && scrapSpeed < 1.0) {
         updateGrabbedObjectPosition(
-          cursorPos,
+          cursorWorldPos,
           { vx: 0, vy: 0 },
           currentGrabbedObject.effectiveLoadResult || {
             loadUp: currentGrabbedObject.mass,
@@ -300,9 +331,9 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       
       // Calculate spring force: F = k * distance * effectiveness
       // Spring pulls scrap toward cursor, strength proportional to distance
-      // Scale spring constant by viewport size for consistent behavior across screen sizes
+      // Spring constant is in world units (device-independent)
       // Effectiveness scales spring stiffness (low effectiveness = weak spring = heavy swinging)
-      const effectiveStiffness = (SPRING_STIFFNESS / pxPerVp()) * effectiveLoadResult.manipulatorEffectiveness;
+      const effectiveStiffness = SPRING_STIFFNESS_WU * effectiveLoadResult.manipulatorEffectiveness;
       const springForceX = dx * effectiveStiffness;
       const springForceY = dy * effectiveStiffness;
       
@@ -328,16 +359,15 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       
       // === SPEED LIMITING ===
       // Clamp velocity magnitude to prevent tunneling and physics breakage
-      // Convert viewport-based speed limit to pixel-based at runtime for consistent behavior
-      const maxSpeedPxPerS = MAX_SCRAP_DRAG_SPEED_VP_PER_S * pxPerVp();
+      // Speed limit is in world units (device-independent)
       const speed = Math.sqrt(vx * vx + vy * vy);
-      if (speed > maxSpeedPxPerS) {
-        const scale = maxSpeedPxPerS / speed;
+      if (speed > MAX_SCRAP_DRAG_SPEED_WU_PER_S) {
+        const scale = MAX_SCRAP_DRAG_SPEED_WU_PER_S / speed;
         vx *= scale;
         vy *= scale;
       }
       
-      // Integrate position: p = p + v * dt
+      // Integrate position: p = p + v * dt (all in world units)
       const newX = currentGrabbedObject.position.x + vx * dtSeconds;
       const newY = currentGrabbedObject.position.y + vy * dtSeconds;
       
@@ -364,13 +394,17 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
   const getDragStyle = useCallback((scrapId: string): React.CSSProperties | undefined => {
     if (!isDragging(scrapId)) return undefined;
     
-    // Use grabbed object position from physics system
-    const positionToUse = grabbedObject.position;
+    // Convert world position to screen pixels for rendering
+    const worldPos = grabbedObject.position;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const screenPos = worldToScreen(worldPos.x, worldPos.y, viewportWidth, viewportHeight);
     
     const width = elementSizeRef.current.width || 0;
     const height = elementSizeRef.current.height || 0;
-    const leftPx = Math.max(0, positionToUse.x - width / 2);
-    const bottomPx = Math.max(0, (window.innerHeight - (positionToUse.y + height / 2)));
+    const leftPx = Math.max(0, screenPos.x - width / 2);
+    const bottomPx = Math.max(0, (window.innerHeight - (screenPos.y + height / 2)));
+    
     return {
       position: 'fixed',
       left: `${leftPx}px`,

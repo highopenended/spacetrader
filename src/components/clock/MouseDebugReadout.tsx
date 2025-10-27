@@ -8,7 +8,8 @@
 
 import React from 'react';
 import { useDragStore, useGameStore } from '../../stores';
-import { MAX_SCRAP_DRAG_SPEED_VP_PER_S, pxPerVp } from '../../constants/physicsConstants';
+import { MAX_SCRAP_DRAG_SPEED_WU_PER_S } from '../../constants/physicsConstants';
+import { calculateZoom } from '../../constants/cameraConstants';
 import './MouseDebugReadout.css';
 
 interface MouseDebugReadoutProps {
@@ -51,12 +52,17 @@ const MouseDebugReadout: React.FC<MouseDebugReadoutProps> = ({
   const hasPhysicsData = grabbedObject.scrapId && grabbedObject.effectiveLoadResult;
   const effectiveLoad = grabbedObject.effectiveLoadResult;
   
-  // Calculate current drag speed from velocity
-  const currentSpeed = isScrapDragging && grabbedObject.velocity
+  // Calculate current drag speed from velocity (in world units)
+  const currentSpeedWu = isScrapDragging && grabbedObject.velocity
     ? Math.sqrt(grabbedObject.velocity.vx ** 2 + grabbedObject.velocity.vy ** 2)
     : 0;
-  const maxSpeedPxPerS = MAX_SCRAP_DRAG_SPEED_VP_PER_S * pxPerVp();
-  const speedPercentage = (currentSpeed / maxSpeedPxPerS) * 100;
+  // Convert to pixels for display (world units to pixels using camera zoom)
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
+  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 1080;
+  const zoom = calculateZoom(viewportWidth, viewportHeight);
+  const currentSpeedPxPerS = currentSpeedWu * zoom;
+  const maxSpeedPxPerS = MAX_SCRAP_DRAG_SPEED_WU_PER_S * zoom;
+  const speedPercentage = (currentSpeedPxPerS / maxSpeedPxPerS) * 100;
   
   // Calculate distance from cursor to grabbed object (for spring physics debugging)
   const cursorDistance = isScrapDragging && globalMousePosition
@@ -112,7 +118,7 @@ const MouseDebugReadout: React.FC<MouseDebugReadoutProps> = ({
             speedPercentage > 90 ? 'metric-warning' : 
             speedPercentage > 70 ? 'metric-active' : ''
           }`}>
-            {isScrapDragging ? `${currentSpeed.toFixed(0)}` : '---'}
+            {isScrapDragging ? `${currentSpeedPxPerS.toFixed(0)}` : '---'}
           </span>
         </div>
         

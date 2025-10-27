@@ -5,17 +5,30 @@
  * - Maintains per-scrap vertical state when airborne
  * - Integrates motion each frame using existing rAF tick from WorkScreen
  * - Signals when a scrap lands (to resume stream movement)
+ * 
+ * WORLD UNITS:
+ * - All positions and velocities use world units (wu)
+ * - World size: 20w × 10h
+ * - Physics calculations are device-independent
  */
 
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { GRAVITY_VP_PER_S2, MAX_DOWNWARD_SPEED_VP_PER_S, MAX_UPWARD_SPEED_VP_PER_S, MAX_HORIZONTAL_SPEED_VP_PER_S, MOMENTUM_SCALE, vpFromPx } from '../constants/physicsConstants';
+import { 
+  GRAVITY_WU_PER_S2, 
+  MAX_DOWNWARD_SPEED_WU_PER_S, 
+  MAX_UPWARD_SPEED_WU_PER_S, 
+  MAX_HORIZONTAL_SPEED_WU_PER_S, 
+  MOMENTUM_SCALE,
+  VELOCITY_MIN_THRESHOLD_WU_PER_S
+} from '../constants/physicsConstants';
+import { screenToWorld } from '../constants/cameraConstants';
 
 export interface AirborneState {
   isAirborne: boolean;
-  yVp: number; // vertical offset above baseline (vp). 0 == baseline
-  vyVpPerSec: number;
-  vxVpPerSec: number;
-  prevYVp?: number; // Previous Y position (for swept collision detection)
+  yWu: number; // vertical offset above baseline (world units). 0 == baseline
+  vyWuPerSec: number; // vertical velocity (world units per second)
+  vxWuPerSec: number; // horizontal velocity (world units per second)
+  prevYWu?: number; // Previous Y position (for swept collision detection)
   velocityHistory?: Array<{ vx: number; vy: number }>; // Last few frames of velocity for stable collision response
   gravityMultiplier?: number; // Custom gravity multiplier for this scrap
   momentumMultiplier?: number; // Custom momentum multiplier for this scrap
@@ -32,18 +45,18 @@ export interface UseScrapPhysicsApi {
   // Commands
   launchAirborneFromRelease: (
     scrapId: string,
-    releaseVelocityPxPerSec: { vx: number; vy: number },
-    initialYAboveBaselineVh: number,
+    releaseVelocityWuPerSec: { vx: number; vy: number },
+    initialYAboveBaselineWu: number,
     customGravityMultiplier?: number,
     customMomentumMultiplier?: number
   ) => void;
-  setVelocity: (scrapId: string, vxVpPerSec: number, vyVpPerSec: number) => void;
-  adjustPosition: (scrapId: string, deltaYVp: number) => void;
+  setVelocity: (scrapId: string, vxWuPerSec: number, vyWuPerSec: number) => void;
+  adjustPosition: (scrapId: string, deltaYWu: number) => void;
   landScrap: (scrapId: string) => void;
 
   // Integration step (call from rAF): returns true if any state changed
   stepAirborne: (dtSeconds: number) => boolean;
-  // Horizontal integration output: deltas (vw) to apply per id since last step
+  // Horizontal integration output: deltas (world units) to apply per id since last step
   consumeHorizontalDeltas: () => Map<string, number>;
 }
 
@@ -55,12 +68,12 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
 
   const getAirborneState = useCallback((scrapId: string) => statesRef.current.get(scrapId), []);
   const isAirborne = useCallback((scrapId: string) => !!statesRef.current.get(scrapId)?.isAirborne, []);
-  const getHorizontalVelocity = useCallback((scrapId: string) => statesRef.current.get(scrapId)?.vxVpPerSec || 0, []);
+  const getHorizontalVelocity = useCallback((scrapId: string) => statesRef.current.get(scrapId)?.vxWuPerSec || 0, []);
   
   const getVelocity = useCallback((scrapId: string) => {
     const state = statesRef.current.get(scrapId);
     if (!state) return null;
-    return { vx: state.vxVpPerSec, vy: state.vyVpPerSec };
+    return { vx: state.vxWuPerSec, vy: state.vyWuPerSec };
   }, []);
 
   const getAveragedVelocity = useCallback((scrapId: string) => {
@@ -76,7 +89,7 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
     }
     
     // Fallback to current velocity
-    return { vx: state.vxVpPerSec, vy: state.vyVpPerSec };
+    return { vx: state.vxWuPerSec, vy: state.vyWuPerSec };
   }, []);
 
   const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
@@ -84,24 +97,35 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
   const launchAirborneFromRelease = useCallback(
     (
       scrapId: string,
-      releaseVelocityPxPerSec: { vx: number; vy: number },
-      initialYAboveBaselineVp: number,
+      releaseVelocityWuPerSec: { vx: number; vy: number },
+      initialYAboveBaselineWu: number,
       customGravityMultiplier: number = 1.0,
       customMomentumMultiplier: number = 1.0
     ) => {
-      // Unified conversion: both axes use vp (viewport-min) units
-      const vyVpPerSec = -vpFromPx(releaseVelocityPxPerSec.vy); // screen Y down -> physics Y up
-      const vxVpPerSec = vpFromPx(releaseVelocityPxPerSec.vx);
+      // Velocity is in world units from drag system
+      // World/screen coordinates: +Y is DOWN (top=0)
+      // Physics coordinates: +Y is UP (height above baseline)
+      // Negate vy to convert coordinate systems
+      const vyWuPerSec = -releaseVelocityWuPerSec.vy;
+      const vxWuPerSec = releaseVelocityWuPerSec.vx;
       
       // Apply custom momentum scaling and clamp
       const effectiveMomentumScale = MOMENTUM_SCALE * customMomentumMultiplier;
-      const clampedVxVpPerSec = Math.max(-MAX_HORIZONTAL_SPEED_VP_PER_S, Math.min(MAX_HORIZONTAL_SPEED_VP_PER_S, vxVpPerSec * effectiveMomentumScale));
+      const clampedVxWuPerSec = clamp(
+        vxWuPerSec * effectiveMomentumScale,
+        -MAX_HORIZONTAL_SPEED_WU_PER_S,
+        MAX_HORIZONTAL_SPEED_WU_PER_S
+      );
       
       statesRef.current.set(scrapId, {
         isAirborne: true,
-        yVp: Math.max(0, initialYAboveBaselineVp),
-        vyVpPerSec: clamp(vyVpPerSec * effectiveMomentumScale, MAX_DOWNWARD_SPEED_VP_PER_S, MAX_UPWARD_SPEED_VP_PER_S),
-        vxVpPerSec: clampedVxVpPerSec,
+        yWu: Math.max(0, initialYAboveBaselineWu),
+        vyWuPerSec: clamp(
+          vyWuPerSec * effectiveMomentumScale,
+          MAX_DOWNWARD_SPEED_WU_PER_S,
+          MAX_UPWARD_SPEED_WU_PER_S
+        ),
+        vxWuPerSec: clampedVxWuPerSec,
         gravityMultiplier: customGravityMultiplier,
         momentumMultiplier: customMomentumMultiplier
       });
@@ -110,31 +134,31 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
     []
   );
 
-  const setVelocity = useCallback((scrapId: string, vxVpPerSec: number, vyVpPerSec: number) => {
+  const setVelocity = useCallback((scrapId: string, vxWuPerSec: number, vyWuPerSec: number) => {
     const state = statesRef.current.get(scrapId);
     if (!state || !state.isAirborne) return;
     
     // Apply velocity clamping
-    const clampedVx = clamp(vxVpPerSec, -MAX_HORIZONTAL_SPEED_VP_PER_S, MAX_HORIZONTAL_SPEED_VP_PER_S);
-    const clampedVy = clamp(vyVpPerSec, MAX_DOWNWARD_SPEED_VP_PER_S, MAX_UPWARD_SPEED_VP_PER_S);
+    const clampedVx = clamp(vxWuPerSec, -MAX_HORIZONTAL_SPEED_WU_PER_S, MAX_HORIZONTAL_SPEED_WU_PER_S);
+    const clampedVy = clamp(vyWuPerSec, MAX_DOWNWARD_SPEED_WU_PER_S, MAX_UPWARD_SPEED_WU_PER_S);
     
     statesRef.current.set(scrapId, {
       ...state,
-      vxVpPerSec: clampedVx,
-      vyVpPerSec: clampedVy
+      vxWuPerSec: clampedVx,
+      vyWuPerSec: clampedVy
     });
     setVersion(v => v + 1);
   }, []);
 
-  const adjustPosition = useCallback((scrapId: string, deltaYVp: number) => {
+  const adjustPosition = useCallback((scrapId: string, deltaYWu: number) => {
     const state = statesRef.current.get(scrapId);
     if (!state || !state.isAirborne) return;
     
-    const newY = Math.max(0, state.yVp + deltaYVp);
+    const newY = Math.max(0, state.yWu + deltaYWu);
     
     statesRef.current.set(scrapId, {
       ...state,
-      yVp: newY
+      yWu: newY
     });
     setVersion(v => v + 1);
   }, []);
@@ -144,9 +168,9 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
     if (!s) return;
     statesRef.current.set(scrapId, { 
       isAirborne: false, 
-      yVp: 0, 
-      vyVpPerSec: 0, 
-      vxVpPerSec: 0,
+      yWu: 0, 
+      vyWuPerSec: 0, 
+      vxWuPerSec: 0,
       gravityMultiplier: s.gravityMultiplier,
       momentumMultiplier: s.momentumMultiplier
     });
@@ -162,30 +186,33 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
 
       // Apply custom gravity multiplier
       const gravityMultiplier = state.gravityMultiplier || 1.0;
-      const effectiveGravity = GRAVITY_VP_PER_S2 * gravityMultiplier;
+      const effectiveGravity = GRAVITY_WU_PER_S2 * gravityMultiplier;
 
       // Store previous Y for swept collision detection
-      const prevY = state.yVp;
+      const prevY = state.yWu;
 
-      // Integrate
-      let vy = state.vyVpPerSec + effectiveGravity * dtSeconds;
-      vy = clamp(vy, MAX_DOWNWARD_SPEED_VP_PER_S, MAX_UPWARD_SPEED_VP_PER_S);
-      let y = state.yVp + vy * dtSeconds;
-      // Horizontal delta in vp for this step
-      const dx = state.vxVpPerSec * dtSeconds;
+      // Integrate velocity: v = v + a * dt
+      let vy = state.vyWuPerSec + effectiveGravity * dtSeconds;
+      vy = clamp(vy, MAX_DOWNWARD_SPEED_WU_PER_S, MAX_UPWARD_SPEED_WU_PER_S);
+      
+      // Integrate position: p = p + v * dt
+      let y = state.yWu + vy * dtSeconds;
+      
+      // Horizontal delta in world units for this step
+      const dx = state.vxWuPerSec * dtSeconds;
       if (dx !== 0) {
         const prev = horizontalDeltaRef.current.get(id) || 0;
         horizontalDeltaRef.current.set(id, prev + dx);
       }
 
       if (y <= 0) {
-        // Land
+        // Land - scrap hit baseline
         statesRef.current.set(id, { 
           isAirborne: false, 
-          yVp: 0, 
-          vyVpPerSec: 0, 
-          vxVpPerSec: 0,
-          prevYVp: prevY,
+          yWu: 0, 
+          vyWuPerSec: 0, 
+          vxWuPerSec: 0,
+          prevYWu: prevY,
           gravityMultiplier: state.gravityMultiplier,
           momentumMultiplier: state.momentumMultiplier
         });
@@ -193,17 +220,17 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
         return;
       }
 
-      if (y !== state.yVp || vy !== state.vyVpPerSec) {
+      if (y !== state.yWu || vy !== state.vyWuPerSec) {
         // Update velocity history (keep last 5 frames for averaging)
         const newHistory = state.velocityHistory || [];
-        newHistory.push({ vx: state.vxVpPerSec, vy: vy });
+        newHistory.push({ vx: state.vxWuPerSec, vy: vy });
         if (newHistory.length > 5) newHistory.shift();
         
         statesRef.current.set(id, { 
           ...state, 
-          yVp: y, 
-          vyVpPerSec: vy, 
-          prevYVp: prevY,
+          yWu: y, 
+          vyWuPerSec: vy, 
+          prevYWu: prevY,
           velocityHistory: newHistory
         });
         changed = true;
