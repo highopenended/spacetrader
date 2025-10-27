@@ -26,7 +26,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Z_LAYERS } from '../constants/zLayers';
-import { VELOCITY_MIN_THRESHOLD_PX_PER_S, SPRING_STIFFNESS, DRAG_DAMPING, MAX_SCRAP_DRAG_SPEED_PX_PER_S, pxPerVp } from '../constants/physicsConstants';
+import { VELOCITY_MIN_THRESHOLD_PX_PER_S, SPRING_STIFFNESS, DRAG_DAMPING, MAX_SCRAP_DRAG_SPEED_VP_PER_S, pxPerVp } from '../constants/physicsConstants';
 import { useClockSubscription } from './useClockSubscription';
 import { useDragStore, useGameStore } from '../stores';
 import { calculateScrapMass, calculateEffectiveLoad, calculateFieldForces } from '../utils/physicsUtils';
@@ -328,9 +328,11 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       
       // === SPEED LIMITING ===
       // Clamp velocity magnitude to prevent tunneling and physics breakage
+      // Convert viewport-based speed limit to pixel-based at runtime for consistent behavior
+      const maxSpeedPxPerS = MAX_SCRAP_DRAG_SPEED_VP_PER_S * pxPerVp();
       const speed = Math.sqrt(vx * vx + vy * vy);
-      if (speed > MAX_SCRAP_DRAG_SPEED_PX_PER_S) {
-        const scale = MAX_SCRAP_DRAG_SPEED_PX_PER_S / speed;
+      if (speed > maxSpeedPxPerS) {
+        const scale = maxSpeedPxPerS / speed;
         vx *= scale;
         vy *= scale;
       }

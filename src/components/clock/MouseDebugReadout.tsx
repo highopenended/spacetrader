@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { useDragStore, useGameStore } from '../../stores';
-import { MAX_SCRAP_DRAG_SPEED_PX_PER_S } from '../../constants/physicsConstants';
+import { MAX_SCRAP_DRAG_SPEED_VP_PER_S, pxPerVp } from '../../constants/physicsConstants';
 import './MouseDebugReadout.css';
 
 interface MouseDebugReadoutProps {
@@ -55,7 +55,8 @@ const MouseDebugReadout: React.FC<MouseDebugReadoutProps> = ({
   const currentSpeed = isScrapDragging && grabbedObject.velocity
     ? Math.sqrt(grabbedObject.velocity.vx ** 2 + grabbedObject.velocity.vy ** 2)
     : 0;
-  const speedPercentage = (currentSpeed / MAX_SCRAP_DRAG_SPEED_PX_PER_S) * 100;
+  const maxSpeedPxPerS = MAX_SCRAP_DRAG_SPEED_VP_PER_S * pxPerVp();
+  const speedPercentage = (currentSpeed / maxSpeedPxPerS) * 100;
   
   // Calculate distance from cursor to grabbed object (for spring physics debugging)
   const cursorDistance = isScrapDragging && globalMousePosition

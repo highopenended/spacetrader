@@ -87,17 +87,20 @@ export const DEFAULT_SCRAP_BASE_MASS = 1;
 
 
 /**
- * Maximum Scrap Drag Speed
+ * Maximum Scrap Drag Speed (in viewport units)
  * 
  * Speed limit for dragged scrap movement to prevent tunneling and physics breakage.
  * Applied to velocity magnitude during integration, acting as a safety ceiling.
+ * Scaled by viewport size at runtime (maxSpeed * pxPerVp()) for consistent behavior across screen sizes.
  * - Mainly constrains light/high-effectiveness scrap during rapid cursor movements
  * - Heavy/low-effectiveness scrap naturally stays below limit due to physics
- * - Higher values (3000+): More permissive, allows very fast throws
- * - Lower values (600-1500): Tighter control, more predictable interactions
- * - 3000: High speed - very responsive, allows dramatic swings
+ * - Higher values (300+): More permissive, allows very fast throws
+ * - Lower values (60-150): Tighter control, more predictable interactions
+ * - 300: High speed - very responsive, allows dramatic swings
+ * 
+ * Note: This is in viewport units. Gets converted to px/s at runtime based on screen size.
  */
-export const MAX_SCRAP_DRAG_SPEED_PX_PER_S = 1000;
+export const MAX_SCRAP_DRAG_SPEED_VP_PER_S = 300;
 
 /**
  * Spring Stiffness (Manipulator Pull Strength)
