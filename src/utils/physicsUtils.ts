@@ -319,19 +319,4 @@ export const calculateFieldForces = (
   return { fx, fy };
 };
 
-/**
- * @deprecated - No longer used with spring-based physics model
- * Calculate follow speed multiplier based on manipulator effectiveness (OBSOLETE)
- * 
- * Previously used in position-based drag system to scale cursor following.
- * Replaced by spring force scaling in spring-damper physics model.
- * Effectiveness now directly scales spring stiffness instead.
- * Will be removed in future cleanup.
- * 
- * @param manipulatorEffectiveness - Effectiveness value from 0 to 1
- * @returns Speed multiplier from 0 to 1
- */
-export const calculateFollowSpeed = (manipulatorEffectiveness: number): number => {
-  return Math.max(0, Math.min(1, manipulatorEffectiveness));
-};
 

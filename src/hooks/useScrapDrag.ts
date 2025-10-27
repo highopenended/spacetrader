@@ -26,7 +26,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Z_LAYERS } from '../constants/zLayers';
-import { VELOCITY_MIN_THRESHOLD_PX_PER_S, SPRING_STIFFNESS, DRAG_DAMPING, MAX_SCRAP_DRAG_SPEED_PX_PER_S } from '../constants/physicsConstants';
+import { VELOCITY_MIN_THRESHOLD_PX_PER_S, SPRING_STIFFNESS, DRAG_DAMPING, MAX_SCRAP_DRAG_SPEED_PX_PER_S, pxPerVp } from '../constants/physicsConstants';
 import { useClockSubscription } from './useClockSubscription';
 import { useDragStore, useGameStore } from '../stores';
 import { calculateScrapMass, calculateEffectiveLoad, calculateFieldForces } from '../utils/physicsUtils';
@@ -300,8 +300,9 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       
       // Calculate spring force: F = k * distance * effectiveness
       // Spring pulls scrap toward cursor, strength proportional to distance
+      // Scale spring constant by viewport size for consistent behavior across screen sizes
       // Effectiveness scales spring stiffness (low effectiveness = weak spring = heavy swinging)
-      const effectiveStiffness = SPRING_STIFFNESS * effectiveLoadResult.manipulatorEffectiveness;
+      const effectiveStiffness = (SPRING_STIFFNESS / pxPerVp()) * effectiveLoadResult.manipulatorEffectiveness;
       const springForceX = dx * effectiveStiffness;
       const springForceY = dy * effectiveStiffness;
       

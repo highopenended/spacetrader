@@ -84,25 +84,7 @@ export const DEFAULT_MANIPULATOR_MAX_LOAD = 4.5;
  */
 export const DEFAULT_SCRAP_BASE_MASS = 1;
 
-/**
- * @deprecated - No longer used with spring-based physics model
- * Manipulator Cursor Following Rate (OBSOLETE)
- * 
- * Previously controlled lag scaling for position-based drag system.
- * Replaced by spring-damper physics (SPRING_STIFFNESS + DRAG_DAMPING).
- * Will be removed in future cleanup.
- */
-export const MANIPULATOR_CURSOR_FOLLOW_RATE = 2;
 
-/**
- * @deprecated - No longer used with spring-based physics model
- * Manipulator Gap Closure Rate (OBSOLETE)
- * 
- * Previously controlled distance-based attraction in position-based drag system.
- * Replaced by spring force in spring-damper physics (SPRING_STIFFNESS).
- * Will be removed in future cleanup.
- */
-export const MANIPULATOR_GAP_CLOSURE_RATE = 6.0;
 
 /**
  * Maximum Scrap Drag Speed
@@ -115,13 +97,14 @@ export const MANIPULATOR_GAP_CLOSURE_RATE = 6.0;
  * - Lower values (600-1500): Tighter control, more predictable interactions
  * - 3000: High speed - very responsive, allows dramatic swings
  */
-export const MAX_SCRAP_DRAG_SPEED_PX_PER_S = 3000;
+export const MAX_SCRAP_DRAG_SPEED_PX_PER_S = 1000;
 
 /**
  * Spring Stiffness (Manipulator Pull Strength)
  * 
- * How strongly the manipulator pulls scrap toward cursor position (force per pixel of distance).
+ * How strongly the manipulator pulls scrap toward cursor position (force per viewport unit of distance).
  * This is the "spring constant" in the spring-damper physics model.
+ * Scaled by viewport size at runtime (k / pxPerVp()) for consistent behavior across screen sizes.
  * - Higher values (25-40): Very strong pull, tight following, minimal swing
  * - Medium values (15-25): Strong pull, responsive with some momentum
  * - Lower values (8-12): Balanced feel, noticeable momentum with control
@@ -130,7 +113,7 @@ export const MAX_SCRAP_DRAG_SPEED_PX_PER_S = 3000;
  * 
  * Scaled by manipulator effectiveness: low effectiveness = weak spring = heavy swinging
  */
-export const SPRING_STIFFNESS = 20.0;
+export const SPRING_STIFFNESS = 600.0;
 
 /**
  * Drag Damping (Velocity Decay)
@@ -146,6 +129,6 @@ export const SPRING_STIFFNESS = 20.0;
  * 
  * Works with spring stiffness to create natural spring-damper behavior.
  */
-export const DRAG_DAMPING = 0.93;
+export const DRAG_DAMPING = 0.96;
 
 
