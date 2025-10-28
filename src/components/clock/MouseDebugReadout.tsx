@@ -8,8 +8,6 @@
 
 import React from 'react';
 import { useDragStore, useGameStore } from '../../stores';
-import { MAX_SCRAP_DRAG_SPEED_WU_PER_S } from '../../constants/physicsConstants';
-import { calculateZoom } from '../../constants/cameraConstants';
 import './MouseDebugReadout.css';
 
 interface MouseDebugReadoutProps {
@@ -56,13 +54,6 @@ const MouseDebugReadout: React.FC<MouseDebugReadoutProps> = ({
   const currentSpeedWu = isScrapDragging && grabbedObject.velocity
     ? Math.sqrt(grabbedObject.velocity.vx ** 2 + grabbedObject.velocity.vy ** 2)
     : 0;
-  // Convert to pixels for display (world units to pixels using camera zoom)
-  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
-  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 1080;
-  const zoom = calculateZoom(viewportWidth, viewportHeight);
-  const currentSpeedPxPerS = currentSpeedWu * zoom;
-  const maxSpeedPxPerS = MAX_SCRAP_DRAG_SPEED_WU_PER_S * zoom;
-  const speedPercentage = (currentSpeedPxPerS / maxSpeedPxPerS) * 100;
   
   // Calculate distance from cursor to grabbed object (for spring physics debugging)
   const cursorDistance = isScrapDragging && globalMousePosition
@@ -112,13 +103,10 @@ const MouseDebugReadout: React.FC<MouseDebugReadoutProps> = ({
           </span>
         </div>
         
-        <div className="mouse-debug-readout__metric" title="Current velocity of dragged scrap in pixels per second">
+        <div className="mouse-debug-readout__metric" title="Current velocity of dragged scrap in world units per second">
           <span className="metric-label">Spd:</span>
-          <span className={`metric-value ${
-            speedPercentage > 90 ? 'metric-warning' : 
-            speedPercentage > 70 ? 'metric-active' : ''
-          }`}>
-            {isScrapDragging ? `${currentSpeedPxPerS.toFixed(0)}` : '---'}
+          <span className={`metric-value ${currentSpeedWu > 20 ? 'metric-active' : ''}`}>
+            {isScrapDragging ? `${currentSpeedWu.toFixed(1)} wu/s` : '---'}
           </span>
         </div>
         

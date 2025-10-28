@@ -13,15 +13,7 @@
  */
 
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { 
-  GRAVITY_WU_PER_S2, 
-  MAX_DOWNWARD_SPEED_WU_PER_S, 
-  MAX_UPWARD_SPEED_WU_PER_S, 
-  MAX_HORIZONTAL_SPEED_WU_PER_S, 
-  MOMENTUM_SCALE,
-  VELOCITY_MIN_THRESHOLD_WU_PER_S
-} from '../constants/physicsConstants';
-import { screenToWorld } from '../constants/cameraConstants';
+import { GRAVITY_WU_PER_S2 } from '../constants/physicsConstants';
 
 export interface AirborneState {
   isAirborne: boolean;
@@ -92,8 +84,6 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
     return { vx: state.vxWuPerSec, vy: state.vyWuPerSec };
   }, []);
 
-  const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
-
   const launchAirborneFromRelease = useCallback(
     (
       scrapId: string,
@@ -109,23 +99,11 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
       const vyWuPerSec = -releaseVelocityWuPerSec.vy;
       const vxWuPerSec = releaseVelocityWuPerSec.vx;
       
-      // Apply custom momentum scaling and clamp
-      const effectiveMomentumScale = MOMENTUM_SCALE * customMomentumMultiplier;
-      const clampedVxWuPerSec = clamp(
-        vxWuPerSec * effectiveMomentumScale,
-        -MAX_HORIZONTAL_SPEED_WU_PER_S,
-        MAX_HORIZONTAL_SPEED_WU_PER_S
-      );
-      
       statesRef.current.set(scrapId, {
         isAirborne: true,
         yWu: Math.max(0, initialYAboveBaselineWu),
-        vyWuPerSec: clamp(
-          vyWuPerSec * effectiveMomentumScale,
-          MAX_DOWNWARD_SPEED_WU_PER_S,
-          MAX_UPWARD_SPEED_WU_PER_S
-        ),
-        vxWuPerSec: clampedVxWuPerSec,
+        vyWuPerSec: vyWuPerSec,
+        vxWuPerSec: vxWuPerSec,
         gravityMultiplier: customGravityMultiplier,
         momentumMultiplier: customMomentumMultiplier
       });
@@ -138,14 +116,10 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
     const state = statesRef.current.get(scrapId);
     if (!state || !state.isAirborne) return;
     
-    // Apply velocity clamping
-    const clampedVx = clamp(vxWuPerSec, -MAX_HORIZONTAL_SPEED_WU_PER_S, MAX_HORIZONTAL_SPEED_WU_PER_S);
-    const clampedVy = clamp(vyWuPerSec, MAX_DOWNWARD_SPEED_WU_PER_S, MAX_UPWARD_SPEED_WU_PER_S);
-    
     statesRef.current.set(scrapId, {
       ...state,
-      vxWuPerSec: clampedVx,
-      vyWuPerSec: clampedVy
+      vxWuPerSec: vxWuPerSec,
+      vyWuPerSec: vyWuPerSec
     });
     setVersion(v => v + 1);
   }, []);
@@ -192,8 +166,7 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
       const prevY = state.yWu;
 
       // Integrate velocity: v = v + a * dt
-      let vy = state.vyWuPerSec + effectiveGravity * dtSeconds;
-      vy = clamp(vy, MAX_DOWNWARD_SPEED_WU_PER_S, MAX_UPWARD_SPEED_WU_PER_S);
+      const vy = state.vyWuPerSec + effectiveGravity * dtSeconds;
       
       // Integrate position: p = p + v * dt
       let y = state.yWu + vy * dtSeconds;

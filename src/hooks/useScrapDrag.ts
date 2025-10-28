@@ -27,7 +27,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Z_LAYERS } from '../constants/zLayers';
 import { 
-  VELOCITY_MIN_THRESHOLD_WU_PER_S, 
   SPRING_STIFFNESS_WU, 
   DRAG_DAMPING, 
   MAX_SCRAP_DRAG_SPEED_WU_PER_S 
@@ -141,18 +140,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     }
 
     // Velocity is already in world units from physics system
-    let releaseVelocityWuPerSec = releasedState.velocity;
-    
-    // Apply minimum velocity threshold to ignore micro-wiggles (in world units)
-    const speed = Math.sqrt(
-      releaseVelocityWuPerSec.vx * releaseVelocityWuPerSec.vx + 
-      releaseVelocityWuPerSec.vy * releaseVelocityWuPerSec.vy
-    );
-    
-    // If moving very slowly at release, treat as stationary
-    if (speed < VELOCITY_MIN_THRESHOLD_WU_PER_S) {
-      releaseVelocityWuPerSec = { vx: 0, vy: 0 };
-    }
+    const releaseVelocityWuPerSec = releasedState.velocity;
 
     if (onDrop) {
       // Convert world position back to screen pixels for drop detection

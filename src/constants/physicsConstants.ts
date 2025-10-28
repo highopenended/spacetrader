@@ -41,63 +41,6 @@ export const SCRAP_BASELINE_BOTTOM_WU = 1.2;
  */
 export const GRAVITY_WU_PER_S2 = -25;
 
-/**
- * Maximum Upward Velocity (world units per second)
- * 
- * Speed cap for upward throws to prevent unrealistic launches.
- * 
- * 20 wu/s = can traverse full world height (10 wu) in 0.5 seconds
- */
-export const MAX_UPWARD_SPEED_WU_PER_S = 20;
-
-/**
- * Maximum Downward Velocity (world units per second)
- * 
- * Terminal velocity for falling scrap (negative = downward).
- * 
- * -60 wu/s = reasonable terminal velocity for game feel
- */
-export const MAX_DOWNWARD_SPEED_WU_PER_S = -60;
-
-/**
- * Maximum Horizontal Velocity (world units per second)
- * 
- * Speed cap for horizontal throws to maintain game balance.
- * 
- * 4 wu/s = can traverse 20% of world width per second
- */
-export const MAX_HORIZONTAL_SPEED_WU_PER_S = 4;
-
-/**
- * Momentum Scale Factor (dimensionless)
- * 
- * Global scaling for throw strength. Applied to release velocity
- * to tune game feel and control.
- * 
- * 0.5 = 50% momentum transfer for balanced throwing
- */
-export const MOMENTUM_SCALE = 0.5;
-
-/**
- * Momentum Valid Window (milliseconds)
- * 
- * Time window for capturing throw momentum. Only velocities within
- * this window after last motion are preserved on release.
- * 
- * 120 ms prevents stale velocity from being used for throws
- */
-export const MOMENTUM_VALID_WINDOW_MS = 120;
-
-/**
- * Velocity Minimum Threshold (world units per second)
- * 
- * Minimum speed threshold for throw detection. Releases slower than
- * this are treated as stationary drops (zero velocity).
- * 
- * 0.8 wu/s filters out micro-jitter and unintentional throws
- */
-export const VELOCITY_MIN_THRESHOLD_WU_PER_S = 0.8;
-
 // ===== NEW FIELD-BASED PHYSICS CONSTANTS =====
 
 /**
