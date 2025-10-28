@@ -19,7 +19,7 @@ import { useScrapPhysics } from '../../../hooks/useScrapPhysics';
 import { useScrapDrag } from '../../../hooks/useScrapDrag';
 import { useClockSubscription } from '../../../hooks/useClockSubscription';
 import { SCRAP_BASELINE_BOTTOM_WU } from '../../../constants/physicsConstants';
-import { screenToWorld, worldToScreen, WORLD_HEIGHT } from '../../../constants/cameraConstants';
+import { screenToWorld, worldToScreen, WORLD_HEIGHT, WORLD_WIDTH } from '../../../constants/cameraConstants';
 import { MutatorRegistry } from '../../../constants/mutatorRegistry';
 import { DOM_IDS } from '../../../constants/domIds';
 import { ScrapRegistry } from '../../../constants/scrapRegistry';
@@ -219,8 +219,9 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
           }
           if (isAirborne(scrap.id)) {
             const prevX = prevXMap.get(scrap.id) ?? scrap.x;
-            const vx = getHorizontalVelocity(scrap.id);
-            const nextX = Math.max(0, Math.min(100, prevX + vx * dtSeconds));
+            const vxWu = getHorizontalVelocity(scrap.id); // World units per second
+            const vxVw = vxWu * (100 / WORLD_WIDTH); // Convert to viewport width % per second
+            const nextX = Math.max(0, Math.min(100, prevX + vxVw * dtSeconds));
             return { ...scrap, x: nextX };
           }
           return scrap;
