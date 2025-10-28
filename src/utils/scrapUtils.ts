@@ -21,7 +21,7 @@ export const ASSEMBLY_LINE_CONFIG = {
     trackHeight: '0.4vh' // Height of the actual track line (converted from 4px)
   },
   behavior: {
-    speed: 15, // Viewport width units per second (15vw/s) for zoom-independent movement
+    speed: 3, // World units per second (3 wu/s) - device-independent movement
     spawnRate: 1000 // Milliseconds between scrap spawns
   },
   visuals: {
@@ -31,10 +31,15 @@ export const ASSEMBLY_LINE_CONFIG = {
 
 /**
  * Active scrap object with position and state
+ * 
+ * ALL POSITIONS IN WORLD UNITS (wu):
+ * - World size: 20w × 10h
+ * - x: horizontal position from left edge (0-20 wu)
+ * - y: vertical position from bottom edge (0-10 wu)
  */
 export interface ActiveScrapObject extends ScrapObject {
-  x: number;           // Current X position (vw units from left)
-  y: number;           // Current Y position (pixels from bottom)
+  x: number;           // Current X position (world units from left, 0-20)
+  y: number;           // Current Y position (world units from bottom, 0-10)
   isCollected: boolean; // Whether scrap has been collected
   isOffScreen: boolean; // Whether scrap has moved off screen
 }
@@ -58,13 +63,13 @@ export const initializeScrapSpawnState = (): ScrapSpawnState => ({
 });
 
 /**
- * Calculate frame-rate independent movement distance in vw units
+ * Calculate frame-rate independent movement distance in world units
  * @param deltaTime - Time elapsed since last frame (milliseconds)
- * @param speedVwPerSecond - Movement speed in viewport width units per second
- * @returns Distance to move in vw units
+ * @param speedWuPerSecond - Movement speed in world units per second
+ * @returns Distance to move in world units
  */
-export const calculateMovementDistance = (deltaTime: number, speedVwPerSecond: number): number => {
-  return (deltaTime / 1000) * speedVwPerSecond;
+export const calculateMovementDistance = (deltaTime: number, speedWuPerSecond: number): number => {
+  return (deltaTime / 1000) * speedWuPerSecond;
 };
 
 /**
@@ -226,7 +231,7 @@ export const spawnScrapIfReady = (
     const newScrap = createRandomScrapObject();
     const activeScrap: ActiveScrapObject = {
       ...newScrap,
-      x: 110, // Start off-screen to the right (110vw)
+      x: 22, // Start off-screen to the right (22 wu, world is 20 wu wide)
       y: 0, // Will be positioned relative to assembly line
       isCollected: false,
       isOffScreen: false
@@ -259,7 +264,7 @@ export const updateScrapPositions = (
   
   const updatedScrap = spawnState.activeScrap.map(scrap => {
     const newX = scrap.x - movementDistance;
-    const isOffScreen = newX < -10; // Mark as off-screen when it goes off the left (-10vw)
+    const isOffScreen = newX < -2; // Mark as off-screen when it goes off the left (-2 wu)
     
     return {
       ...scrap,

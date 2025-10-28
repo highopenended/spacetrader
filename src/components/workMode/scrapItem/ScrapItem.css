@@ -1,7 +1,8 @@
 .scrap-item {
   position: fixed;
-  width: 3.6vw; /* Increased from 2.4vw */
-  height: 3.6vw; /* Increased from 2.4vw - using vw to maintain square aspect ratio */
+  /* Size: 0.72 world units = 3.6% of 20wu world width = 3.6vw */
+  width: 3.6vw;
+  height: 3.6vw; /* Square items using vw to maintain aspect ratio */
   cursor: grab;
   user-select: none;
   /* Bottom is controlled by WorkScreen inline styles; no default here */

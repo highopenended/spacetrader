@@ -22,6 +22,16 @@ import { GlobalField } from '../types/physicsTypes';
 // ===== AIRBORNE PHYSICS CONSTANTS (after release) =====
 
 /**
+ * Scrap Size (world units)
+ * 
+ * Width and height of scrap items (square).
+ * Defined in world units for consistent sizing across all devices.
+ * 
+ * 0.72 wu = 3.6% of world width (20 wu) = 3.6vw on screen
+ */
+export const SCRAP_SIZE_WU = 0.72;
+
+/**
  * Scrap Baseline Height (world units)
  * 
  * Vertical position where grounded scrap sits on the assembly line.

@@ -40,7 +40,7 @@ import { ScrapObject } from '../types/scrapTypes';
 
 export interface ScrapDragDropInfo {
   scrapId: string;
-  releasePositionPx: { x: number; y: number }; // Screen pixels for drop detection
+  releasePositionWu: { x: number; y: number }; // World units for physics
   releaseVelocityWuPerSec: { vx: number; vy: number }; // World units per second for physics
   elementSizePx: { width: number; height: number }; // Screen pixels for rendering
 }
@@ -139,18 +139,14 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       return;
     }
 
-    // Velocity is already in world units from physics system
+    // Position and velocity are already in world units from physics system
+    const releasePositionWu = releasedState.position;
     const releaseVelocityWuPerSec = releasedState.velocity;
 
     if (onDrop) {
-      // Convert world position back to screen pixels for drop detection
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const screenPos = worldToScreen(releasedState.position.x, releasedState.position.y, viewportWidth, viewportHeight);
-      
       onDrop({ 
         scrapId: releasedState.scrapId, 
-        releasePositionPx: screenPos, 
+        releasePositionWu, 
         releaseVelocityWuPerSec, 
         elementSizePx: elementSizeRef.current 
       });
@@ -245,50 +241,11 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       // Convert cursor position to world units for physics calculations
       const cursorWorldPos = screenToWorld(cursorPos.x, cursorPos.y, viewportWidth, viewportHeight);
       
-      // Calculate cursor movement since last frame (in world units)
-      let cursorDeltaX = 0;
-      let cursorDeltaY = 0;
-      
-      if (previousCursorPosRef.current) {
-        const prevCursorWorldPos = screenToWorld(
-          previousCursorPosRef.current.x, 
-          previousCursorPosRef.current.y, 
-          viewportWidth, 
-          viewportHeight
-        );
-        cursorDeltaX = cursorWorldPos.x - prevCursorWorldPos.x;
-        cursorDeltaY = cursorWorldPos.y - prevCursorWorldPos.y;
-      }
       
       // Calculate distance and direction to cursor (all in world units)
       const dx = cursorWorldPos.x - currentGrabbedObject.position.x;
       const dy = cursorWorldPos.y - currentGrabbedObject.position.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      // If very close to cursor, not moving, and velocity is low, snap to it
-      // This prevents jitter when holding still and provides tight control at rest
-      // Thresholds in world units (2 wu ≈ 0.2 meters at current scale)
-      const cursorSpeed = Math.sqrt(cursorDeltaX * cursorDeltaX + cursorDeltaY * cursorDeltaY);
-      const scrapSpeed = Math.sqrt(
-        currentGrabbedObject.velocity.vx * currentGrabbedObject.velocity.vx + 
-        currentGrabbedObject.velocity.vy * currentGrabbedObject.velocity.vy
-      );
-      if (distance < 0.2 && cursorSpeed < 0.1 && scrapSpeed < 1.0) {
-        updateGrabbedObjectPosition(
-          cursorWorldPos,
-          { vx: 0, vy: 0 },
-          currentGrabbedObject.effectiveLoadResult || {
-            loadUp: currentGrabbedObject.mass,
-            loadDown: currentGrabbedObject.mass,
-            loadLeft: currentGrabbedObject.mass,
-            loadRight: currentGrabbedObject.mass,
-            effectiveLoad: currentGrabbedObject.mass,
-            manipulatorEffectiveness: 1.0
-          }
-        );
-        previousCursorPosRef.current = { x: cursorPos.x, y: cursorPos.y };
-        return;
-      }
       
       // Normalized drag direction (screen coords: +Y is down)
       const dragDirection = {

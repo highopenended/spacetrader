@@ -18,13 +18,13 @@ import { useScrapDropTargets } from '../../../hooks/useScrapDropTargets';
 import { useScrapPhysics } from '../../../hooks/useScrapPhysics';
 import { useScrapDrag } from '../../../hooks/useScrapDrag';
 import { useClockSubscription } from '../../../hooks/useClockSubscription';
-import { SCRAP_BASELINE_BOTTOM_WU } from '../../../constants/physicsConstants';
-import { screenToWorld, worldToScreen, WORLD_HEIGHT, WORLD_WIDTH } from '../../../constants/cameraConstants';
+import { SCRAP_BASELINE_BOTTOM_WU, SCRAP_SIZE_WU } from '../../../constants/physicsConstants';
+import { worldToScreen, WORLD_HEIGHT, WORLD_WIDTH } from '../../../constants/cameraConstants';
 import { MutatorRegistry } from '../../../constants/mutatorRegistry';
 import { DOM_IDS } from '../../../constants/domIds';
 import { ScrapRegistry } from '../../../constants/scrapRegistry';
 import WorkModePurgeZone from '../workModePurgeZone/WorkModePurgeZone';
-import { useGameStore, useUpgradesStore, useAnchorsStore, useBarrierStore } from '../../../stores';
+import { useGameStore, useUpgradesStore, useAnchorsStore, useBarrierStore, useDragStore } from '../../../stores';
 import { Anchor } from '../../../stores/anchorsStore';
 import { checkRectOverlap, viewportToRect, domRectToRect } from '../../../utils/collisionUtils';
 import { checkBarrierCollision } from '../../../utils/barrierCollisionUtils';
@@ -97,7 +97,12 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   const [beingCollectedIds, setBeingCollectedIds] = useState<Set<string>>(new Set());
   const { getDraggableProps, getDragStyle, draggedScrapId } = useScrapDrag({
     getScrap,
-    onDrop: ({ scrapId, releasePositionPx, releaseVelocityWuPerSec, elementSizePx }) => {
+    onDrop: ({ scrapId, releasePositionWu, releaseVelocityWuPerSec, elementSizePx }) => {
+			// Convert world position to screen pixels for purge zone detection only
+			const viewportWidth = window.innerWidth;
+			const viewportHeight = window.innerHeight;
+			const releasePositionPx = worldToScreen(releasePositionWu.x, releasePositionWu.y, viewportWidth, viewportHeight);
+			
 			// Resolve drop target (only purge zone now - bin uses continuous collision)
 			const target = resolveScrapDropTarget(releasePositionPx);
 			if (target === 'purgeZone') {
@@ -122,26 +127,14 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
 			}
 
       // Launch airborne with physics (bin collection handled by continuous collision)
-      // Convert release position to world units
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const worldPos = screenToWorld(releasePositionPx.x, releasePositionPx.y, viewportWidth, viewportHeight);
-      
-      // Convert X world position to VW for stream movement (use release X)
-      const vwPerPx = 1 / (viewportWidth / 100);
-      const leftPx = Math.max(0, releasePositionPx.x - (elementSizePx?.width || 0) / 2);
-      const newXvw = Math.max(0, Math.min(100, leftPx * vwPerPx));
+      // Don't update X position - it should stay where it visually is from the drag
+      // The X position will be updated by horizontal velocity integration during airborne
       
       // Calculate Y offset above baseline in world units
       // World coordinates have +Y DOWN (top=0), but physics needs +Y UP (height above ground)
       // Convert: worldPos.y=0 (top) → WORLD_HEIGHT from bottom, worldPos.y=WORLD_HEIGHT (bottom) → 0 from bottom
-      const worldYFromBottom = WORLD_HEIGHT - worldPos.y;
+      const worldYFromBottom = WORLD_HEIGHT - releasePositionWu.y;
       const yAboveBaselineWu = Math.max(0, worldYFromBottom - SCRAP_BASELINE_BOTTOM_WU);
-
-      setSpawnState(prev => ({
-        ...prev,
-        activeScrap: prev.activeScrap.map(s => (s.id === scrapId ? { ...s, x: newXvw } : s))
-      }));
 
       // Apply custom physics modifiers for dense scrap
       const mutators = getScrapMutators(scrapId);
@@ -213,15 +206,22 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
         ...updated,
         activeScrap: updated.activeScrap.map(scrap => {
           if (scrap.id === draggedScrapId) {
-            // Freeze dragged scrap entirely (no conveyor movement or off-screen)
+            // Update dragged scrap X position to match visual drag position (in world units)
+            const grabbedObj = useDragStore.getState().grabbedObject;
+            if (grabbedObj.scrapId === scrap.id && grabbedObj.position) {
+              // Position is already in world units (center), convert to left edge
+              const centerXWu = grabbedObj.position.x;
+              const leftEdgeWu = centerXWu - (SCRAP_SIZE_WU / 2);
+              return { ...scrap, x: leftEdgeWu, isOffScreen: false };
+            }
+            // Fallback: freeze in place
             const prevX = prevXMap.get(scrap.id) ?? scrap.x;
             return { ...scrap, x: prevX, isOffScreen: false };
           }
           if (isAirborne(scrap.id)) {
             const prevX = prevXMap.get(scrap.id) ?? scrap.x;
             const vxWu = getHorizontalVelocity(scrap.id); // World units per second
-            const vxVw = vxWu * (100 / WORLD_WIDTH); // Convert to viewport width % per second
-            const nextX = Math.max(0, Math.min(100, prevX + vxVw * dtSeconds));
+            const nextX = prevX + vxWu * dtSeconds; // Stay in world units
             return { ...scrap, x: nextX };
           }
           return scrap;
@@ -283,8 +283,9 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
 
   // Helper: compute actual on-screen position for a scrap id, including drag overrides
   const getRenderedPosition = useCallback((scrap: ActiveScrapObject) => {
-    // Defaults from physics/baseline
-    let xVw = scrap.x;
+    // Convert world units to viewport units for rendering
+    // scrap.x is in world units (left edge), convert to VW
+    let xVw = (scrap.x / WORLD_WIDTH) * 100;
     const airborne = getAirborneState(scrap.id);
     // Convert world unit baseline to VH for rendering
     const viewportWidth = window.innerWidth;
@@ -437,8 +438,10 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
                   const correctionXVw = collision.normal.x * collision.penetration;
                   const correctionYVh = collision.normal.y * collision.penetration;
                   
-                  // Update X position (horizontal in VW)
-                  const newX = scrap.x + correctionXVw;
+                  // Update X position (horizontal in world units)
+                  // Convert VW correction to world units
+                  const correctionXWu = (correctionXVw / 100) * WORLD_WIDTH;
+                  const newX = scrap.x + correctionXWu;
                   newState = {
                     ...newState,
                     activeScrap: newState.activeScrap.map(s => 
@@ -446,11 +449,10 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
                     )
                   };
                   
-                  // Update Y position (vertical in VP for airborne system)
-                  // Convert VH to VP: VP uses viewport-min as base
-                  const minDimension = Math.min(window.innerWidth, window.innerHeight);
-                  const correctionYVp = (correctionYVh / 100) * window.innerHeight / minDimension * 100;
-                  adjustPosition(scrap.id, correctionYVp);
+                  // Update Y position (vertical in world units for airborne system)
+                  // Convert VH to world units: VH is percentage, world height is 10 wu
+                  const correctionYWu = (correctionYVh / 100) * WORLD_HEIGHT;
+                  adjustPosition(scrap.id, correctionYWu);
                 }
                 
                 // Apply reflected velocity
@@ -542,7 +544,8 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
         ...scrap,
         style: {
           // Anchoring model: left (vw) + bottom (vh), transform: none
-          left: `${scrap.x}vw`,
+          // Convert world units to vw for rendering
+          left: `${(scrap.x / WORLD_WIDTH) * 100}vw`,
           transform: 'none',
           bottom: `${bottomVh}vh`
         }
