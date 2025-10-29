@@ -83,8 +83,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.15rem;
-  /* Base: 4 rows (X/Y, Subs/Drag, Spd/Dist, Mass/Grip) */
-  /* Physics active: 8 rows total (X/Y, Subs/Drag, Spd/Dist, Mass/Grip, Load/Eff, ↑/↓, ←/→) */
+  /* Base: 2 rows (X/Y, Subs/Drag) */
 }
 
 .mouse-debug-readout__metric {

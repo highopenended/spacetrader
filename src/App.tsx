@@ -47,6 +47,7 @@ import ClockTestSubscriber from './components/clock/ClockTestSubscriber';
 // Global Mouse Tracking
 import GlobalMouseTracker from './components/GlobalMouseTracker';
 import MouseDebugReadout from './components/clock/MouseDebugReadout';
+import GrabbedScrapDebugReadout from './components/clock/GrabbedScrapDebugReadout';
 import CameraDebugReadout from './components/clock/CameraDebugReadout';
 
 function App() {  
@@ -319,6 +320,7 @@ function App() {
         <GameOptionsGear />
         <ClockDebugReadout visible={true} position="bottom-left" />
         <MouseDebugReadout visible={true} position="bottom-left" />
+        <GrabbedScrapDebugReadout visible={true} position="bottom-left" />
         <CameraDebugReadout visible={true} position="bottom-center" />
         {/* <ClockTestSubscriber visible={true} position="bottom-left" /> */}
         <DataReadout {...componentProps.dataReadout} />
