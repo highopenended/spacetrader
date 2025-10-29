@@ -6,8 +6,9 @@
  * Positioned next to ClockDebugReadout.
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDragStore } from '../../stores';
+import { screenToWorld } from '../../constants/cameraConstants';
 import './MouseDebugReadout.css';
 
 interface MouseDebugReadoutProps {
@@ -29,17 +30,46 @@ const MouseDebugReadout: React.FC<MouseDebugReadoutProps> = ({
   const subscribeToMouse = useDragStore(state => state.subscribeToMouse);
   const unsubscribeFromMouse = useDragStore(state => state.unsubscribeFromMouse);
   
+  // Viewport dimensions for coordinate conversion
+  const [viewport, setViewport] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
+
+  // Update viewport size on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setViewport({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Check if scrap is being dragged (not app/window drag)
   const grabbedObject = useDragStore(state => state.grabbedObject);
   const isScrapDragging = !!grabbedObject.scrapId;
 
   // Subscribe this debug component to mouse tracking
-  React.useEffect(() => {
+  useEffect(() => {
     subscribeToMouse('MouseDebugReadout');
     return () => {
       unsubscribeFromMouse('MouseDebugReadout');
     };
   }, [subscribeToMouse, unsubscribeFromMouse]);
+
+  // Convert cursor position to world units
+  const cursorWorldPosition = globalMousePosition
+    ? screenToWorld(
+        globalMousePosition.x,
+        globalMousePosition.y,
+        viewport.width,
+        viewport.height
+      )
+    : null;
 
   if (!visible) return null;
 
@@ -66,6 +96,20 @@ const MouseDebugReadout: React.FC<MouseDebugReadoutProps> = ({
           <span className="metric-label">Y(px):</span>
           <span className="metric-value">
             {globalMousePosition?.y?.toFixed(0) ?? '---'}
+          </span>
+        </div>
+        
+        <div className="mouse-debug-readout__metric" title="Cursor X position in world units">
+          <span className="metric-label">X(wu):</span>
+          <span className="metric-value">
+            {cursorWorldPosition ? cursorWorldPosition.x.toFixed(3) : '---'}
+          </span>
+        </div>
+        
+        <div className="mouse-debug-readout__metric" title="Cursor Y position in world units">
+          <span className="metric-label">Y(wu):</span>
+          <span className="metric-value">
+            {cursorWorldPosition ? cursorWorldPosition.y.toFixed(3) : '---'}
           </span>
         </div>
         

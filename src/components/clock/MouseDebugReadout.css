@@ -83,7 +83,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.15rem;
-  /* Base: 2 rows (X/Y, Subs/Drag) */
+  /* Base: 3 rows (X(px)/Y(px), X(wu)/Y(wu), Subs/Drag) */
 }
 
 .mouse-debug-readout__metric {
