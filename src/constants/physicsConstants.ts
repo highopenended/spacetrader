@@ -42,6 +42,30 @@ export const SCRAP_SIZE_WU = 0.72;
 export const SCRAP_BASELINE_BOTTOM_WU = 1.2;
 
 /**
+ * Scrap Bin Size (world units)
+ * 
+ * Width and height of the scrap bin (square).
+ * Defined in world units for consistent sizing across all devices.
+ * 
+ * 1.5 wu = 7.5% of world width (20 wu)
+ */
+export const SCRAP_BIN_SIZE_WU = 1.5;
+
+/**
+ * Scrap Bin Position (world units)
+ * 
+ * World position where the scrap bin is centered.
+ * X is horizontal center of world, Y is distance from top.
+ * 
+ * x: 10 wu = center of 20 wu wide world
+ * y: 0.5 wu = near top of world (0.5 wu from top edge)
+ */
+export const SCRAP_BIN_POSITION_WU = {
+  x: 10,  // Center horizontally
+  y: 0.5  // Near top (0.5 wu from top edge)
+};
+
+/**
  * Gravity Acceleration (world units per second squared)
  * 
  * Downward acceleration applied to airborne scrap.

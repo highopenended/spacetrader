@@ -42,13 +42,15 @@ import EndingCutscene from './components/endings/EndingCutscene';
 // Global Clock System
 import ClockManager from './components/clock/ClockManager';
 import ClockDebugReadout from './components/clock/ClockDebugReadout';
-import ClockTestSubscriber from './components/clock/ClockTestSubscriber';
 
 // Global Mouse Tracking
 import GlobalMouseTracker from './components/GlobalMouseTracker';
 import MouseDebugReadout from './components/clock/MouseDebugReadout';
 import GrabbedScrapDebugReadout from './components/clock/GrabbedScrapDebugReadout';
 import CameraDebugReadout from './components/clock/CameraDebugReadout';
+
+// Global Viewport Tracking
+import GlobalViewportTracker from './components/GlobalViewportTracker';
 
 function App() {  
   // ===== ZUSTAND GAME STORE SELECTORS =====
@@ -311,6 +313,9 @@ function App() {
       
       {/* Global Mouse Tracking - centralized mouse position tracking */}
       <GlobalMouseTracker />
+      
+      {/* Global Viewport Tracking - centralized viewport size tracking */}
+      <GlobalViewportTracker />
       
       <div className="App">
         <GameBackground backgroundId={gameBackground} />

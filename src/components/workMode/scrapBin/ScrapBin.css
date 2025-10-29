@@ -1,10 +1,6 @@
 .scrap-bin {
   position: fixed;
-  top: 2vh;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 8vw; /* Converted from 80px */
-  height: 8vw; /* Converted from 80px - using vw to maintain square aspect ratio */
+  /* Position and size are set via inline styles from WorkScreen using world units */
   z-index: 101;
   user-select: none;
 }

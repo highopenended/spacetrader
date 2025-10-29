@@ -18,13 +18,13 @@ import { useScrapDropTargets } from '../../../hooks/useScrapDropTargets';
 import { useScrapPhysics } from '../../../hooks/useScrapPhysics';
 import { useScrapDrag } from '../../../hooks/useScrapDrag';
 import { useClockSubscription } from '../../../hooks/useClockSubscription';
-import { SCRAP_BASELINE_BOTTOM_WU, SCRAP_SIZE_WU } from '../../../constants/physicsConstants';
+import { SCRAP_BASELINE_BOTTOM_WU, SCRAP_SIZE_WU, SCRAP_BIN_SIZE_WU, SCRAP_BIN_POSITION_WU } from '../../../constants/physicsConstants';
 import { worldToScreen, WORLD_HEIGHT, WORLD_WIDTH, calculateZoom } from '../../../constants/cameraConstants';
 import { MutatorRegistry } from '../../../constants/mutatorRegistry';
 import { DOM_IDS } from '../../../constants/domIds';
 import { ScrapRegistry } from '../../../constants/scrapRegistry';
 import WorkModePurgeZone from '../workModePurgeZone/WorkModePurgeZone';
-import { useGameStore, useUpgradesStore, useAnchorsStore, useBarrierStore, useDragStore } from '../../../stores';
+import { useGameStore, useUpgradesStore, useAnchorsStore, useBarrierStore, useDragStore, useViewportStore } from '../../../stores';
 import { Anchor } from '../../../stores/anchorsStore';
 import { checkRectOverlap, domRectToRect, Rect } from '../../../utils/collisionUtils';
 import { checkBarrierCollision } from '../../../utils/barrierCollisionUtils';
@@ -183,6 +183,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       });
       rafId = requestAnimationFrame(tick);
     };
+    
     rafId = requestAnimationFrame(tick);
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
@@ -651,11 +652,35 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   const isUpgradePurchased_WorkMode = isUpgradePurchased('purgeZone.workModePurgeZone');
   const showWorkModePurgeZone = isPurgeZoneInstalled && isUpgradePurchased_WorkMode;
 
+  // Get viewport dimensions from centralized viewport store
+  const viewport = useViewportStore(state => state.viewport);
+  
+  // Calculate scrap bin screen position from world units (respects letterboxing)
+  // Uses centralized viewport store - updates reactively when viewport changes
+  const centerScreenPos = worldToScreen(SCRAP_BIN_POSITION_WU.x, SCRAP_BIN_POSITION_WU.y, viewport.width, viewport.height);
+  const zoom = calculateZoom(viewport.width, viewport.height);
+  const binSizePx = SCRAP_BIN_SIZE_WU * zoom;
+  
+  const binScreenPosition = {
+    left: centerScreenPos.x - binSizePx / 2,
+    top: centerScreenPos.y - binSizePx / 2,
+    width: binSizePx,
+    height: binSizePx
+  };
+
   return (
     <div className="work-screen">
       <WorkTimer elapsedSeconds={elapsedSeconds} collectedCount={collectedCount} />
       <AssemblyLine />
-      <ScrapBin ref={dropZoneRef} />
+      <ScrapBin 
+        ref={dropZoneRef} 
+        style={{
+          left: `${binScreenPosition.left}px`,
+          top: `${binScreenPosition.top}px`,
+          width: `${binScreenPosition.width}px`,
+          height: `${binScreenPosition.height}px`
+        }}
+      />
       
       {/* Conditional work mode purge zone */}
       {showWorkModePurgeZone && <WorkModePurgeZone />}
