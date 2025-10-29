@@ -4,11 +4,13 @@
  * Provides a ref to attach to a drop zone element and helpers to
  * read its current screen bounds and hit-test a point against it.
  *
- * - Attaches listeners to keep cached bounds reasonably fresh
+ * - Uses centralized viewport store for resize events
+ * - Still listens to scroll events (viewport-independent)
  * - Exposes an explicit measure() to force-update when needed
  */
 
 import { useRef, useCallback, useEffect } from 'react';
+import { useViewportStore } from '../stores';
 
 export interface DropZoneBoundsApi {
   dropZoneRef: React.MutableRefObject<HTMLDivElement | null>;
@@ -20,6 +22,9 @@ export interface DropZoneBoundsApi {
 export const useDropZoneBounds = (): DropZoneBoundsApi => {
   const dropZoneRef = useRef<HTMLDivElement | null>(null);
   const cachedRectRef = useRef<DOMRect | null>(null);
+  
+  // Subscribe to viewport changes for resize-triggered remeasure
+  const viewport = useViewportStore(state => state.viewport);
 
   const measure = useCallback(() => {
     if (dropZoneRef.current) {
@@ -27,21 +32,25 @@ export const useDropZoneBounds = (): DropZoneBoundsApi => {
     }
   }, []);
 
+  // Initial measure after mount
   useEffect(() => {
-    // Initial measure after mount
     measure();
+  }, [measure]);
 
-    const handleWindowChange = () => {
-      // Re-measure on viewport-affecting events
+  // Remeasure when viewport size changes (resize)
+  useEffect(() => {
+    measure();
+  }, [viewport.width, viewport.height, measure]);
+
+  // Listen to scroll events (not handled by viewport store)
+  useEffect(() => {
+    const handleScroll = () => {
       measure();
     };
 
-    window.addEventListener('resize', handleWindowChange);
-    window.addEventListener('scroll', handleWindowChange, true);
-
+    window.addEventListener('scroll', handleScroll, true);
     return () => {
-      window.removeEventListener('resize', handleWindowChange);
-      window.removeEventListener('scroll', handleWindowChange, true);
+      window.removeEventListener('scroll', handleScroll, true);
     };
   }, [measure]);
 

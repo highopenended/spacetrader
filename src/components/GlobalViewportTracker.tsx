@@ -9,7 +9,7 @@
  */
 
 import { useEffect } from 'react';
-import { useViewportStore } from '../stores/viewportStore';
+import { useViewportStore } from '../stores';
 
 export const GlobalViewportTracker: React.FC = () => {
   const updateViewport = useViewportStore(state => state.updateViewport);

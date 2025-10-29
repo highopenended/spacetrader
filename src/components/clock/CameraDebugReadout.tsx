@@ -5,8 +5,9 @@
  * Shows game world size, viewport size, zoom factor, and letterbox bars.
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { WORLD_WIDTH, WORLD_HEIGHT, calculateZoom, calculateLetterbox } from '../../constants/cameraConstants';
+import { useViewportStore } from '../../stores';
 import './CameraDebugReadout.css';
 
 interface CameraDebugReadoutProps {
@@ -21,23 +22,8 @@ const CameraDebugReadout: React.FC<CameraDebugReadoutProps> = ({
   visible = true,
   position = 'bottom-center' 
 }) => {
-  const [viewport, setViewport] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight
-  });
-
-  // Update viewport size on window resize
-  useEffect(() => {
-    const handleResize = () => {
-      setViewport({
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Viewport dimensions from centralized viewport store
+  const viewport = useViewportStore(state => state.viewport);
 
   if (!visible) return null;
 

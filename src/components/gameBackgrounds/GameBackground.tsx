@@ -6,9 +6,10 @@
  * the viewport aspect ratio doesn't match the game world aspect ratio.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { GameBackgroundRegistry, BackgroundId } from '../../constants/gameBackgroundRegistry';
 import { calculateLetterbox } from '../../constants/cameraConstants';
+import { useViewportStore } from '../../stores';
 import './GameBackground.css';
 
 interface GameBackgroundProps {
@@ -16,18 +17,13 @@ interface GameBackgroundProps {
 }
 
 const GameBackground: React.FC<GameBackgroundProps> = ({ backgroundId }) => {
-  const [letterbox, setLetterbox] = useState(calculateLetterbox(window.innerWidth, window.innerHeight));
+  const viewport = useViewportStore(state => state.viewport);
   const BackgroundComponent = GameBackgroundRegistry[backgroundId];
   
-  // Update letterbox bars on window resize
-  useEffect(() => {
-    const handleResize = () => {
-      setLetterbox(calculateLetterbox(window.innerWidth, window.innerHeight));
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Calculate letterbox bars from centralized viewport store
+  const letterbox = useMemo(() => {
+    return calculateLetterbox(viewport.width, viewport.height);
+  }, [viewport.width, viewport.height]);
   
   if (!BackgroundComponent) {
     // Fallback to default background if component not found

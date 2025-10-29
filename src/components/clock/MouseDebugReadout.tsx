@@ -6,8 +6,8 @@
  * Positioned next to ClockDebugReadout.
  */
 
-import React, { useState, useEffect } from 'react';
-import { useDragStore } from '../../stores';
+import React, { useEffect } from 'react';
+import { useDragStore, useViewportStore } from '../../stores';
 import { screenToWorld } from '../../constants/cameraConstants';
 import './MouseDebugReadout.css';
 
@@ -30,24 +30,8 @@ const MouseDebugReadout: React.FC<MouseDebugReadoutProps> = ({
   const subscribeToMouse = useDragStore(state => state.subscribeToMouse);
   const unsubscribeFromMouse = useDragStore(state => state.unsubscribeFromMouse);
   
-  // Viewport dimensions for coordinate conversion
-  const [viewport, setViewport] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight
-  });
-
-  // Update viewport size on window resize
-  useEffect(() => {
-    const handleResize = () => {
-      setViewport({
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Viewport dimensions from centralized viewport store
+  const viewport = useViewportStore(state => state.viewport);
 
   // Check if scrap is being dragged (not app/window drag)
   const grabbedObject = useDragStore(state => state.grabbedObject);
