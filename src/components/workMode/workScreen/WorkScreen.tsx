@@ -19,14 +19,14 @@ import { useScrapPhysics } from '../../../hooks/useScrapPhysics';
 import { useScrapDrag } from '../../../hooks/useScrapDrag';
 import { useClockSubscription } from '../../../hooks/useClockSubscription';
 import { SCRAP_BASELINE_BOTTOM_WU, SCRAP_SIZE_WU } from '../../../constants/physicsConstants';
-import { worldToScreen, WORLD_HEIGHT, WORLD_WIDTH } from '../../../constants/cameraConstants';
+import { worldToScreen, WORLD_HEIGHT, WORLD_WIDTH, calculateZoom } from '../../../constants/cameraConstants';
 import { MutatorRegistry } from '../../../constants/mutatorRegistry';
 import { DOM_IDS } from '../../../constants/domIds';
 import { ScrapRegistry } from '../../../constants/scrapRegistry';
 import WorkModePurgeZone from '../workModePurgeZone/WorkModePurgeZone';
 import { useGameStore, useUpgradesStore, useAnchorsStore, useBarrierStore, useDragStore } from '../../../stores';
 import { Anchor } from '../../../stores/anchorsStore';
-import { checkRectOverlap, viewportToRect, domRectToRect } from '../../../utils/collisionUtils';
+import { checkRectOverlap, domRectToRect, Rect } from '../../../utils/collisionUtils';
 import { checkBarrierCollision } from '../../../utils/barrierCollisionUtils';
 import Barrier from '../barrier/Barrier';
 
@@ -65,7 +65,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   // Scrap spawning state
   const [spawnState, setSpawnState] = useState<ScrapSpawnState>(initializeScrapSpawnState());
   const [collectedCount, setCollectedCount] = useState<number>(0);
-  const [scrapSize, setScrapSize] = useState<{ widthVw: number; heightVh: number } | null>(null);
+  // Scrap size is now a constant in world units - no need for dynamic measurement
 
   // Centralized scrap drop targets (purge zone + bin)
   const { binRef: dropZoneRef, resolveScrapDropTarget } = useScrapDropTargets();
@@ -169,8 +169,12 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
           if (dragStyle && typeof dragStyle.left === 'string' && typeof dragStyle.bottom === 'string') {
             const leftPx = parseFloat(dragStyle.left);
             const bottomPx = parseFloat(dragStyle.bottom);
-            const x = leftPx + (window.innerWidth * 0.018); // approx half of 3.6vw square
-            const y = window.innerHeight - bottomPx - (window.innerHeight * 0.018);
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
+            // Calculate center of scrap element
+            const x = leftPx + scrapSizePx / 2;
+            const y = viewportHeight - bottomPx - scrapSizePx / 2;
             const target = resolveScrapDropTarget({ x, y });
             if (target === 'purgeZone') el.classList.add('active');
             else el.classList.remove('active');
@@ -236,97 +240,61 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     setSpawnState(prevState => cleanupCollectedScrap(prevState));
   }, []);
 
-  // Measure scrap element size (dynamic) and cache in vw/vh units
-  useEffect(() => {
-    const measure = () => {
-      const el = document.querySelector('.scrap-item') as HTMLElement | null;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        const widthVw = rect.width * (100 / window.innerWidth);
-        const heightVh = rect.height * (100 / window.innerHeight);
-        setScrapSize(prev => {
-          if (!prev || Math.abs(prev.widthVw - widthVw) > 0.01 || Math.abs(prev.heightVh - heightVh) > 0.01) {
-            return { widthVw, heightVh };
-          }
-          return prev;
-        });
-      }
-    };
-    // Initial tries (immediate and next frame)
-    measure();
-    const raf = requestAnimationFrame(measure);
-    const onResize = () => measure();
-    window.addEventListener('resize', onResize);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('resize', onResize);
-    };
-  }, []);
+  // Scrap size is constant in world units (SCRAP_SIZE_WU)
 
-  // If we haven't measured yet, try again when scraps appear
-  useEffect(() => {
-    if (scrapSize) return;
-    if (spawnState.activeScrap.length === 0) return;
-    const raf = requestAnimationFrame(() => {
-      const el = document.querySelector('.scrap-item') as HTMLElement | null;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        const widthVw = rect.width * (100 / window.innerWidth);
-        const heightVh = rect.height * (100 / window.innerHeight);
-        setScrapSize({ widthVw, heightVh });
-      }
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [scrapSize, spawnState.activeScrap.length]);
-
-  // Helper: compute actual on-screen position for a scrap id, including drag overrides
+  // Helper: compute actual on-screen position for a scrap id in screen pixels, including drag overrides
   const getRenderedPosition = useCallback((scrap: ActiveScrapObject) => {
-    // Convert world units to viewport units for rendering
-    // scrap.x is in world units (left edge), convert to VW
-    let xVw = (scrap.x / WORLD_WIDTH) * 100;
-    const airborne = getAirborneState(scrap.id);
-    // Convert world unit baseline to VH for rendering
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    const minDimension = Math.min(viewportWidth, viewportHeight);
-    const baseBottomVh = (SCRAP_BASELINE_BOTTOM_WU * minDimension / 10) * (100 / viewportHeight);
-    let bottomVh = airborne?.isAirborne 
-      ? baseBottomVh + ((airborne.yWu * minDimension / 10) * (100 / viewportHeight))
-      : baseBottomVh;
-
-    // If dragging, override from drag style (may be px or vw/vh)
+    
+    // Calculate world position (center of scrap)
+    const airborne = getAirborneState(scrap.id);
+    const centerXWu = scrap.x + (SCRAP_SIZE_WU / 2); // scrap.x is left edge, convert to center
+    
+    // Calculate Y position in world units (Y=0 is top, increases downward)
+    // World Y from bottom = SCRAP_BASELINE_BOTTOM_WU + airborne offset
+    const worldYFromBottomWu = SCRAP_BASELINE_BOTTOM_WU + (airborne?.isAirborne ? airborne.yWu : 0);
+    // Convert to world Y coordinate (Y=0 is top, WORLD_HEIGHT is bottom)
+    const centerYWu = WORLD_HEIGHT - worldYFromBottomWu;
+    
+    // Convert world position to screen pixels using camera system
+    let screenPos = worldToScreen(centerXWu, centerYWu, viewportWidth, viewportHeight);
+    
+    // If dragging, override from drag style (dragStyle returns pixels)
     const dragStyle = getDragStyle(scrap.id);
     if (dragStyle) {
-      const vwPerPx = 100 / window.innerWidth;
-      const vhPerPx = 100 / window.innerHeight;
-
       const left = dragStyle.left as unknown as string | number | undefined;
       const bottom = dragStyle.bottom as unknown as string | number | undefined;
 
-      if (typeof left === 'string') {
-        if (left.endsWith('vw')) xVw = parseFloat(left);
-        else if (left.endsWith('px')) xVw = parseFloat(left) * vwPerPx;
+      if (typeof left === 'string' && left.endsWith('px')) {
+        // dragStyle.left is left edge in pixels, convert to center
+        const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
+        screenPos.x = parseFloat(left) + scrapSizePx / 2;
       } else if (typeof left === 'number') {
-        xVw = left * vwPerPx;
+        const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
+        screenPos.x = left + scrapSizePx / 2;
       }
 
-      if (typeof bottom === 'string') {
-        if (bottom.endsWith('vh')) bottomVh = parseFloat(bottom);
-        else if (bottom.endsWith('px')) bottomVh = parseFloat(bottom) * vhPerPx;
+      if (typeof bottom === 'string' && bottom.endsWith('px')) {
+        // bottom is distance from bottom of viewport, convert to screen Y (top=0)
+        const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
+        screenPos.y = viewportHeight - parseFloat(bottom) - scrapSizePx / 2;
       } else if (typeof bottom === 'number') {
-        bottomVh = bottom * vhPerPx;
+        const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
+        screenPos.y = viewportHeight - bottom - scrapSizePx / 2;
       }
     }
 
-    return { xVw, bottomVh: bottomVh };
+    return screenPos;
   }, [getAirborneState, getDragStyle]);
 
   // Check scrap-bin collisions and collect any overlapping scrap
   const checkBinCollisions = useCallback(() => {
     if (!dropZoneRef.current) return;
-    if (!scrapSize) return;
+    
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
     
     const binRect = domRectToRect(dropZoneRef.current.getBoundingClientRect());
     
@@ -338,9 +306,16 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       for (const scrap of prevState.activeScrap) {
         if (scrap.isCollected) continue;
         
-        // Get current rendered position (handles drag override and airborne state)
-        const { xVw, bottomVh } = getRenderedPosition(scrap);
-        const scrapRect = viewportToRect(xVw, bottomVh, scrapSize.widthVw, scrapSize.heightVh);
+        // Get current rendered position in screen pixels (center)
+        const centerPos = getRenderedPosition(scrap);
+        
+        // Convert center position + size to rect (top-left corner)
+        const scrapRect: Rect = {
+          left: centerPos.x - scrapSizePx / 2,
+          top: centerPos.y - scrapSizePx / 2,
+          right: centerPos.x + scrapSizePx / 2,
+          bottom: centerPos.y + scrapSizePx / 2
+        };
         
         // Check collision
         if (checkRectOverlap(scrapRect, binRect)) {
@@ -363,7 +338,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       
       return newState;
     });
-  }, [dropZoneRef, scrapSize, getRenderedPosition, updateCredits]);
+  }, [dropZoneRef, getRenderedPosition, updateCredits]);
 
   // Subscribe to global clock for game loop
   useClockSubscription(
@@ -384,43 +359,55 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       checkScrapSpawning(scaledTimeRef.current); // Use scaled time for spawn timing
 
       // Check barrier collisions for airborne scrap (after physics, before bin)
-      if (scrapSize) {
-        const activeBarriers = useBarrierStore.getState().getAllBarriers();
-        for (const barrier of activeBarriers) {
-          if (!barrier.enabled) continue;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
+      const scrapWidthVw = (scrapSizePx / viewportWidth) * 100;
+      const scrapHeightVh = (scrapSizePx / viewportHeight) * 100;
+      
+      const activeBarriers = useBarrierStore.getState().getAllBarriers();
+      for (const barrier of activeBarriers) {
+        if (!barrier.enabled) continue;
+        
+        setSpawnState(prevState => {
+          let newState = prevState;
           
-          setSpawnState(prevState => {
-            let newState = prevState;
+          prevState.activeScrap.forEach(scrap => {
+            if (!isAirborne(scrap.id)) return; // Only check airborne scrap
             
-            prevState.activeScrap.forEach(scrap => {
-              if (!isAirborne(scrap.id)) return; // Only check airborne scrap
-              
-              const { xVw, bottomVh } = getRenderedPosition(scrap);
-              
-              // Use AVERAGED velocity over last 5 frames for stable, accurate collision response
-              const velocity = getAveragedVelocity(scrap.id);
-              if (!velocity) return;
-              
-              // Get previous position for swept collision detection
-              const airborneState = getAirborneState(scrap.id);
-              let prevBottomVh: number | undefined = undefined;
-              if (airborneState?.prevYWu !== undefined) {
-                // Convert world unit prevY to VH
-                const viewportHeight = window.innerHeight;
-                const minDimension = Math.min(window.innerWidth, window.innerHeight);
-                const prevYOffsetVh = (airborneState.prevYWu * minDimension / 10) * (100 / viewportHeight);
-                prevBottomVh = ((SCRAP_BASELINE_BOTTOM_WU * minDimension / 10) * (100 / viewportHeight)) + prevYOffsetVh;
-              }
-              
-              const collision = checkBarrierCollision(
-                xVw,
-                bottomVh,
-                scrapSize.widthVw,
-                scrapSize.heightVh,
-                velocity,
-                barrier,
-                prevBottomVh
-              );
+            // Get position in screen pixels, convert to vw/vh for barrier collision (barrier system still uses vw/vh)
+            const centerPos = getRenderedPosition(scrap);
+            const scrapLeftXPx = centerPos.x - scrapSizePx / 2;
+            const scrapBottomYPx = viewportHeight - (centerPos.y + scrapSizePx / 2);
+            const xVw = (scrapLeftXPx / viewportWidth) * 100;
+            const bottomVh = (scrapBottomYPx / viewportHeight) * 100;
+            
+            // Use AVERAGED velocity over last 5 frames for stable, accurate collision response
+            const velocity = getAveragedVelocity(scrap.id);
+            if (!velocity) return;
+            
+            // Get previous position for swept collision detection
+            const airborneState = getAirborneState(scrap.id);
+            let prevBottomVh: number | undefined = undefined;
+            if (airborneState?.prevYWu !== undefined) {
+              // Convert world unit prevY to screen pixels, then to VH
+              const prevWorldYFromBottomWu = SCRAP_BASELINE_BOTTOM_WU + airborneState.prevYWu;
+              const prevCenterYWu = WORLD_HEIGHT - prevWorldYFromBottomWu;
+              const prevCenterXPx = scrap.x + SCRAP_SIZE_WU / 2;
+              const prevScreenPos = worldToScreen(prevCenterXPx, prevCenterYWu, viewportWidth, viewportHeight);
+              const prevBottomYPx = viewportHeight - (prevScreenPos.y + scrapSizePx / 2);
+              prevBottomVh = (prevBottomYPx / viewportHeight) * 100;
+            }
+            
+            const collision = checkBarrierCollision(
+              xVw,
+              bottomVh,
+              scrapWidthVw,
+              scrapHeightVh,
+              velocity,
+              barrier,
+              prevBottomVh
+            );
               
               if (collision.collided) {
                 // If swept collision provided a corrected position, use it directly
@@ -462,7 +449,6 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
             
             return newState;
           });
-        }
       }
 
       // Check bin collisions every frame (continuous collision detection)
@@ -528,43 +514,60 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   // Memoize scrap items with stable style objects to prevent unnecessary re-renders
   const scrapItems = useMemo(() => {
     type ScrapWithStyle = ActiveScrapObject & { style: React.CSSProperties };
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
+    
     const items: ScrapWithStyle[] = spawnState.activeScrap
       .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
       .map((scrap) => {
-      const airborne = getAirborneState(scrap.id);
-      // Convert world unit baseline to VH for rendering
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const minDimension = Math.min(viewportWidth, viewportHeight);
-      const baseBottomVh = (SCRAP_BASELINE_BOTTOM_WU * minDimension / 10) * (100 / viewportHeight);
-      const bottomVh = airborne?.isAirborne 
-        ? baseBottomVh + ((airborne.yWu * minDimension / 10) * (100 / viewportHeight))
-        : baseBottomVh;
-      const item: ScrapWithStyle = {
-        ...scrap,
-        style: {
-          // Anchoring model: left (vw) + bottom (vh), transform: none
-          // Convert world units to vw for rendering
-          left: `${(scrap.x / WORLD_WIDTH) * 100}vw`,
-          transform: 'none',
-          bottom: `${bottomVh}vh`
+        // Get position in screen pixels using worldToScreen
+        const centerPos = getRenderedPosition(scrap);
+        const leftPx = centerPos.x - scrapSizePx / 2;
+        const bottomPx = viewportHeight - (centerPos.y + scrapSizePx / 2);
+        
+        const item: ScrapWithStyle = {
+          ...scrap,
+          style: {
+            // Use pixel-based positioning (drag style already uses pixels)
+            position: 'fixed',
+            left: `${leftPx}px`,
+            bottom: `${bottomPx}px`,
+            transform: 'none',
+            zIndex: 100 // Default z-index, drag style will override when dragging
+          }
+        };
+        
+        // If dragging, override with drag style (already in pixels)
+        const draggingStyle = getDragStyle(scrap.id);
+        if (draggingStyle) {
+          item.style = draggingStyle;
         }
-      };
-      const draggingStyle = getDragStyle(scrap.id);
-      if (draggingStyle) {
-        item.style = draggingStyle;
-      }
-      return item;
-    });
+        return item;
+      });
     return items;
-  }, [spawnState.activeScrap, beingCollectedIds, getAirborneState, getDragStyle]);
+  }, [spawnState.activeScrap, beingCollectedIds, getRenderedPosition, getDragStyle]);
 
   // Publish anchors for overlays when Dumpster Vision is active
   useEffect(() => {
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
+    
     const anchors: Anchor[] = spawnState.activeScrap
       .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
       .map((scrap) => {
-        const { xVw, bottomVh } = getRenderedPosition(scrap);
+        // Get position in screen pixels (center)
+        const centerPos = getRenderedPosition(scrap);
+        
+        // Convert to vw/vh for anchors (anchor system expects vw/vh)
+        const leftPx = centerPos.x - scrapSizePx / 2;
+        const bottomPx = viewportHeight - (centerPos.y + scrapSizePx / 2);
+        const xVw = (leftPx / viewportWidth) * 100;
+        const bottomVh = (bottomPx / viewportHeight) * 100;
+        const scrapWidthVw = (scrapSizePx / viewportWidth) * 100;
+        const scrapHeightVh = (scrapSizePx / viewportHeight) * 100;
+        
         const typeEntry = ScrapRegistry[scrap.typeId as keyof typeof ScrapRegistry];
         const typeLabel = `${typeEntry?.label ?? scrap.typeId}`;
         const mutatorLinesArr = scrap.mutators
@@ -573,30 +576,46 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
             return m ? `${m.appearance} ${m.label}` : id;
           });
         const label = [typeLabel, ...mutatorLinesArr].join('\n');
+        
         // Compute scrap center for connectors
-        const cxVw = xVw + (scrapSize?.widthVw ?? 0) / 2;
-        const cyVh = bottomVh + (scrapSize?.heightVh ?? 0) / 2;
+        const cxVw = xVw + scrapWidthVw / 2;
+        const cyVh = bottomVh + scrapHeightVh / 2;
+        
         return {
           id: scrap.id,
-          xVw: xVw + (scrapSize?.widthVw ?? 0) + 0.5, // slight hud offset right
-          bottomVh: bottomVh + (scrapSize?.heightVh ?? 0) + 0.4, // slight hud offset up
+          xVw: xVw + scrapWidthVw + 0.5, // slight hud offset right
+          bottomVh: bottomVh + scrapHeightVh + 0.4, // slight hud offset up
           label,
           cxVw,
           cyVh,
         } as Anchor;
       });
     setAnchors(anchors);
-  }, [spawnState.activeScrap, beingCollectedIds, getRenderedPosition, scrapSize, setAnchors]);
+  }, [spawnState.activeScrap, beingCollectedIds, getRenderedPosition, setAnchors]);
 
   // While dragging, update anchors every frame using live drag style
   useEffect(() => {
     if (!draggedScrapId) return;
     let rafId: number | null = null;
     const tick = () => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
+      
       const anchors: Anchor[] = spawnState.activeScrap
         .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
         .map((scrap) => {
-          const { xVw, bottomVh } = getRenderedPosition(scrap);
+          // Get position in screen pixels (center)
+          const centerPos = getRenderedPosition(scrap);
+          
+          // Convert to vw/vh for anchors
+          const leftPx = centerPos.x - scrapSizePx / 2;
+          const bottomPx = viewportHeight - (centerPos.y + scrapSizePx / 2);
+          const xVw = (leftPx / viewportWidth) * 100;
+          const bottomVh = (bottomPx / viewportHeight) * 100;
+          const scrapWidthVw = (scrapSizePx / viewportWidth) * 100;
+          const scrapHeightVh = (scrapSizePx / viewportHeight) * 100;
+          
           const typeEntry = ScrapRegistry[scrap.typeId as keyof typeof ScrapRegistry];
           const typeLabel = `${typeEntry?.label ?? scrap.typeId}`;
           const mutatorLinesArr = scrap.mutators
@@ -605,12 +624,14 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
               return m ? `${m.appearance} ${m.label}` : id;
             });
           const label = [typeLabel, ...mutatorLinesArr].join('\n');
-          const cxVw = xVw + (scrapSize?.widthVw ?? 0) / 2;
-          const cyVh = bottomVh + (scrapSize?.heightVh ?? 0) / 2;
+          
+          const cxVw = xVw + scrapWidthVw / 2;
+          const cyVh = bottomVh + scrapHeightVh / 2;
+          
           return {
             id: scrap.id,
-            xVw: xVw + (scrapSize?.widthVw ?? 0) + 0.5,
-            bottomVh: bottomVh + (scrapSize?.heightVh ?? 0) + 0.4,
+            xVw: xVw + scrapWidthVw + 0.5,
+            bottomVh: bottomVh + scrapHeightVh + 0.4,
             label,
             cxVw,
             cyVh
@@ -623,7 +644,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [draggedScrapId, spawnState.activeScrap, beingCollectedIds, getRenderedPosition, scrapSize, setAnchors]);
+  }, [draggedScrapId, spawnState.activeScrap, beingCollectedIds, getRenderedPosition, setAnchors]);
 
   // Check if work mode purge zone should be shown (upgrade purchased AND purgeZone app installed)
   const isPurgeZoneInstalled = installedApps?.some(app => app.id === 'purgeZone') ?? false;
