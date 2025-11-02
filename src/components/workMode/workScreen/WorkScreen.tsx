@@ -589,14 +589,9 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     <div className="work-screen">
       <WorkTimer elapsedSeconds={elapsedSeconds} collectedCount={collectedCount} />
       <AssemblyLine />
-      <ScrapBin 
-        ref={dropZoneRef} 
-        style={{
-          left: `${binScreenPosition.left}px`,
-          top: `${binScreenPosition.top}px`,
-          width: `${binScreenPosition.width}px`,
-          height: `${binScreenPosition.height}px`
-        }}
+      <ScrapBin
+        ref={dropZoneRef}
+        style={binScreenPosition}
       />
       
       {/* Conditional work mode purge zone */}

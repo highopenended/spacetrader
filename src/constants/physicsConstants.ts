@@ -53,16 +53,16 @@ export const SCRAP_BIN_SIZE_WU = 1.5;
 
 /**
  * Scrap Bin Position (world units)
- * 
+ *
  * World position where the scrap bin is centered.
  * X is horizontal center of world, Y is distance from top.
- * 
+ *
  * x: 10 wu = center of 20 wu wide world
- * y: 0.5 wu = near top of world (0.5 wu from top edge)
+ * y: 2 wu = near top of world (allows full 1.5 wu height to be visible)
  */
 export const SCRAP_BIN_POSITION_WU = {
   x: 10,  // Center horizontally
-  y: 0.5  // Near top (0.5 wu from top edge)
+  y: 2  // Near top (0.75 wu from top edge, center of 1.5 wu bin)
 };
 
 /**
