@@ -66,6 +66,32 @@ export const SCRAP_BIN_POSITION_WU = {
 };
 
 /**
+ * Assembly Line Height (world units)
+ * 
+ * Thickness/height of the assembly line track.
+ * Defined in world units for consistent sizing across all devices.
+ * 
+ * 0.1 wu = 1% of world height (10 wu)
+ */
+export const ASSEMBLY_LINE_HEIGHT_WU = 0.05;
+
+/**
+ * Assembly Line Position (world units)
+ * 
+ * World position where the assembly line is positioned.
+ * The line sits at the scrap baseline height, spanning full world width.
+ * Y is measured from bottom of world (matches SCRAP_BASELINE_BOTTOM_WU).
+ * 
+ * x: 0 to WORLD_WIDTH (spans full width)
+ * yFromBottom: SCRAP_BASELINE_BOTTOM_WU = 1.2 wu from bottom
+ */
+export const ASSEMBLY_LINE_POSITION_WU = {
+  x: 0,                      // Starts at left edge
+  width: 20,                 // Full world width
+  yFromBottom: SCRAP_BASELINE_BOTTOM_WU  // Same as scrap baseline
+};
+
+/**
  * Gravity Acceleration (world units per second squared)
  * 
  * Downward acceleration applied to airborne scrap.

@@ -18,13 +18,15 @@ import { useScrapDropTargets } from '../../../hooks/useScrapDropTargets';
 import { useScrapPhysics } from '../../../hooks/useScrapPhysics';
 import { useScrapDrag } from '../../../hooks/useScrapDrag';
 import { useClockSubscription } from '../../../hooks/useClockSubscription';
+import { useCameraUtils } from '../../../hooks/useCameraUtils';
 import { SCRAP_BASELINE_BOTTOM_WU, SCRAP_SIZE_WU, SCRAP_BIN_SIZE_WU, SCRAP_BIN_POSITION_WU } from '../../../constants/physicsConstants';
 import { worldToScreen, WORLD_HEIGHT, WORLD_WIDTH, calculateZoom } from '../../../constants/cameraConstants';
+import { worldRectToScreenStylesFromViewport } from '../../../utils/cameraUtils';
 import { MutatorRegistry } from '../../../constants/mutatorRegistry';
 import { DOM_IDS } from '../../../constants/domIds';
 import { ScrapRegistry } from '../../../constants/scrapRegistry';
 import WorkModePurgeZone from '../workModePurgeZone/WorkModePurgeZone';
-import { useGameStore, useUpgradesStore, useAnchorsStore, useBarrierStore, useDragStore, useViewportStore } from '../../../stores';
+import { useGameStore, useUpgradesStore, useAnchorsStore, useBarrierStore, useDragStore } from '../../../stores';
 import { Anchor } from '../../../stores/anchorsStore';
 import { checkRectOverlap, domRectToRect, Rect } from '../../../utils/collisionUtils';
 import { checkBarrierCollision } from '../../../utils/barrierCollisionUtils';
@@ -52,6 +54,9 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     return useBarrierStore.getState().getAllBarriers();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [barriersVersion]);
+  
+  // Camera utilities (viewport, conversions, zoom)
+  const { viewport, worldSizeToPx, worldToScreenPx } = useCameraUtils();
   
   // Timer display state
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
@@ -245,9 +250,6 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
 
   // Helper: compute actual on-screen position for a scrap id in screen pixels, including drag overrides
   const getRenderedPosition = useCallback((scrap: ActiveScrapObject) => {
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    
     // Calculate world position (center of scrap)
     const airborne = getAirborneState(scrap.id);
     const centerXWu = scrap.x + (SCRAP_SIZE_WU / 2); // scrap.x is left edge, convert to center
@@ -259,35 +261,32 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     const centerYWu = WORLD_HEIGHT - worldYFromBottomWu;
     
     // Convert world position to screen pixels using camera system
-    let screenPos = worldToScreen(centerXWu, centerYWu, viewportWidth, viewportHeight);
+    let screenPos = worldToScreenPx(centerXWu, centerYWu);
     
     // If dragging, override from drag style (dragStyle returns pixels)
     const dragStyle = getDragStyle(scrap.id);
     if (dragStyle) {
+      const scrapSizePx = worldSizeToPx(SCRAP_SIZE_WU);
       const left = dragStyle.left as unknown as string | number | undefined;
       const bottom = dragStyle.bottom as unknown as string | number | undefined;
 
       if (typeof left === 'string' && left.endsWith('px')) {
         // dragStyle.left is left edge in pixels, convert to center
-        const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
         screenPos.x = parseFloat(left) + scrapSizePx / 2;
       } else if (typeof left === 'number') {
-        const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
         screenPos.x = left + scrapSizePx / 2;
       }
 
       if (typeof bottom === 'string' && bottom.endsWith('px')) {
         // bottom is distance from bottom of viewport, convert to screen Y (top=0)
-        const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
-        screenPos.y = viewportHeight - parseFloat(bottom) - scrapSizePx / 2;
+        screenPos.y = viewport.height - parseFloat(bottom) - scrapSizePx / 2;
       } else if (typeof bottom === 'number') {
-        const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
-        screenPos.y = viewportHeight - bottom - scrapSizePx / 2;
+        screenPos.y = viewport.height - bottom - scrapSizePx / 2;
       }
     }
 
     return screenPos;
-  }, [getAirborneState, getDragStyle]);
+  }, [getAirborneState, getDragStyle, viewport, worldSizeToPx, worldToScreenPx]);
 
   // Check scrap-bin collisions and collect any overlapping scrap
   const checkBinCollisions = useCallback(() => {
@@ -652,21 +651,20 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   const isUpgradePurchased_WorkMode = isUpgradePurchased('purgeZone.workModePurgeZone');
   const showWorkModePurgeZone = isPurgeZoneInstalled && isUpgradePurchased_WorkMode;
 
-  // Get viewport dimensions from centralized viewport store
-  const viewport = useViewportStore(state => state.viewport);
-  
   // Calculate scrap bin screen position from world units (respects letterboxing)
   // Uses centralized viewport store - updates reactively when viewport changes
-  const centerScreenPos = worldToScreen(SCRAP_BIN_POSITION_WU.x, SCRAP_BIN_POSITION_WU.y, viewport.width, viewport.height);
-  const zoom = calculateZoom(viewport.width, viewport.height);
-  const binSizePx = SCRAP_BIN_SIZE_WU * zoom;
-  
-  const binScreenPosition = {
-    left: centerScreenPos.x - binSizePx / 2,
-    top: centerScreenPos.y - binSizePx / 2,
-    width: binSizePx,
-    height: binSizePx
-  };
+  const binScreenPosition = useMemo(() => {
+    return worldRectToScreenStylesFromViewport(
+      {
+        x: SCRAP_BIN_POSITION_WU.x,
+        y: SCRAP_BIN_POSITION_WU.y,
+        width: SCRAP_BIN_SIZE_WU,
+        height: SCRAP_BIN_SIZE_WU,
+        anchor: 'center'
+      },
+      viewport
+    );
+  }, [viewport]);
 
   return (
     <div className="work-screen">

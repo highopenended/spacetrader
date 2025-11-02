@@ -1,9 +1,6 @@
 .assembly-line {
   position: fixed;
-  bottom: 10vh;
-  left: 0;
-  right: 0;
-  height: 2vh; /* Converted from CSS variable */
+  /* Position and size are set via inline styles from AssemblyLine.tsx using world units */
   z-index: 100;
   pointer-events: none;
   user-select: none;
@@ -11,7 +8,7 @@
 
 .assembly-line-track {
   width: 100%;
-  height: 0.4vh; /* Converted from CSS variable */
+  height: 100%; /* Fill parent container (sized via world units) */
   background: linear-gradient(90deg, 
     #1a1a1a 0%, 
     #333 20%, 
