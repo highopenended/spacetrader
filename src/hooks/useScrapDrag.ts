@@ -337,10 +337,12 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
   );
 
   const getDragStyle = useCallback((scrapId: string): React.CSSProperties | undefined => {
-    if (!isDragging(scrapId)) return undefined;
+    // Read fresh state from store (not stale closure) to support RAF loops
+    const currentGrabbedObject = useDragStore.getState().grabbedObject;
+    if (currentGrabbedObject.scrapId !== scrapId) return undefined;
     
     // Convert world position to screen pixels for rendering
-    const worldPos = grabbedObject.position;
+    const worldPos = currentGrabbedObject.position;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const screenPos = worldToScreen(worldPos.x, worldPos.y, viewportWidth, viewportHeight);
@@ -359,7 +361,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       pointerEvents: 'none',
       transition: 'none'
     };
-  }, [isDragging, grabbedObject.position]);
+  }, []); // No dependencies - reads fresh state from store on each call
 
   return useMemo(() => ({
     draggedScrapId: grabbedObject.scrapId,

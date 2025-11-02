@@ -18,14 +18,13 @@ import { useClockSubscription } from '../../../hooks/useClockSubscription';
 import { useCameraUtils } from '../../../hooks/useCameraUtils';
 import { useScrapRendering } from '../../../hooks/useScrapRendering';
 import { useScrapBinCollisions } from '../../../hooks/useScrapBinCollisions';
+import { useScrapAnchors } from '../../../hooks/useScrapAnchors';
 import { SCRAP_BASELINE_BOTTOM_WU, SCRAP_SIZE_WU, SCRAP_BIN_SIZE_WU, SCRAP_BIN_POSITION_WU } from '../../../constants/physicsConstants';
 import { worldToScreen, WORLD_HEIGHT, WORLD_WIDTH, calculateZoom } from '../../../constants/cameraConstants';
 import { worldRectToScreenStylesFromViewport } from '../../../utils/cameraUtils';
 import { DOM_IDS } from '../../../constants/domIds';
-import { computeAnchorFromScrap } from '../../../utils/anchorUtils';
 import WorkModePurgeZone from '../workModePurgeZone/WorkModePurgeZone';
 import { useGameStore, useUpgradesStore, useAnchorsStore, useBarrierStore, useDragStore, useScrapStore } from '../../../stores';
-import { Anchor } from '../../../stores/anchorsStore';
 import { checkBarrierCollision } from '../../../utils/barrierCollisionUtils';
 import Barrier from '../barrier/Barrier';
 
@@ -38,8 +37,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   // Get upgrade checker from upgradesStore
   const isUpgradePurchased = useUpgradesStore(state => state.isPurchased);
   
-  // Get anchors store actions for DumpsterVision overlay
-  const setAnchors = useAnchorsStore(state => state.setAnchors);
+  // Get anchors store actions for cleanup
   const clearAnchors = useAnchorsStore(state => state.clearAnchors);
   
   // Get barrier store actions (use version for reactive updates, not getAllBarriers)
@@ -157,6 +155,12 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   const { getRenderedPosition } = useScrapRendering({
     getAirborneState,
     getDragStyle
+  });
+
+  // Anchor computation and publishing for AR overlays
+  useScrapAnchors({
+    getRenderedPosition,
+    draggedScrapId
   });
 
   // Bin collision detection
@@ -478,49 +482,6 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     return items;
   }, [spawnState.activeScrap, getRenderedPosition, getDragStyle, getBeingCollectedIds]);
 
-  // Publish anchors for overlays when Dumpster Vision is active
-  useEffect(() => {
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const beingCollectedIds = getBeingCollectedIds();
-    
-    const anchors: Anchor[] = spawnState.activeScrap
-      .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
-      .map((scrap) => {
-        // Get position in screen pixels (center) - already derived from world units via camera system
-        const centerPos = getRenderedPosition(scrap);
-        // Compute anchor from scrap using shared utility
-        return computeAnchorFromScrap(scrap, centerPos, viewportWidth, viewportHeight);
-      });
-    setAnchors(anchors);
-  }, [spawnState.activeScrap, getRenderedPosition, setAnchors, getBeingCollectedIds]);
-
-  // While dragging, update anchors every frame using live drag style
-  useEffect(() => {
-    if (!draggedScrapId) return;
-    let rafId: number | null = null;
-    const tick = () => {
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const beingCollectedIds = getBeingCollectedIds();
-      const currentState = useScrapStore.getState().getSpawnState();
-      
-      const anchors: Anchor[] = currentState.activeScrap
-        .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
-        .map((scrap) => {
-          // Get position in screen pixels (center) - already derived from world units via camera system
-          const centerPos = getRenderedPosition(scrap);
-          // Compute anchor from scrap using shared utility
-          return computeAnchorFromScrap(scrap, centerPos, viewportWidth, viewportHeight);
-        });
-      setAnchors(anchors);
-      rafId = requestAnimationFrame(tick);
-    };
-    rafId = requestAnimationFrame(tick);
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-    };
-  }, [draggedScrapId, getRenderedPosition, setAnchors, getBeingCollectedIds]);
 
   // Check if work mode purge zone should be shown (upgrade purchased AND purgeZone app installed)
   const isPurgeZoneInstalled = installedApps?.some(app => app.id === 'purgeZone') ?? false;
