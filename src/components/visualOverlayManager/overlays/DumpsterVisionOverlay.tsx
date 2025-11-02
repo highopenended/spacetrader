@@ -4,6 +4,7 @@ import { useAnchorsStore } from '../../../stores';
 import { Anchor } from '../../../stores/anchorsStore';
 import { VisualOverlayProps, ANIMATION_DURATIONS } from '../types';
 import { useClockSubscription } from '../../../hooks/useClockSubscription';
+import { useCameraUtils } from '../../../hooks/useCameraUtils';
 
 /**
  * DumpsterVisionOverlay Component
@@ -41,7 +42,7 @@ import { useClockSubscription } from '../../../hooks/useClockSubscription';
  * - **Connector Lines**: Visual lines connecting labels to scrap items
  * - **Smooth Animation**: Position interpolation with dead-zone smoothing
  * - **Boot Sequence**: Animated startup with CRT-style effects
- * - **Responsive Design**: Viewport-relative positioning (vw/vh units)
+ * - **Responsive Design**: Pixel positioning derived from world units (scales with camera zoom)
  * 
  * ## Technical Details
  * 
@@ -63,6 +64,14 @@ const DumpsterVisionOverlay: React.FC<VisualOverlayProps> = ({ isExiting, animat
   const animateLabelsRef = React.useRef<boolean>(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
+  // ===== CAMERA UTILITIES =====
+  const { zoom } = useCameraUtils();
+  
+  // Calculate font size in pixels based on world units (scales with screen size)
+  // Base size: 0.12 wu ≈ 12px at default zoom, scales proportionally
+  const LABEL_FONT_SIZE_WU = 0.12;
+  const labelFontSizePx = React.useMemo(() => LABEL_FONT_SIZE_WU * zoom, [zoom]);
+
   // ===== STORE ACCESS =====
   const getAnchors = () => useAnchorsStore.getState().anchors;
 
@@ -73,9 +82,11 @@ const DumpsterVisionOverlay: React.FC<VisualOverlayProps> = ({ isExiting, animat
     // Apply CSS class for base styles
     labelEl.className = 'dv-label';
     
-    // Set dynamic positioning
-    labelEl.style.left = `${anchor.xVw}vw`;
-    labelEl.style.bottom = `${anchor.bottomVh}vh`;
+    // Set dynamic positioning in pixels (derived from world units)
+    labelEl.style.left = `${anchor.xPx}px`;
+    labelEl.style.bottom = `${anchor.bottomPx}px`;
+    // Set font size based on world units (scales with screen size)
+    labelEl.style.fontSize = `${labelFontSizePx}px`;
     labelEl.setAttribute('aria-hidden', 'true');
     
     // Add animation if needed
@@ -101,7 +112,7 @@ const DumpsterVisionOverlay: React.FC<VisualOverlayProps> = ({ isExiting, animat
     });
     
     return labelEl;
-  }, []);
+  }, [labelFontSizePx]);
 
   const createConnectorElement = React.useCallback((): HTMLDivElement => {
     const connectorEl = document.createElement('div');
@@ -112,20 +123,23 @@ const DumpsterVisionOverlay: React.FC<VisualOverlayProps> = ({ isExiting, animat
 
   // ===== DOM ELEMENT UPDATES =====
   const updateLabelElement = React.useCallback((element: HTMLDivElement, anchor: Anchor) => {
-    element.style.left = `${anchor.xVw}vw`;
-    element.style.bottom = `${anchor.bottomVh}vh`;
-  }, []);
+    element.style.left = `${anchor.xPx}px`;
+    element.style.bottom = `${anchor.bottomPx}px`;
+    // Update font size if zoom changed (recalculates based on world units)
+    element.style.fontSize = `${labelFontSizePx}px`;
+  }, [labelFontSizePx]);
 
   const updateConnectorLine = React.useCallback((
     connectorEl: HTMLDivElement, 
     anchor: Anchor, 
     labelEl: HTMLDivElement | null
   ) => {
-    if (!labelEl || anchor.cxVw == null || anchor.cyVh == null) return;
+    if (!labelEl || anchor.cxPx == null || anchor.cyPx == null) return;
     
     const rect = labelEl.getBoundingClientRect();
-    const startX = anchor.cxVw * (window.innerWidth / 100);
-    const startY = window.innerHeight - anchor.cyVh * (window.innerHeight / 100);
+    // Anchor center is already in screen pixels (derived from world units)
+    const startX = anchor.cxPx;
+    const startY = window.innerHeight - anchor.cyPx; // cyPx is from bottom, convert to top-relative
     
     // Use actual on-screen label rect (accounts for transforms) for nearest point
     const labelLeftPx = rect.left;
@@ -170,7 +184,7 @@ const DumpsterVisionOverlay: React.FC<VisualOverlayProps> = ({ isExiting, animat
 
   const addConnectorElement = React.useCallback((anchor: Anchor) => {
     const container = containerRef.current;
-    if (!container || anchor.cxVw == null || anchor.cyVh == null) return;
+    if (!container || anchor.cxPx == null || anchor.cyPx == null) return;
     
     const connectorEl = createConnectorElement();
     connectorRefs.current.set(anchor.id, connectorEl);
@@ -207,7 +221,7 @@ const DumpsterVisionOverlay: React.FC<VisualOverlayProps> = ({ isExiting, animat
         addLabelElement(anchor, index);
       }
       
-      if (!connectorRefs.current.has(anchor.id) && anchor.cxVw != null && anchor.cyVh != null) {
+      if (!connectorRefs.current.has(anchor.id) && anchor.cxPx != null && anchor.cyPx != null) {
         addConnectorElement(anchor);
       }
     });
@@ -237,8 +251,6 @@ const DumpsterVisionOverlay: React.FC<VisualOverlayProps> = ({ isExiting, animat
   }), []);
 
   const applySmoothing = React.useCallback((anchor: Anchor): Anchor => {
-    const vwToPx = window.innerWidth / 100;
-    const vhToPx = window.innerHeight / 100;
     const { DEAD_PX, LERP } = SMOOTHING_CONFIG;
 
     const prev = smoothMapRef.current.get(anchor.id);
@@ -246,28 +258,29 @@ const DumpsterVisionOverlay: React.FC<VisualOverlayProps> = ({ isExiting, animat
       return anchor;
     }
 
-    let xVw = anchor.xVw;
-    let bottomVh = anchor.bottomVh;
-    const dxPx = (anchor.xVw - prev.xVw) * vwToPx;
-    const dyPx = (anchor.bottomVh - prev.bottomVh) * vhToPx;
+    // Anchor positions are already in pixels (derived from world units)
+    let xPx = anchor.xPx;
+    let bottomPx = anchor.bottomPx;
+    const dxPx = anchor.xPx - prev.xPx;
+    const dyPx = anchor.bottomPx - prev.bottomPx;
     
     if (Math.abs(dxPx) < DEAD_PX) {
-      xVw = prev.xVw;
+      xPx = prev.xPx;
     } else {
-      xVw = prev.xVw + (anchor.xVw - prev.xVw) * LERP;
+      xPx = prev.xPx + (anchor.xPx - prev.xPx) * LERP;
     }
     
     if (Math.abs(dyPx) < DEAD_PX) {
-      bottomVh = prev.bottomVh;
+      bottomPx = prev.bottomPx;
     } else {
-      bottomVh = prev.bottomVh + (anchor.bottomVh - prev.bottomVh) * LERP;
+      bottomPx = prev.bottomPx + (anchor.bottomPx - prev.bottomPx) * LERP;
     }
 
     // Do NOT smooth the scrap center so the connector stays glued during fast motion
-    const cxVw = anchor.cxVw;
-    const cyVh = anchor.cyVh;
+    const cxPx = anchor.cxPx;
+    const cyPx = anchor.cyPx;
 
-    return { ...anchor, xVw, bottomVh, cxVw, cyVh } as Anchor;
+    return { ...anchor, xPx, bottomPx, cxPx, cyPx } as Anchor;
   }, [SMOOTHING_CONFIG]);
 
   // ===== CLOCK SUBSCRIPTION =====
@@ -317,7 +330,7 @@ const DumpsterVisionOverlay: React.FC<VisualOverlayProps> = ({ isExiting, animat
         
         // Update connector line position directly via DOM
         const connectorEl = connectorRefs.current.get(anchor.id);
-        if (connectorEl && anchor.cxVw != null && anchor.cyVh != null) {
+        if (connectorEl && anchor.cxPx != null && anchor.cyPx != null) {
           updateConnectorLine(connectorEl, smoothedAnchor, labelEl || null);
         }
       });

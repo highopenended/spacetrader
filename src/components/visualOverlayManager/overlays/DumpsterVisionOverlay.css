@@ -199,7 +199,7 @@
 	transform: perspective(400px) rotateX(12deg);
 	color: #9f9;
 	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
-	font-size: 12px;
+	/* font-size set dynamically in JS based on world units (scales with camera zoom) */
 	text-shadow: 0 0 4px rgba(144,255,144,0.8);
 	pointer-events: none;
 	white-space: nowrap;

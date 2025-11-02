@@ -15,12 +15,12 @@ import { create } from 'zustand';
 
 export interface Anchor {
   id: string;
-  xVw: number; // left position in vw
-  bottomVh: number; // bottom position in vh
+  xPx: number; // left position in screen pixels (derived from world units via camera)
+  bottomPx: number; // bottom position in screen pixels (from bottom of viewport)
   label: string;
-  // Scrap center in viewport units for connector lines
-  cxVw?: number; // center x in vw
-  cyVh?: number; // center y in vh (from bottom)
+  // Scrap center in screen pixels for connector lines
+  cxPx?: number; // center x in screen pixels
+  cyPx?: number; // center y in screen pixels (from bottom of viewport)
 }
 
 interface AnchorsState {
@@ -44,7 +44,7 @@ interface AnchorsActions {
    * @param id - Anchor ID
    * @param position - New position data
    */
-  updateAnchorPosition: (id: string, position: { xVw: number; bottomVh: number; cxVw?: number; cyVh?: number }) => void;
+  updateAnchorPosition: (id: string, position: { xPx: number; bottomPx: number; cxPx?: number; cyPx?: number }) => void;
 }
 
 type AnchorsStore = AnchorsState & AnchorsActions;

@@ -23,9 +23,8 @@ import { useScrapBinCollisions } from '../../../hooks/useScrapBinCollisions';
 import { SCRAP_BASELINE_BOTTOM_WU, SCRAP_SIZE_WU, SCRAP_BIN_SIZE_WU, SCRAP_BIN_POSITION_WU } from '../../../constants/physicsConstants';
 import { worldToScreen, WORLD_HEIGHT, WORLD_WIDTH, calculateZoom } from '../../../constants/cameraConstants';
 import { worldRectToScreenStylesFromViewport } from '../../../utils/cameraUtils';
-import { MutatorRegistry } from '../../../constants/mutatorRegistry';
 import { DOM_IDS } from '../../../constants/domIds';
-import { ScrapRegistry } from '../../../constants/scrapRegistry';
+import { computeAnchorFromScrap } from '../../../utils/anchorUtils';
 import WorkModePurgeZone from '../workModePurgeZone/WorkModePurgeZone';
 import { useGameStore, useUpgradesStore, useAnchorsStore, useBarrierStore, useDragStore } from '../../../stores';
 import { Anchor } from '../../../stores/anchorsStore';
@@ -471,43 +470,14 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   useEffect(() => {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
     
     const anchors: Anchor[] = spawnState.activeScrap
       .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
       .map((scrap) => {
-        // Get position in screen pixels (center)
+        // Get position in screen pixels (center) - already derived from world units via camera system
         const centerPos = getRenderedPosition(scrap);
-        
-        // Convert to vw/vh for anchors (anchor system expects vw/vh)
-        const leftPx = centerPos.x - scrapSizePx / 2;
-        const bottomPx = viewportHeight - (centerPos.y + scrapSizePx / 2);
-        const xVw = (leftPx / viewportWidth) * 100;
-        const bottomVh = (bottomPx / viewportHeight) * 100;
-        const scrapWidthVw = (scrapSizePx / viewportWidth) * 100;
-        const scrapHeightVh = (scrapSizePx / viewportHeight) * 100;
-        
-        const typeEntry = ScrapRegistry[scrap.typeId as keyof typeof ScrapRegistry];
-        const typeLabel = `${typeEntry?.label ?? scrap.typeId}`;
-        const mutatorLinesArr = scrap.mutators
-          .map(id => {
-            const m = MutatorRegistry[id as keyof typeof MutatorRegistry];
-            return m ? `${m.appearance} ${m.label}` : id;
-          });
-        const label = [typeLabel, ...mutatorLinesArr].join('\n');
-        
-        // Compute scrap center for connectors
-        const cxVw = xVw + scrapWidthVw / 2;
-        const cyVh = bottomVh + scrapHeightVh / 2;
-        
-        return {
-          id: scrap.id,
-          xVw: xVw + scrapWidthVw + 0.5, // slight hud offset right
-          bottomVh: bottomVh + scrapHeightVh + 0.4, // slight hud offset up
-          label,
-          cxVw,
-          cyVh,
-        } as Anchor;
+        // Compute anchor from scrap using shared utility
+        return computeAnchorFromScrap(scrap, centerPos, viewportWidth, viewportHeight);
       });
     setAnchors(anchors);
   }, [spawnState.activeScrap, beingCollectedIds, getRenderedPosition, setAnchors]);
@@ -519,42 +489,14 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     const tick = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      const scrapSizePx = SCRAP_SIZE_WU * calculateZoom(viewportWidth, viewportHeight);
       
       const anchors: Anchor[] = spawnState.activeScrap
         .filter(scrap => !scrap.isCollected && !beingCollectedIds.has(scrap.id))
         .map((scrap) => {
-          // Get position in screen pixels (center)
+          // Get position in screen pixels (center) - already derived from world units via camera system
           const centerPos = getRenderedPosition(scrap);
-          
-          // Convert to vw/vh for anchors
-          const leftPx = centerPos.x - scrapSizePx / 2;
-          const bottomPx = viewportHeight - (centerPos.y + scrapSizePx / 2);
-          const xVw = (leftPx / viewportWidth) * 100;
-          const bottomVh = (bottomPx / viewportHeight) * 100;
-          const scrapWidthVw = (scrapSizePx / viewportWidth) * 100;
-          const scrapHeightVh = (scrapSizePx / viewportHeight) * 100;
-          
-          const typeEntry = ScrapRegistry[scrap.typeId as keyof typeof ScrapRegistry];
-          const typeLabel = `${typeEntry?.label ?? scrap.typeId}`;
-          const mutatorLinesArr = scrap.mutators
-            .map(id => {
-              const m = MutatorRegistry[id as keyof typeof MutatorRegistry];
-              return m ? `${m.appearance} ${m.label}` : id;
-            });
-          const label = [typeLabel, ...mutatorLinesArr].join('\n');
-          
-          const cxVw = xVw + scrapWidthVw / 2;
-          const cyVh = bottomVh + scrapHeightVh / 2;
-          
-          return {
-            id: scrap.id,
-            xVw: xVw + scrapWidthVw + 0.5,
-            bottomVh: bottomVh + scrapHeightVh + 0.4,
-            label,
-            cxVw,
-            cyVh
-          } as Anchor;
+          // Compute anchor from scrap using shared utility
+          return computeAnchorFromScrap(scrap, centerPos, viewportWidth, viewportHeight);
         });
       setAnchors(anchors);
       rafId = requestAnimationFrame(tick);
