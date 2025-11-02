@@ -14,6 +14,7 @@ import { advanceGameTime, getNextGamePhase } from '../utils/gameStateUtils';
 import { INITIAL_GAME_STATE } from '../constants/gameConstants';
 import { APP_REGISTRY } from '../constants/appListConstants';
 import { AppDefinition, InstalledApp } from '../types/appListState';
+import { useScrapStore } from './scrapStore';
 
 interface GameState {
   // Core game data
@@ -122,6 +123,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   // ===== WORK MODE MANAGEMENT =====
   beginWorkSession: () => {
+    // Reset scrap store for fresh work session
+    useScrapStore.getState().resetScrapState();
+    
     set({ 
       gameMode: 'workMode',
       workSessionStartTime: 0 // Will be set by the first clock tick
@@ -129,6 +133,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   endWorkSession: () => {
+    // Reset scrap store when work session ends
+    useScrapStore.getState().resetScrapState();
+    
     set({ 
       gameMode: 'freeMode',
       workSessionStartTime: 0 
