@@ -19,6 +19,7 @@ import { useScrapPhysics } from '../../../hooks/useScrapPhysics';
 import { useScrapDrag } from '../../../hooks/useScrapDrag';
 import { useClockSubscription } from '../../../hooks/useClockSubscription';
 import { useCameraUtils } from '../../../hooks/useCameraUtils';
+import { useScrapRendering } from '../../../hooks/useScrapRendering';
 import { SCRAP_BASELINE_BOTTOM_WU, SCRAP_SIZE_WU, SCRAP_BIN_SIZE_WU, SCRAP_BIN_POSITION_WU } from '../../../constants/physicsConstants';
 import { worldToScreen, WORLD_HEIGHT, WORLD_WIDTH, calculateZoom } from '../../../constants/cameraConstants';
 import { worldRectToScreenStylesFromViewport } from '../../../utils/cameraUtils';
@@ -47,7 +48,6 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   
   // Get barrier store actions (use version for reactive updates, not getAllBarriers)
   const barriersVersion = useBarrierStore(state => state.version);
-  const setBarriers = useBarrierStore(state => state.setBarriers);
   
   // Get barriers for rendering (memoized, only updates when version changes)
   const barriers = useMemo(() => {
@@ -55,8 +55,8 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [barriersVersion]);
   
-  // Camera utilities (viewport, conversions, zoom)
-  const { viewport, worldSizeToPx, worldToScreenPx } = useCameraUtils();
+  // Camera utilities (viewport for other components)
+  const { viewport } = useCameraUtils();
   
   // Timer display state
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
@@ -149,6 +149,12 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
 
       launchAirborneFromRelease(scrapId, releaseVelocityWuPerSec, yAboveBaselineWu, gravityMultiplier, momentumMultiplier);
     }
+  });
+
+  // Scrap rendering utilities (position calculations)
+  const { getRenderedPosition } = useScrapRendering({
+    getAirborneState,
+    getDragStyle
   });
 
   // Drive purge-zone visual effects during scrap drag using the same resolver
@@ -245,48 +251,6 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
   const cleanupScrap = useCallback(() => {
     setSpawnState(prevState => cleanupCollectedScrap(prevState));
   }, []);
-
-  // Scrap size is constant in world units (SCRAP_SIZE_WU)
-
-  // Helper: compute actual on-screen position for a scrap id in screen pixels, including drag overrides
-  const getRenderedPosition = useCallback((scrap: ActiveScrapObject) => {
-    // Calculate world position (center of scrap)
-    const airborne = getAirborneState(scrap.id);
-    const centerXWu = scrap.x + (SCRAP_SIZE_WU / 2); // scrap.x is left edge, convert to center
-    
-    // Calculate Y position in world units (Y=0 is top, increases downward)
-    // World Y from bottom = SCRAP_BASELINE_BOTTOM_WU + airborne offset
-    const worldYFromBottomWu = SCRAP_BASELINE_BOTTOM_WU + (airborne?.isAirborne ? airborne.yWu : 0);
-    // Convert to world Y coordinate (Y=0 is top, WORLD_HEIGHT is bottom)
-    const centerYWu = WORLD_HEIGHT - worldYFromBottomWu;
-    
-    // Convert world position to screen pixels using camera system
-    let screenPos = worldToScreenPx(centerXWu, centerYWu);
-    
-    // If dragging, override from drag style (dragStyle returns pixels)
-    const dragStyle = getDragStyle(scrap.id);
-    if (dragStyle) {
-      const scrapSizePx = worldSizeToPx(SCRAP_SIZE_WU);
-      const left = dragStyle.left as unknown as string | number | undefined;
-      const bottom = dragStyle.bottom as unknown as string | number | undefined;
-
-      if (typeof left === 'string' && left.endsWith('px')) {
-        // dragStyle.left is left edge in pixels, convert to center
-        screenPos.x = parseFloat(left) + scrapSizePx / 2;
-      } else if (typeof left === 'number') {
-        screenPos.x = left + scrapSizePx / 2;
-      }
-
-      if (typeof bottom === 'string' && bottom.endsWith('px')) {
-        // bottom is distance from bottom of viewport, convert to screen Y (top=0)
-        screenPos.y = viewport.height - parseFloat(bottom) - scrapSizePx / 2;
-      } else if (typeof bottom === 'number') {
-        screenPos.y = viewport.height - bottom - scrapSizePx / 2;
-      }
-    }
-
-    return screenPos;
-  }, [getAirborneState, getDragStyle, viewport, worldSizeToPx, worldToScreenPx]);
 
   // Check scrap-bin collisions and collect any overlapping scrap
   const checkBinCollisions = useCallback(() => {
