@@ -38,6 +38,7 @@ import { calculateScrapMass, calculateEffectiveLoad, calculateFieldForces } from
 import { PhysicsContext } from '../types/physicsTypes';
 import { ScrapObject } from '../types/scrapTypes';
 import { checkBarrierCollision } from '../utils/barrierCollisionUtils';
+import { SCRAP_SIZE_WU } from '../constants/physicsConstants';
 
 export interface ScrapDragDropInfo {
   scrapId: string;
@@ -337,6 +338,11 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
           vy: -vy * zoom  // Negate because physics Y-up vs screen Y-down
         };
         
+        // Calculate scrap radius in pixels for penetration threshold
+        const scrapRadiusPx = (SCRAP_SIZE_WU / 2) * zoom;
+        const PENETRATION_THRESHOLD = 0.5; // 50% of radius
+        const VELOCITY_THRESHOLD = 50; // pixels per second - fast enough to break grip
+        
         // Check collision against all enabled barriers
         for (const barrier of enabledBarriers) {
           const collision = checkBarrierCollision(
@@ -349,10 +355,24 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
           );
           
           if (collision.collided) {
-            // Auto-release on barrier collision! Trigger endDrag which calls onDrop
-            // The existing velocity in the store will be used automatically
-            endDrag();
-            return; // Exit early, collision handled
+            // Check if we should break grip based on velocity and penetration
+            // Fast velocity into barrier OR deep penetration (> 10% radius) → break grip
+            // This allows picking up resting scrap (low velocity + minimal penetration)
+            // but prevents dragging through barriers (fast velocity or deep penetration)
+            
+            // Calculate velocity component INTO the barrier (positive = moving into)
+            const velocityIntoBarrier = velocityPx.vx * collision.normal.x + velocityPx.vy * collision.normal.y;
+            const isFastVelocity = velocityIntoBarrier > VELOCITY_THRESHOLD;
+            
+            // Check penetration depth (already in pixels from collision detection)
+            const isDeepPenetration = collision.penetration > (scrapRadiusPx * PENETRATION_THRESHOLD);
+            
+            if (isFastVelocity || isDeepPenetration) {
+              // Break grip: either moving fast into barrier or already deeply embedded
+              endDrag();
+              return; // Exit early, collision handled
+            }
+            // Otherwise: keep grip (resting contact with minimal penetration - allow pickup)
           }
         }
       }
