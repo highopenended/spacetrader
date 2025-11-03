@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Barrier as BarrierType } from '../../../types/barrierTypes';
 import { getBarrierTransform } from '../../../utils/barrierGeometry';
+import { useCameraUtils } from '../../../hooks/useCameraUtils';
+import { worldRectToScreenStylesFromViewport } from '../../../utils/cameraUtils';
 import './Barrier.css';
 
 interface BarrierProps {
@@ -8,17 +10,29 @@ interface BarrierProps {
 }
 
 const Barrier: React.FC<BarrierProps> = ({ barrier }) => {
-  if (!barrier.enabled) return null;
-
+  const { viewport } = useCameraUtils();
   const { position, width, height, visual } = barrier;
   
-  // Use shared geometry calculation - ensures visual matches collision exactly
+  // Convert barrier world units to screen pixel styles (respects letterboxing)
+  const baseStyle = useMemo(() => {
+    return worldRectToScreenStylesFromViewport(
+      {
+        x: position.x,
+        yFromBottom: position.yFromBottom,
+        width: width,
+        height: height,
+        anchor: 'center'
+      },
+      viewport
+    );
+  }, [position.x, position.yFromBottom, width, height, viewport]);
+
+  if (!barrier.enabled) return null;
+
+  // Combine base positioning with rotation transform and visual styles
   const style: React.CSSProperties = {
+    ...baseStyle,
     position: 'fixed',
-    left: `${position.xVw}vw`,
-    bottom: `${position.bottomVh}vh`,
-    width: `${width}vw`,
-    height: `${height}vw`, // Use vw for height to maintain aspect ratio
     transform: getBarrierTransform(barrier),
     transformOrigin: 'center',
     backgroundColor: visual?.color || '#fff',

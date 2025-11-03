@@ -5,9 +5,9 @@
  * Uses Oriented Bounding Box (OBB) collision for rotated rectangles.
  * 
  * Coordinate system:
- * - Positions in vw/vh units
- * - Velocities in vp/s (viewport-min per second)
- * - Rotation in degrees (0 = horizontal, positive = counter-clockwise)
+ * - All positions and sizes in screen pixels
+ * - Velocities in pixels per second
+ * - Barriers are converted from world units to pixels for collision detection
  */
 
 import { Barrier, BarrierCollision } from '../types/barrierTypes';
@@ -119,65 +119,75 @@ const checkRectangleOverlap = (
  * Uses actual geometric rectangle-rectangle intersection (SAT algorithm)
  * Supports swept collision detection to prevent tunneling
  * 
- * @param scrapXVw - Scrap left X position (vw)
- * @param scrapBottomVh - Scrap bottom position (vh)
- * @param scrapWidthVw - Scrap width (vw)
- * @param scrapHeightVh - Scrap height (vh)
- * @param velocity - Scrap velocity (vp/s)
- * @param barrier - Barrier to check against
- * @param prevScrapBottomVh - Optional previous position for swept detection
+ * @param scrapLeftXPx - Scrap left X position (screen pixels)
+ * @param scrapTopYPx - Scrap top Y position (screen pixels, top=0)
+ * @param scrapWidthPx - Scrap width (screen pixels)
+ * @param scrapHeightPx - Scrap height (screen pixels)
+ * @param velocity - Scrap velocity (pixels per second)
+ * @param barrier - Barrier to check against (in world units)
+ * @param viewportWidth - Viewport width in pixels
+ * @param viewportHeight - Viewport height in pixels
+ * @param prevScrapTopYPx - Optional previous top Y position for swept detection
  * @returns Collision result with normal and reflected velocity
  */
 export const checkBarrierCollision = (
-  scrapXVw: number,
-  scrapBottomVh: number,
-  scrapWidthVw: number,
-  scrapHeightVh: number,
+  scrapLeftXPx: number,
+  scrapTopYPx: number,
+  scrapWidthPx: number,
+  scrapHeightPx: number,
   velocity: { vx: number; vy: number },
   barrier: Barrier,
-  prevScrapBottomVh?: number
+  viewportWidth: number,
+  viewportHeight: number,
+  prevScrapTopYPx?: number
 ): BarrierCollision => {
+  // Convert barrier from world units to screen pixels for collision detection
+  const barrierVertices = getSharedBarrierVertices(barrier, viewportWidth, viewportHeight);
+  
   // SWEPT COLLISION DETECTION: Check intermediate positions to prevent tunneling
   // If previous position provided and scrap moved significantly, check the path
-  if (prevScrapBottomVh !== undefined) {
-    const movementVh = Math.abs(scrapBottomVh - prevScrapBottomVh);
-    const thresholdVh = scrapHeightVh * 0.5; // If moved more than half scrap height
+  if (prevScrapTopYPx !== undefined) {
+    const movementPx = Math.abs(scrapTopYPx - prevScrapTopYPx);
+    const thresholdPx = scrapHeightPx * 0.5; // If moved more than half scrap height
     
-    if (movementVh > thresholdVh) {
+    if (movementPx > thresholdPx) {
       // Sub-step through the movement path
-      const numSteps = Math.ceil(movementVh / thresholdVh);
+      const numSteps = Math.ceil(movementPx / thresholdPx);
       
       for (let i = 1; i <= numSteps; i++) {
         const t = i / numSteps;
-        const interpY = prevScrapBottomVh + (scrapBottomVh - prevScrapBottomVh) * t;
-        const interpCenterY = interpY + scrapHeightVh / 2;
+        const interpTopY = prevScrapTopYPx + (scrapTopYPx - prevScrapTopYPx) * t;
+        const interpCenterY = interpTopY + scrapHeightPx / 2;
         
         const interpVertices = getScrapVertices(
-          scrapXVw + scrapWidthVw / 2,
+          scrapLeftXPx + scrapWidthPx / 2,
           interpCenterY,
-          scrapWidthVw,
-          scrapHeightVh
+          scrapWidthPx,
+          scrapHeightPx
         );
         
-        const barrierVertices = getSharedBarrierVertices(barrier);
         const interpCollision = checkRectangleOverlap(interpVertices, barrierVertices);
         
         if (interpCollision.overlaps && interpCollision.separatingAxis) {
           // Found collision along path! Use this position for collision response
           const result = resolveCollision(
-            scrapXVw + scrapWidthVw / 2,
+            scrapLeftXPx + scrapWidthPx / 2,
             interpCenterY,
-            scrapWidthVw,
-            scrapHeightVh,
+            scrapWidthPx,
+            scrapHeightPx,
             velocity,
+            barrierVertices,
             barrier,
             {
               minOverlap: interpCollision.minOverlap,
               separatingAxis: interpCollision.separatingAxis
             }
           );
-          // Return the interpolated Y position so scrap can be placed there
-          result.correctedPositionVh = interpY;
+          // Return the interpolated position so scrap can be placed there
+          result.correctedPositionPx = {
+            x: scrapLeftXPx,
+            y: interpTopY
+          };
           return result;
         }
       }
@@ -185,12 +195,9 @@ export const checkBarrierCollision = (
   }
   
   // Standard discrete collision check at current position
-  const scrapCenterX = scrapXVw + scrapWidthVw / 2;
-  const scrapCenterY = scrapBottomVh + scrapHeightVh / 2;
-  const scrapVertices = getScrapVertices(scrapCenterX, scrapCenterY, scrapWidthVw, scrapHeightVh);
-  
-  // Use SHARED geometry calculation for barrier - guarantees visual matches collision
-  const barrierVertices = getSharedBarrierVertices(barrier);
+  const scrapCenterX = scrapLeftXPx + scrapWidthPx / 2;
+  const scrapCenterY = scrapTopYPx + scrapHeightPx / 2;
+  const scrapVertices = getScrapVertices(scrapCenterX, scrapCenterY, scrapWidthPx, scrapHeightPx);
   
   // Check ACTUAL geometric overlap using SAT
   const collision = checkRectangleOverlap(scrapVertices, barrierVertices);
@@ -209,9 +216,10 @@ export const checkBarrierCollision = (
   return resolveCollision(
     scrapCenterX,
     scrapCenterY,
-    scrapWidthVw,
-    scrapHeightVh,
+    scrapWidthPx,
+    scrapHeightPx,
     velocity,
+    barrierVertices,
     barrier,
     {
       minOverlap: collision.minOverlap,
@@ -226,9 +234,10 @@ export const checkBarrierCollision = (
 const resolveCollision = (
   scrapCenterX: number,
   scrapCenterY: number,
-  scrapWidthVw: number,
-  scrapHeightVh: number,
+  scrapWidthPx: number,
+  scrapHeightPx: number,
   velocity: { vx: number; vy: number },
+  barrierVertices: Array<{ x: number; y: number }>,
   barrier: Barrier,
   collision: { minOverlap: number; separatingAxis: { x: number; y: number } }
 ): BarrierCollision => {
@@ -236,20 +245,25 @@ const resolveCollision = (
   let normal = collision.separatingAxis;
   const penetration = collision.minOverlap;
   
+  // Calculate barrier center from vertices
+  const barrierCenterX = barrierVertices.reduce((sum, v) => sum + v.x, 0) / barrierVertices.length;
+  const barrierCenterY = barrierVertices.reduce((sum, v) => sum + v.y, 0) / barrierVertices.length;
+  
   // Ensure normal points from barrier toward scrap (for correct bounce direction)
-  const barrierCenterX = barrier.position.xVw;
-  const barrierCenterY = barrier.position.bottomVh;
   const toScrap = vec2.subtract({ x: scrapCenterX, y: scrapCenterY }, { x: barrierCenterX, y: barrierCenterY });
   if (vec2.dot(normal, toScrap) < 0) {
     normal = { x: -normal.x, y: -normal.y };
   }
   
   // Calculate reflected velocity using: v' = v - (1 + restitution) × (v · n) × n
+  const RESTITUTION = barrier.restitution;
+  const FRICTION = barrier.friction;
+  
   const velocityVec = { x: velocity.vx, y: velocity.vy };
   const velocityDotNormal = vec2.dot(velocityVec, normal);
   
   // If velocity into surface is very small, treat as resting contact (no bounce)
-  const RESTING_THRESHOLD = 5; // vp/s - below this, no bounce
+  const RESTING_THRESHOLD = 5; // pixels/s - below this, no bounce
   const isResting = Math.abs(velocityDotNormal) < RESTING_THRESHOLD;
   
   let reflectedVelocity;
@@ -260,7 +274,7 @@ const resolveCollision = (
     reflectedVelocity = vec2.scale(tangent, tangentVelocity);
   } else {
     // Moving contact: apply reflection with restitution
-    const reflectionScale = (1 + barrier.restitution) * velocityDotNormal;
+    const reflectionScale = (1 + RESTITUTION) * velocityDotNormal;
     const reflection = vec2.scale(normal, reflectionScale);
     reflectedVelocity = vec2.subtract(velocityVec, reflection);
   }
@@ -269,7 +283,7 @@ const resolveCollision = (
   // Tangent is perpendicular to normal
   const tangent = { x: -normal.y, y: normal.x };
   const tangentVelocity = vec2.dot(reflectedVelocity, tangent);
-  const frictionDamping = 1 - barrier.friction * 0.5; // Scale friction effect
+  const frictionDamping = 1 - FRICTION * 0.5; // Scale friction effect
   const dampedTangentVelocity = tangentVelocity * frictionDamping;
   
   // Reconstruct velocity from normal and tangent components
@@ -289,15 +303,4 @@ const resolveCollision = (
   };
 };
 
-/**
- * Get barrier corner vertices in world space (for rendering/debugging)
- * Uses shared geometry calculation
- * 
- * @param barrier - Barrier to get vertices for
- * @returns Array of 4 corner points [bottomLeft, bottomRight, topRight, topLeft]
- */
-export const getBarrierVertices = (barrier: Barrier): Array<{ xVw: number; bottomVh: number }> => {
-  const vertices = getSharedBarrierVertices(barrier);
-  return vertices.map(v => ({ xVw: v.x, bottomVh: v.y }));
-};
 

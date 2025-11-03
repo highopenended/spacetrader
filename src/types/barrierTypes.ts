@@ -7,16 +7,19 @@
 
 /**
  * Barrier - Static obstacle that scrap interacts with
+ * 
+ * All positions and dimensions in world units (wu).
+ * World size: 20w × 10h (top-left is 0,0; bottom-right is 20,10).
  */
 export interface Barrier {
   id: string;                      // Unique identifier
   position: {
-    xVw: number;                   // Center X position (viewport width units)
-    bottomVh: number;              // Center bottom position (viewport height units)
+    x: number;                     // Center X position (world units, 0-20)
+    yFromBottom: number;           // Center Y position from bottom (world units, 0-10)
   };
-  width: number;                   // Width in vw
-  height: number;                  // Height (thickness) in vw
-  rotation: number;                // Rotation in degrees (0 = horizontal)
+  width: number;                   // Width in world units
+  height: number;                  // Height (thickness) in world units
+  rotation: number;                // Rotation in degrees (0 = horizontal, positive = clockwise like CSS)
   restitution: number;             // Bounciness (0 = no bounce, 1 = perfect bounce)
   friction: number;                // Friction coefficient (0 = ice, 1 = sticky)
   enabled: boolean;                // Whether collision detection is active
@@ -32,8 +35,8 @@ export interface Barrier {
 export interface BarrierCollision {
   collided: boolean;               // Whether collision occurred
   normal: { x: number; y: number }; // Surface normal vector (unit vector)
-  penetration: number;             // How far scrap penetrated (vp units)
-  newVelocity: { vx: number; vy: number }; // Reflected velocity (vp/s)
-  correctedPositionVh?: number;    // If swept collision, the Y position to place scrap at
+  penetration: number;             // How far scrap penetrated (in pixels)
+  newVelocity: { vx: number; vy: number }; // Reflected velocity (in pixels per second)
+  correctedPositionPx?: { x: number; y: number }; // If swept collision, the screen position to place scrap at
 }
 

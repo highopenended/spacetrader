@@ -85,21 +85,21 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       
       // Initialize barriers for work mode
       // Uncomment and modify these to add barriers:
-      // setBarriers([
-      //   {
-      //     id: 'test-barrier-1',
-      //     position: {
-      //       xVw: 30,        // Center X position (viewport width units)
-      //       bottomVh: 25    // Bottom position (viewport height units)
-      //     },
-      //     width: 20,        // Width in vw
-      //     height: 0.5,      // Height (thickness) in vw
-      //     rotation: 15,     // Rotation in degrees (0 = horizontal)
-      //     restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
-      //     friction: 0.2,    // Friction (0 = ice, 1 = sticky)
-      //     enabled: true
-      //   }
-      // ]);
+      setBarriers([
+        {
+          id: 'test-barrier-1',
+          position: {
+            x: 5.9,         // Center X position (world units, 0-20)
+            yFromBottom: 2.5 // Center Y position from bottom (world units, 0-10)
+          },
+          width: 4,         // Width in world units (approx 3.93 to match endpoints)
+          height: 0.2,      // Height (thickness) in world units
+          rotation: 15,     // Rotation in degrees (0 = horizontal, positive = clockwise)
+          restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
+          friction: 0.2,    // Friction (0 = ice, 1 = sticky)
+          enabled: true
+        }
+      ]);
     } else {
       // Clear barriers when work mode ends
       clearBarriers();

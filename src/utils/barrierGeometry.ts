@@ -7,6 +7,7 @@
  */
 
 import { Barrier } from '../types/barrierTypes';
+import { worldToScreen, WORLD_HEIGHT } from '../constants/cameraConstants';
 
 /**
  * Convert degrees to radians
@@ -14,59 +15,59 @@ import { Barrier } from '../types/barrierTypes';
 const degToRad = (degrees: number): number => degrees * (Math.PI / 180);
 
 /**
- * Get the 4 corner vertices of a barrier in world space
+ * Get the 4 corner vertices of a barrier in screen pixel coordinates
  * This is the DEFINITIVE barrier shape - both visual and collision use this.
  * 
  * Coordinate system:
- * - Position: xVw in VW units, bottomVh in VH units
- * - Width in VW, Height in VW (to match CSS which uses vw for both)
- * - But we need to convert height to screen space for Y-axis calculations
+ * - Input: Barrier in world units (x, yFromBottom, width, height in wu)
  * - Rotation in degrees (0 = horizontal, positive = clockwise like CSS)
- * - Returns corners in mixed units: x in VW, y in VH
+ * - Returns corners in screen pixels (for collision detection)
  */
-export const getBarrierVertices = (barrier: Barrier): Array<{ x: number; y: number }> => {
-  const centerX = barrier.position.xVw;  // VW
-  const centerY = barrier.position.bottomVh; // VH
-  const halfWidth = barrier.width / 2;   // VW
+export const getBarrierVertices = (
+  barrier: Barrier,
+  viewportWidth: number,
+  viewportHeight: number
+): Array<{ x: number; y: number }> => {
+  // Convert barrier center position from world units to screen pixels
+  // yFromBottom is measured from bottom, convert to world Y (top=0, increases downward)
+  const centerYWu = WORLD_HEIGHT - barrier.position.yFromBottom;
+  const centerScreenPos = worldToScreen(barrier.position.x, centerYWu, viewportWidth, viewportHeight);
   
-  // Convert height from VW to VH for proper Y-axis calculations
-  // Since CSS uses height in VW for aspect ratio, we need to convert to same Y-axis units
-  const aspectRatio = window.innerWidth / window.innerHeight;
-  const halfHeightInVh = (barrier.height / 2) * aspectRatio; // Convert VW to VH
+  // Calculate half-dimensions in world units
+  const halfWidthWu = barrier.width / 2;
+  const halfHeightWu = barrier.height / 2;
   
-  // Convert rotation to radians (negate because CSS is clockwise, math is counter-clockwise)
-  const angleRad = -degToRad(barrier.rotation);
+  // Convert half-dimensions to screen pixels
+  // We need to convert world units to pixels for rotation
+  const zoomX = viewportWidth / 20; // WORLD_WIDTH = 20
+  const zoomY = viewportHeight / 10; // WORLD_HEIGHT = 10
+  const zoom = Math.min(zoomX, zoomY);
+  
+  const halfWidthPx = halfWidthWu * zoom;
+  const halfHeightPx = halfHeightWu * zoom;
+  
+  // Convert rotation to radians
+  // In screen coordinates (Y-down), positive angles produce clockwise rotation (same as CSS)
+  const angleRad = degToRad(barrier.rotation);
   const cos = Math.cos(angleRad);
   const sin = Math.sin(angleRad);
   
-  // Local corners (before rotation, relative to center)
-  // X offsets in VW, Y offsets in VH
+  // Local corners (before rotation, relative to center) in pixels
   const localCorners = [
-    { x: -halfWidth, y: -halfHeightInVh }, // Bottom-left
-    { x: halfWidth, y: -halfHeightInVh },  // Bottom-right  
-    { x: halfWidth, y: halfHeightInVh },   // Top-right
-    { x: -halfWidth, y: halfHeightInVh }   // Top-left
+    { x: -halfWidthPx, y: -halfHeightPx }, // Bottom-left
+    { x: halfWidthPx, y: -halfHeightPx },  // Bottom-right  
+    { x: halfWidthPx, y: halfHeightPx },   // Top-right
+    { x: -halfWidthPx, y: halfHeightPx }   // Top-left
   ];
   
-  // Rotate each corner and translate to world position
-  // After rotation, need to ensure we're still in correct units
+  // Rotate each corner and translate to screen position
   return localCorners.map(corner => {
-    // Rotation mixes the axes, so we need to be careful
-    // Since corner.x is in VW and corner.y is in VH, this gets complex
-    // Let's convert everything to pixels, rotate, then convert back
-    
-    const cornerXPx = (corner.x / 100) * window.innerWidth;
-    const cornerYPx = (corner.y / 100) * window.innerHeight;
-    
-    const rotatedXPx = cornerXPx * cos - cornerYPx * sin;
-    const rotatedYPx = cornerXPx * sin + cornerYPx * cos;
-    
-    const rotatedXVw = (rotatedXPx / window.innerWidth) * 100;
-    const rotatedYVh = (rotatedYPx / window.innerHeight) * 100;
+    const rotatedXPx = corner.x * cos - corner.y * sin;
+    const rotatedYPx = corner.x * sin + corner.y * cos;
     
     return {
-      x: centerX + rotatedXVw,  // VW + VW
-      y: centerY + rotatedYVh   // VH + VH
+      x: centerScreenPos.x + rotatedXPx,  // Screen pixels
+      y: centerScreenPos.y + rotatedYPx   // Screen pixels (top=0, increases downward)
     };
   });
 };
@@ -83,14 +84,19 @@ export const getBarrierTransform = (barrier: Barrier): string => {
 
 /**
  * Get barrier bounding box (axis-aligned, for quick overlap checks)
+ * Returns bounding box in screen pixels
  */
-export const getBarrierBounds = (barrier: Barrier): { 
+export const getBarrierBounds = (
+  barrier: Barrier,
+  viewportWidth: number,
+  viewportHeight: number
+): { 
   minX: number; 
   maxX: number; 
   minY: number; 
   maxY: number;
 } => {
-  const vertices = getBarrierVertices(barrier);
+  const vertices = getBarrierVertices(barrier, viewportWidth, viewportHeight);
   
   return {
     minX: Math.min(...vertices.map(v => v.x)),
