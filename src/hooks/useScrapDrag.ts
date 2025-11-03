@@ -33,10 +33,11 @@ import {
 } from '../constants/physicsConstants';
 import { screenToWorld, worldToScreen } from '../constants/cameraConstants';
 import { useClockSubscription } from './useClockSubscription';
-import { useDragStore, useGameStore } from '../stores';
+import { useDragStore, useGameStore, useBarrierStore } from '../stores';
 import { calculateScrapMass, calculateEffectiveLoad, calculateFieldForces } from '../utils/physicsUtils';
 import { PhysicsContext } from '../types/physicsTypes';
 import { ScrapObject } from '../types/scrapTypes';
+import { checkBarrierCollision } from '../utils/barrierCollisionUtils';
 
 export interface ScrapDragDropInfo {
   scrapId: string;
@@ -315,6 +316,46 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
       // Integrate position: p = p + v * dt (all in world units)
       const newX = currentGrabbedObject.position.x + vx * dtSeconds;
       const newY = currentGrabbedObject.position.y + vy * dtSeconds;
+      
+      // === BARRIER COLLISION DETECTION ===
+      // Check if dragged scrap collides with any barriers - auto-release on collision
+      const enabledBarriers = useBarrierStore.getState().getAllBarriers().filter(b => b.enabled);
+      if (enabledBarriers.length > 0) {
+        // Convert grabbed object position to screen pixels for collision detection
+        const grabbedScreenPos = worldToScreen(newX, newY, viewportWidth, viewportHeight);
+        
+        // Convert velocity from world units per second to pixels per second
+        // Calculate zoom factor (same as barrier collision hook)
+        const zoomX = viewportWidth / 20; // WORLD_WIDTH = 20
+        const zoomY = viewportHeight / 10; // WORLD_HEIGHT = 10
+        const zoom = Math.min(zoomX, zoomY);
+        
+        // IMPORTANT: Physics system uses vy positive UP, but screen coordinates use Y positive DOWN
+        // So we must negate vy when converting to screen pixels
+        const velocityPx = {
+          vx: vx * zoom,
+          vy: -vy * zoom  // Negate because physics Y-up vs screen Y-down
+        };
+        
+        // Check collision against all enabled barriers
+        for (const barrier of enabledBarriers) {
+          const collision = checkBarrierCollision(
+            grabbedScreenPos.x,
+            grabbedScreenPos.y,
+            velocityPx,
+            barrier,
+            viewportWidth,
+            viewportHeight
+          );
+          
+          if (collision.collided) {
+            // Auto-release on barrier collision! Trigger endDrag which calls onDrop
+            // The existing velocity in the store will be used automatically
+            endDrag();
+            return; // Exit early, collision handled
+          }
+        }
+      }
       
       // Update cursor position tracking for next frame
       previousCursorPosRef.current = { x: cursorPos.x, y: cursorPos.y };
