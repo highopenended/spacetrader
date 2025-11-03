@@ -12,10 +12,19 @@
 
 import { useCallback } from "react";
 import { SCRAP_SIZE_WU } from "../constants/physicsConstants";
-import { domRectToRect, Rect } from "../utils/collisionUtils";
 import { collectScrap, calculateScrapValue, ActiveScrapObject } from "../utils/scrapUtils";
 import { ScrapSpawnState } from "../utils/scrapUtils";
 import { useCameraUtils } from "./useCameraUtils";
+
+/**
+ * Rectangle bounds in screen space (pixels)
+ */
+interface Rect {
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+}
 
 export interface UseScrapBinCollisionsOptions {
     /** Ref to the bin DOM element for collision bounds */
@@ -38,6 +47,18 @@ export interface UseScrapBinCollisionsApi {
      */
     checkBinCollisions: (prevState: ScrapSpawnState) => ScrapSpawnState;
 }
+
+/**
+ * Convert DOMRect to Rect interface
+ */
+const domRectToRect = (domRect: DOMRect): Rect => {
+    return {
+        left: domRect.left,
+        top: domRect.top,
+        right: domRect.right,
+        bottom: domRect.bottom
+    };
+};
 
 /**
  * Check if a circle overlaps with an axis-aligned rectangle

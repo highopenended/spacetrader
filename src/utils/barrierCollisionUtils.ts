@@ -21,7 +21,7 @@ import { WORLD_WIDTH, WORLD_HEIGHT } from '../constants/cameraConstants';
  * - Green: Bounding box has overlapping scrap
  * - Red: No scrap overlapping bounding box
  */
-export const DEBUG_BARRIER_BOUNDS = true;
+export const DEBUG_BARRIER_BOUNDS = false;
 
 /**
  * Module-level state tracking which barriers have overlapping bounding boxes

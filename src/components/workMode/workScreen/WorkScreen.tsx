@@ -85,16 +85,30 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
       
       // Initialize barriers for work mode
       // Uncomment and modify these to add barriers:
+      // Includes screen borders
       setBarriers([
         {
-          id: 'test-barrier-1',
+          id: 'barrier-left-wall',
           position: {
-            x: 8,         // Center X position (world units, 0-20)
-            yFromBottom: 5.5 // Center Y position from bottom (world units, 0-10)
+            x: 0,         // Center X position (world units, 0-20)
+            yFromBottom: 6.5 // Center Y position from bottom (world units, 0-10)
           },
-          width: 16,         // Width in world units (approx 3.93 to match endpoints)
+          width: 8,         // Width in world units (approx 3.93 to match endpoints)
           height: 0.1,      // Height (thickness) in world units
-          rotation: 5,     // Rotation in degrees (0 = horizontal, positive = clockwise)
+          rotation: 90,     // Rotation in degrees (0 = horizontal, positive = clockwise)
+          restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
+          friction: 0.05,    // Friction (0 = ice, 1 = sticky)
+          enabled: true
+        },
+        {
+          id: 'barrier-right-wall',
+          position: {
+            x: 20,         // Center X position (world units, 0-20)
+            yFromBottom: 6 // Center Y position from bottom (world units, 0-10)
+          },
+          width: 8,         // Width in world units (approx 3.93 to match endpoints)
+          height: 0.1,      // Height (thickness) in world units
+          rotation: 90,     // Rotation in degrees (0 = horizontal, positive = clockwise)
           restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
           friction: 0.05,    // Friction (0 = ice, 1 = sticky)
           enabled: true
