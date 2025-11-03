@@ -112,6 +112,32 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
           restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
           friction: 0.05,    // Friction (0 = ice, 1 = sticky)
           enabled: true
+        },
+        {
+          id: 'barrier-wall-middle1',
+          position: {
+            x: 8.7,         // Center X position (world units, 0-20)
+            yFromBottom: 3 // Center Y position from bottom (world units, 0-10)
+          },
+          width: 4,         // Width in world units (approx 3.93 to match endpoints)
+          height: 0.1,      // Height (thickness) in world units
+          rotation: 45,     // Rotation in degrees (0 = horizontal, positive = clockwise)
+          restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
+          friction: 0.05,    // Friction (0 = ice, 1 = sticky)
+          enabled: true
+        },
+        {
+          id: 'barrier-wall-middle2',
+          position: {
+            x: 11.3,         // Center X position (world units, 0-20)
+            yFromBottom: 3 // Center Y position from bottom (world units, 0-10)
+          },
+          width: 4,         // Width in world units (approx 3.93 to match endpoints)
+          height: 0.1,      // Height (thickness) in world units
+          rotation: 135,     // Rotation in degrees (0 = horizontal, positive = clockwise)
+          restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
+          friction: 0.05,    // Friction (0 = ice, 1 = sticky)
+          enabled: true
         }
       ]);
     } else {

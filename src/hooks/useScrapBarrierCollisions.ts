@@ -112,35 +112,37 @@ export const useScrapBarrierCollisions = (
             prevState.activeScrap.forEach(scrap => {
                 if (!isAirborne(scrap.id)) return; // Only check airborne scrap
 
-                // Check collision against all enabled barriers
+                // Get scrap position in screen pixels (center point)
+                const centerPos = getRenderedPosition(scrap);
+
+                // Use AVERAGED velocity over last 5 frames for stable, accurate collision response
+                const velocityWu = getAveragedVelocity(scrap.id);
+                if (!velocityWu) return;
+                
+                // Convert velocity from world units per second to pixels per second
+                // IMPORTANT: Physics system uses vy positive UP, but screen coordinates use Y positive DOWN
+                // So we must negate vy when converting to screen pixels
+                const velocityPx = {
+                    vx: velocityWu.vx * zoom,
+                    vy: -velocityWu.vy * zoom  // Negate because physics Y-up vs screen Y-down
+                };
+
+                // Get previous position for swept collision detection (in pixels, center Y)
+                const airborneState = getAirborneState(scrap.id);
+                let prevScrapCenterYPx: number | undefined = undefined;
+                if (airborneState?.prevYWu !== undefined) {
+                    // Convert world unit prevY to screen pixels
+                    const prevWorldYFromBottomWu = SCRAP_BASELINE_BOTTOM_WU + airborneState.prevYWu;
+                    const prevCenterYWu = WORLD_HEIGHT - prevWorldYFromBottomWu;
+                    const prevCenterXPx = scrap.x + SCRAP_SIZE_WU / 2;
+                    const prevScreenPos = worldToScreenPx(prevCenterXPx, prevCenterYWu);
+                    prevScrapCenterYPx = prevScreenPos.y;
+                }
+
+                // Collect ALL collisions first (don't break after first)
+                const collisions: Array<{ barrier: typeof enabledBarriers[0]; collision: ReturnType<typeof checkBarrierCollision> }> = [];
+                
                 for (const barrier of enabledBarriers) {
-                    // Get scrap position in screen pixels (center point)
-                    const centerPos = getRenderedPosition(scrap);
-
-                    // Use AVERAGED velocity over last 5 frames for stable, accurate collision response
-                    const velocityWu = getAveragedVelocity(scrap.id);
-                    if (!velocityWu) continue;
-                    
-                    // Convert velocity from world units per second to pixels per second
-                    // IMPORTANT: Physics system uses vy positive UP, but screen coordinates use Y positive DOWN
-                    // So we must negate vy when converting to screen pixels
-                    const velocityPx = {
-                        vx: velocityWu.vx * zoom,
-                        vy: -velocityWu.vy * zoom  // Negate because physics Y-up vs screen Y-down
-                    };
-
-                    // Get previous position for swept collision detection (in pixels, center Y)
-                    const airborneState = getAirborneState(scrap.id);
-                    let prevScrapCenterYPx: number | undefined = undefined;
-                    if (airborneState?.prevYWu !== undefined) {
-                        // Convert world unit prevY to screen pixels
-                        const prevWorldYFromBottomWu = SCRAP_BASELINE_BOTTOM_WU + airborneState.prevYWu;
-                        const prevCenterYWu = WORLD_HEIGHT - prevWorldYFromBottomWu;
-                        const prevCenterXPx = scrap.x + SCRAP_SIZE_WU / 2;
-                        const prevScreenPos = worldToScreenPx(prevCenterXPx, prevCenterYWu);
-                        prevScrapCenterYPx = prevScreenPos.y;
-                    }
-
                     const collision = checkBarrierCollision(
                         centerPos.x,
                         centerPos.y,
@@ -152,42 +154,155 @@ export const useScrapBarrierCollisions = (
                     );
 
                     if (collision.collided) {
-                        // Collision response always provides corrected position (center coordinates in pixels)
-                        if (collision.correctedPositionPx !== undefined) {
-                            // Convert corrected center position back to world units
-                            const correctedWorld = screenToWorld(
-                                collision.correctedPositionPx.x, 
-                                collision.correctedPositionPx.y, 
-                                viewport.width, 
-                                viewport.height
-                            );
-                            
-                            // Update X position (convert center to left edge)
-                            const correctedXWu = correctedWorld.x - SCRAP_SIZE_WU / 2;
-                            newState = {
-                                ...newState,
-                                activeScrap: newState.activeScrap.map(s =>
-                                    s.id === scrap.id ? { ...s, x: correctedXWu } : s
-                                )
-                            };
-                            
-                            // Update Y position (convert world Y to offset from baseline)
-                            const worldYFromBottomWu = WORLD_HEIGHT - correctedWorld.y;
-                            const correctedYWu = worldYFromBottomWu - SCRAP_BASELINE_BOTTOM_WU;
-                            adjustPosition(scrap.id, correctedYWu - (airborneState?.yWu || 0));
-                        }
-
-                        // Apply reflected velocity (convert from pixels/s back to world units/s)
-                        // IMPORTANT: Negate vy again when converting back (screen Y-down to physics Y-up)
-                        const reflectedVelocityWu = {
-                            vx: collision.newVelocity.vx / zoom,
-                            vy: -collision.newVelocity.vy / zoom  // Negate because screen Y-down to physics Y-up
-                        };
-                        setVelocity(scrap.id, reflectedVelocityWu.vx, reflectedVelocityWu.vy);
-
-                        // Only process first collision per scrap (break after first collision)
-                        break;
+                        collisions.push({ barrier, collision });
                     }
+                }
+
+                // Process collisions
+                if (collisions.length === 0) {
+                    return; // No collisions
+                } else if (collisions.length === 1) {
+                    // Single collision - handle as before
+                    const { collision } = collisions[0];
+                    
+                    if (collision.correctedPositionPx !== undefined) {
+                        // Convert corrected center position back to world units
+                        const correctedWorld = screenToWorld(
+                            collision.correctedPositionPx.x, 
+                            collision.correctedPositionPx.y, 
+                            viewport.width, 
+                            viewport.height
+                        );
+                        
+                        // Update X position (convert center to left edge)
+                        const correctedXWu = correctedWorld.x - SCRAP_SIZE_WU / 2;
+                        newState = {
+                            ...newState,
+                            activeScrap: newState.activeScrap.map(s =>
+                                s.id === scrap.id ? { ...s, x: correctedXWu } : s
+                            )
+                        };
+                        
+                        // Update Y position (convert world Y to offset from baseline)
+                        const worldYFromBottomWu = WORLD_HEIGHT - correctedWorld.y;
+                        const correctedYWu = worldYFromBottomWu - SCRAP_BASELINE_BOTTOM_WU;
+                        adjustPosition(scrap.id, correctedYWu - (airborneState?.yWu || 0));
+                    }
+
+                    // Apply reflected velocity (convert from pixels/s back to world units/s)
+                    const reflectedVelocityWu = {
+                        vx: collision.newVelocity.vx / zoom,
+                        vy: -collision.newVelocity.vy / zoom  // Negate because screen Y-down to physics Y-up
+                    };
+                    setVelocity(scrap.id, reflectedVelocityWu.vx, reflectedVelocityWu.vy);
+                } else {
+                    // Multiple collisions - resolve together (e.g., V-shape where two barriers meet)
+                    // Average corrected positions to find intersection point
+                    let avgCorrectedX = 0;
+                    let avgCorrectedY = 0;
+                    let hasCorrectedPosition = false;
+                    
+                    for (const { collision } of collisions) {
+                        if (collision.correctedPositionPx !== undefined) {
+                            avgCorrectedX += collision.correctedPositionPx.x;
+                            avgCorrectedY += collision.correctedPositionPx.y;
+                            hasCorrectedPosition = true;
+                        }
+                    }
+                    
+                    if (hasCorrectedPosition) {
+                        avgCorrectedX /= collisions.length;
+                        avgCorrectedY /= collisions.length;
+                        
+                        // Convert averaged corrected position back to world units
+                        const correctedWorld = screenToWorld(
+                            avgCorrectedX,
+                            avgCorrectedY,
+                            viewport.width,
+                            viewport.height
+                        );
+                        
+                        // Update X position (convert center to left edge)
+                        const correctedXWu = correctedWorld.x - SCRAP_SIZE_WU / 2;
+                        newState = {
+                            ...newState,
+                            activeScrap: newState.activeScrap.map(s =>
+                                s.id === scrap.id ? { ...s, x: correctedXWu } : s
+                            )
+                        };
+                        
+                        // Update Y position (convert world Y to offset from baseline)
+                        const worldYFromBottomWu = WORLD_HEIGHT - correctedWorld.y;
+                        const correctedYWu = worldYFromBottomWu - SCRAP_BASELINE_BOTTOM_WU;
+                        adjustPosition(scrap.id, correctedYWu - (airborneState?.yWu || 0));
+                    }
+
+                    // For velocity: constrain to valid space that doesn't violate any collision normal
+                    // In a V-shape, this means velocity along the crease (perpendicular to average normal)
+                    // Or zero if velocity into any surface is too high
+                    
+                    // Average the normals
+                    let avgNormalX = 0;
+                    let avgNormalY = 0;
+                    for (const { collision } of collisions) {
+                        avgNormalX += collision.normal.x;
+                        avgNormalY += collision.normal.y;
+                    }
+                    avgNormalX /= collisions.length;
+                    avgNormalY /= collisions.length;
+                    
+                    // Normalize average normal
+                    const avgNormalLen = Math.sqrt(avgNormalX * avgNormalX + avgNormalY * avgNormalY);
+                    if (avgNormalLen > 0.0001) {
+                        avgNormalX /= avgNormalLen;
+                        avgNormalY /= avgNormalLen;
+                    }
+                    
+                    // Check if velocity into any surface is low (resting contact)
+                    let maxVelocityIntoSurface = 0;
+                    for (const { collision } of collisions) {
+                        const velocityDotNormal = velocityPx.vx * collision.normal.x + velocityPx.vy * collision.normal.y;
+                        maxVelocityIntoSurface = Math.max(maxVelocityIntoSurface, Math.abs(velocityDotNormal));
+                    }
+                    
+                    const RESTING_THRESHOLD = 5; // pixels/s
+                    const isResting = maxVelocityIntoSurface < RESTING_THRESHOLD;
+                    
+                    let finalVelocityPx = { vx: 0, vy: 0 };
+                    
+                    if (isResting) {
+                        // Resting contact with multiple barriers: velocity should be zero
+                        // (can't slide along crease if fully constrained by two barriers)
+                        finalVelocityPx = { vx: 0, vy: 0 };
+                    } else {
+                        // Moving contact: project velocity onto crease (tangent to average normal)
+                        // Tangent is perpendicular to average normal
+                        const tangentX = -avgNormalY;
+                        const tangentY = avgNormalX;
+                        
+                        // Project velocity onto tangent (along the crease)
+                        const velocityDotTangent = velocityPx.vx * tangentX + velocityPx.vy * tangentY;
+                        finalVelocityPx = {
+                            vx: tangentX * velocityDotTangent,
+                            vy: tangentY * velocityDotTangent
+                        };
+                        
+                        // Apply friction from the most restrictive barrier
+                        let minFriction = 1.0;
+                        for (const { barrier } of collisions) {
+                            minFriction = Math.min(minFriction, barrier.friction);
+                        }
+                        const frictionDamping = 1 - minFriction * 0.5;
+                        finalVelocityPx.vx *= frictionDamping;
+                        finalVelocityPx.vy *= frictionDamping;
+                    }
+                    
+                    // Convert final velocity back to world units
+                    const finalVelocityWu = {
+                        vx: finalVelocityPx.vx / zoom,
+                        vy: -finalVelocityPx.vy / zoom  // Negate because screen Y-down to physics Y-up
+                    };
+                    setVelocity(scrap.id, finalVelocityWu.vx, finalVelocityWu.vy);
                 }
             });
 
