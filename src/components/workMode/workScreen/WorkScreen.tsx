@@ -94,9 +94,9 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
           },
           width: 16,         // Width in world units (approx 3.93 to match endpoints)
           height: 0.1,      // Height (thickness) in world units
-          rotation: 45,     // Rotation in degrees (0 = horizontal, positive = clockwise)
+          rotation: 5,     // Rotation in degrees (0 = horizontal, positive = clockwise)
           restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
-          friction: 0.7,    // Friction (0 = ice, 1 = sticky)
+          friction: 0.05,    // Friction (0 = ice, 1 = sticky)
           enabled: true
         }
       ]);

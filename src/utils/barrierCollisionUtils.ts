@@ -2,16 +2,19 @@
  * Barrier Collision Utilities
  * 
  * Handles collision detection and response for barriers.
- * Uses Oriented Bounding Box (OBB) collision for rotated rectangles.
+ * Uses Circle-to-OBB collision (scrap is circular, barriers are rotated rectangles).
  * 
  * Coordinate system:
  * - All positions and sizes in screen pixels
  * - Velocities in pixels per second
  * - Barriers are converted from world units to pixels for collision detection
+ * - Scrap treated as circles (matching visual appearance)
  */
 
 import { Barrier, BarrierCollision } from '../types/barrierTypes';
 import { getBarrierVertices as getSharedBarrierVertices, getBarrierBounds } from './barrierGeometry';
+import { SCRAP_SIZE_WU } from '../constants/physicsConstants';
+import { WORLD_WIDTH, WORLD_HEIGHT } from '../constants/cameraConstants';
 
 /**
  * Debug mode: Show bounding box overlays for barriers
@@ -41,149 +44,164 @@ const vec2 = {
 };
 
 /**
- * Get vertices for scrap rectangle (always axis-aligned, no rotation)
+ * Calculate scrap radius in pixels from viewport dimensions
  */
-const getScrapVertices = (
-  centerX: number,
-  centerY: number,
-  width: number,
-  height: number
-): Array<{ x: number; y: number }> => {
-  const halfWidth = width / 2;
-  const halfHeight = height / 2;
+const getScrapRadiusPx = (viewportWidth: number, viewportHeight: number): number => {
+  // Calculate zoom factor to convert world units to pixels
+  const zoomX = viewportWidth / WORLD_WIDTH;
+  const zoomY = viewportHeight / WORLD_HEIGHT;
+  const zoom = Math.min(zoomX, zoomY);
   
-  return [
-    { x: centerX - halfWidth, y: centerY - halfHeight }, // Bottom-left
-    { x: centerX + halfWidth, y: centerY - halfHeight }, // Bottom-right
-    { x: centerX + halfWidth, y: centerY + halfHeight }, // Top-right
-    { x: centerX - halfWidth, y: centerY + halfHeight }  // Top-left
-  ];
+  // Scrap is circular with diameter = SCRAP_SIZE_WU
+  return (SCRAP_SIZE_WU / 2) * zoom;
 };
 
 /**
- * Project polygon onto axis and return min/max
+ * Find closest point on an OBB (Oriented Bounding Box) to a given point
+ * Returns the closest point on or inside the OBB
  */
-const projectPolygon = (vertices: Array<{ x: number; y: number }>, axis: { x: number; y: number }) => {
-  let min = vec2.dot(vertices[0], axis);
-  let max = min;
+const closestPointOnOBB = (
+  point: { x: number; y: number },
+  obbCenter: { x: number; y: number },
+  obbHalfExtents: { width: number; height: number },
+  obbRotationRad: number
+): { x: number; y: number } => {
+  // Transform point to OBB's local space (undo rotation)
+  const cos = Math.cos(-obbRotationRad);
+  const sin = Math.sin(-obbRotationRad);
+  const dx = point.x - obbCenter.x;
+  const dy = point.y - obbCenter.y;
+  const localX = dx * cos - dy * sin;
+  const localY = dx * sin + dy * cos;
   
-  for (let i = 1; i < vertices.length; i++) {
-    const p = vec2.dot(vertices[i], axis);
-    if (p < min) min = p;
-    if (p > max) max = p;
-  }
+  // Clamp to box extents in local space
+  const clampedX = Math.max(-obbHalfExtents.width, Math.min(obbHalfExtents.width, localX));
+  const clampedY = Math.max(-obbHalfExtents.height, Math.min(obbHalfExtents.height, localY));
   
-  return { min, max };
+  // Transform back to world space (apply rotation)
+  const cos2 = Math.cos(obbRotationRad);
+  const sin2 = Math.sin(obbRotationRad);
+  const worldX = clampedX * cos2 - clampedY * sin2 + obbCenter.x;
+  const worldY = clampedX * sin2 + clampedY * cos2 + obbCenter.y;
+  
+  return { x: worldX, y: worldY };
 };
 
 /**
- * Check if two rectangles overlap using SAT (Separating Axis Theorem)
- * Returns overlap amount and axis if collision detected
+ * Check if circle overlaps with OBB (Oriented Bounding Box)
+ * Returns collision info with penetration depth and normal
  */
-const checkRectangleOverlap = (
-  rect1Vertices: Array<{ x: number; y: number }>,
-  rect2Vertices: Array<{ x: number; y: number }>
-): { overlaps: boolean; minOverlap: number; separatingAxis: { x: number; y: number } | null } => {
-  const axes: Array<{ x: number; y: number }> = [];
-  
-  // Get axes from both rectangles (perpendicular to edges)
-  const addAxes = (vertices: Array<{ x: number; y: number }>) => {
-    for (let i = 0; i < vertices.length; i++) {
-      const v1 = vertices[i];
-      const v2 = vertices[(i + 1) % vertices.length];
-      const edge = vec2.subtract(v2, v1);
-      // Perpendicular to edge (normalized)
-      const axis = vec2.normalize({ x: -edge.y, y: edge.x });
-      axes.push(axis);
-    }
+const checkCircleOBBCollision = (
+  circleCenter: { x: number; y: number },
+  circleRadius: number,
+  barrierVertices: Array<{ x: number; y: number }>,
+  barrierRotationRad: number
+): { collides: boolean; penetration: number; normal: { x: number; y: number } | null; closestPoint: { x: number; y: number } | null } => {
+  // Calculate barrier center and half-extents from vertices
+  const barrierCenter = {
+    x: barrierVertices.reduce((sum, v) => sum + v.x, 0) / barrierVertices.length,
+    y: barrierVertices.reduce((sum, v) => sum + v.y, 0) / barrierVertices.length
   };
   
-  addAxes(rect1Vertices);
-  addAxes(rect2Vertices);
+  // Calculate half-extents (distance from center to edge)
+  const v0 = barrierVertices[0];
+  const v1 = barrierVertices[1];
+  const v3 = barrierVertices[3];
+  const halfWidth = vec2.length(vec2.subtract(v1, v0)) / 2;
+  const halfHeight = vec2.length(vec2.subtract(v3, v0)) / 2;
   
-  let minOverlap = Infinity;
-  let separatingAxis: { x: number; y: number } | null = null;
+  // Find closest point on OBB to circle center
+  const closest = closestPointOnOBB(
+    circleCenter,
+    barrierCenter,
+    { width: halfWidth, height: halfHeight },
+    barrierRotationRad
+  );
   
-  // Test all axes
-  for (const axis of axes) {
-    const proj1 = projectPolygon(rect1Vertices, axis);
-    const proj2 = projectPolygon(rect2Vertices, axis);
-    
-    const overlap = Math.min(proj1.max, proj2.max) - Math.max(proj1.min, proj2.min);
-    
-    if (overlap < 0) {
-      // Found separating axis - no collision
-      return { overlaps: false, minOverlap: 0, separatingAxis: null };
-    }
-    
-    // Track minimum overlap and axis
-    if (overlap < minOverlap) {
-      minOverlap = overlap;
-      separatingAxis = axis;
-    }
+  // Calculate distance from circle center to closest point
+  const distance = vec2.length(vec2.subtract(circleCenter, closest));
+  
+  // Check collision
+  if (distance >= circleRadius) {
+    return { collides: false, penetration: 0, normal: null, closestPoint: null };
   }
   
-  // All axes overlap - collision detected
-  return { overlaps: true, minOverlap, separatingAxis };
+  // Calculate penetration depth and collision normal
+  const penetration = circleRadius - distance;
+  
+  // Normal points from closest point toward circle center
+  let normal: { x: number; y: number };
+  if (distance > 0.0001) {
+    // Circle center is outside/on edge of OBB - normal is from closest point to center
+    const diff = vec2.subtract(circleCenter, closest);
+    normal = vec2.normalize(diff);
+  } else {
+    // Circle center is inside OBB - need to find shortest exit direction
+    // Use the direction from barrier center to circle center
+    const diff = vec2.subtract(circleCenter, barrierCenter);
+    normal = vec2.length(diff) > 0.0001 ? vec2.normalize(diff) : { x: 0, y: -1 }; // Default to up if coincident
+  }
+  
+  return { collides: true, penetration, normal, closestPoint: closest };
 };
 
 /**
- * Broad-phase collision detection: Check if axis-aligned bounding boxes overlap
- * Fast approximate check before expensive SAT algorithm
+ * Broad-phase collision detection: Check if circle bounding box overlaps barrier bounding box
+ * Fast approximate check before expensive circle-to-OBB calculation
  */
 const checkBoundingBoxOverlap = (
-  scrapLeftXPx: number,
-  scrapTopYPx: number,
-  scrapWidthPx: number,
-  scrapHeightPx: number,
+  scrapCenterXPx: number,
+  scrapCenterYPx: number,
+  scrapRadiusPx: number,
   barrierBounds: { minX: number; maxX: number; minY: number; maxY: number }
 ): boolean => {
-  const scrapRightXPx = scrapLeftXPx + scrapWidthPx;
-  const scrapBottomYPx = scrapTopYPx + scrapHeightPx;
+  // Circle bounding box
+  const scrapMinX = scrapCenterXPx - scrapRadiusPx;
+  const scrapMaxX = scrapCenterXPx + scrapRadiusPx;
+  const scrapMinY = scrapCenterYPx - scrapRadiusPx;
+  const scrapMaxY = scrapCenterYPx + scrapRadiusPx;
   
   // Check if bounding boxes overlap (AABB collision)
   return !(
-    scrapRightXPx < barrierBounds.minX ||  // Scrap is to the left
-    scrapLeftXPx > barrierBounds.maxX ||   // Scrap is to the right
-    scrapBottomYPx < barrierBounds.minY || // Scrap is above
-    scrapTopYPx > barrierBounds.maxY       // Scrap is below
+    scrapMaxX < barrierBounds.minX ||  // Scrap is to the left
+    scrapMinX > barrierBounds.maxX ||  // Scrap is to the right
+    scrapMaxY < barrierBounds.minY ||  // Scrap is above
+    scrapMinY > barrierBounds.maxY     // Scrap is below
   );
 };
 
 /**
- * Check collision between scrap and rotated barrier rectangle
- * Uses broad-phase (bounding box) check first, then narrow-phase (SAT algorithm)
+ * Check collision between circular scrap and rotated barrier rectangle
+ * Uses broad-phase (bounding box) check first, then narrow-phase (circle-to-OBB)
  * Supports swept collision detection to prevent tunneling
  * 
- * @param scrapLeftXPx - Scrap left X position (screen pixels)
- * @param scrapTopYPx - Scrap top Y position (screen pixels, top=0)
- * @param scrapWidthPx - Scrap width (screen pixels)
- * @param scrapHeightPx - Scrap height (screen pixels)
+ * @param scrapCenterXPx - Scrap center X position (screen pixels)
+ * @param scrapCenterYPx - Scrap center Y position (screen pixels, top=0)
  * @param velocity - Scrap velocity (pixels per second)
  * @param barrier - Barrier to check against (in world units)
  * @param viewportWidth - Viewport width in pixels
  * @param viewportHeight - Viewport height in pixels
- * @param prevScrapTopYPx - Optional previous top Y position for swept detection
- * @returns Collision result with normal and reflected velocity
+ * @param prevScrapCenterYPx - Optional previous center Y position for swept detection
+ * @returns Collision result with normal, reflected velocity, and corrected position
  */
 export const checkBarrierCollision = (
-  scrapLeftXPx: number,
-  scrapTopYPx: number,
-  scrapWidthPx: number,
-  scrapHeightPx: number,
+  scrapCenterXPx: number,
+  scrapCenterYPx: number,
   velocity: { vx: number; vy: number },
   barrier: Barrier,
   viewportWidth: number,
   viewportHeight: number,
-  prevScrapTopYPx?: number
+  prevScrapCenterYPx?: number
 ): BarrierCollision => {
+  // Calculate scrap radius in pixels
+  const scrapRadiusPx = getScrapRadiusPx(viewportWidth, viewportHeight);
+  
   // BROAD-PHASE: Check bounding box overlap first (fast approximate check)
   const barrierBounds = getBarrierBounds(barrier, viewportWidth, viewportHeight);
   const boundingBoxOverlaps = checkBoundingBoxOverlap(
-    scrapLeftXPx,
-    scrapTopYPx,
-    scrapWidthPx,
-    scrapHeightPx,
+    scrapCenterXPx,
+    scrapCenterYPx,
+    scrapRadiusPx,
     barrierBounds
   );
   
@@ -200,12 +218,13 @@ export const checkBarrierCollision = (
   // NARROW-PHASE: Bounding boxes overlap, check precise geometric collision
   // Convert barrier from world units to screen pixels for collision detection
   const barrierVertices = getSharedBarrierVertices(barrier, viewportWidth, viewportHeight);
+  const barrierRotationRad = (barrier.rotation * Math.PI) / 180;
   
   // SWEPT COLLISION DETECTION: Check intermediate positions to prevent tunneling
   // If previous position provided and scrap moved significantly, check the path
-  if (prevScrapTopYPx !== undefined) {
-    const movementPx = Math.abs(scrapTopYPx - prevScrapTopYPx);
-    const thresholdPx = scrapHeightPx * 0.5; // If moved more than half scrap height
+  if (prevScrapCenterYPx !== undefined) {
+    const movementPx = Math.abs(scrapCenterYPx - prevScrapCenterYPx);
+    const thresholdPx = scrapRadiusPx; // If moved more than radius
     
     if (movementPx > thresholdPx) {
       // Sub-step through the movement path
@@ -213,38 +232,25 @@ export const checkBarrierCollision = (
       
       for (let i = 1; i <= numSteps; i++) {
         const t = i / numSteps;
-        const interpTopY = prevScrapTopYPx + (scrapTopYPx - prevScrapTopYPx) * t;
-        const interpCenterY = interpTopY + scrapHeightPx / 2;
+        const interpCenterY = prevScrapCenterYPx + (scrapCenterYPx - prevScrapCenterYPx) * t;
         
-        const interpVertices = getScrapVertices(
-          scrapLeftXPx + scrapWidthPx / 2,
-          interpCenterY,
-          scrapWidthPx,
-          scrapHeightPx
+        const interpCollision = checkCircleOBBCollision(
+          { x: scrapCenterXPx, y: interpCenterY },
+          scrapRadiusPx,
+          barrierVertices,
+          barrierRotationRad
         );
         
-        const interpCollision = checkRectangleOverlap(interpVertices, barrierVertices);
-        
-        if (interpCollision.overlaps && interpCollision.separatingAxis) {
+        if (interpCollision.collides && interpCollision.normal) {
           // Found collision along path! Use this position for collision response
           const result = resolveCollision(
-            scrapLeftXPx + scrapWidthPx / 2,
-            interpCenterY,
-            scrapWidthPx,
-            scrapHeightPx,
+            { x: scrapCenterXPx, y: interpCenterY },
+            scrapRadiusPx,
             velocity,
-            barrierVertices,
             barrier,
-            {
-              minOverlap: interpCollision.minOverlap,
-              separatingAxis: interpCollision.separatingAxis
-            }
+            interpCollision.normal,
+            interpCollision.penetration
           );
-          // Return the interpolated position so scrap can be placed there
-          result.correctedPositionPx = {
-            x: scrapLeftXPx,
-            y: interpTopY
-          };
           return result;
         }
       }
@@ -252,14 +258,14 @@ export const checkBarrierCollision = (
   }
   
   // Standard discrete collision check at current position
-  const scrapCenterX = scrapLeftXPx + scrapWidthPx / 2;
-  const scrapCenterY = scrapTopYPx + scrapHeightPx / 2;
-  const scrapVertices = getScrapVertices(scrapCenterX, scrapCenterY, scrapWidthPx, scrapHeightPx);
+  const collision = checkCircleOBBCollision(
+    { x: scrapCenterXPx, y: scrapCenterYPx },
+    scrapRadiusPx,
+    barrierVertices,
+    barrierRotationRad
+  );
   
-  // Check ACTUAL geometric overlap using SAT
-  const collision = checkRectangleOverlap(scrapVertices, barrierVertices);
-  
-  if (!collision.overlaps || !collision.separatingAxis) {
+  if (!collision.collides || !collision.normal) {
     // No collision
     return {
       collided: false,
@@ -271,46 +277,30 @@ export const checkBarrierCollision = (
   
   // Resolve collision at current position
   return resolveCollision(
-    scrapCenterX,
-    scrapCenterY,
-    scrapWidthPx,
-    scrapHeightPx,
+    { x: scrapCenterXPx, y: scrapCenterYPx },
+    scrapRadiusPx,
     velocity,
-    barrierVertices,
     barrier,
-    {
-      minOverlap: collision.minOverlap,
-      separatingAxis: collision.separatingAxis
-    }
+    collision.normal,
+    collision.penetration
   );
 };
 
 /**
- * Helper: Resolve collision response given an overlap detection result
+ * Helper: Resolve collision response given circle center, collision normal, and penetration
+ * Calculates reflected velocity and corrected position
  */
 const resolveCollision = (
-  scrapCenterX: number,
-  scrapCenterY: number,
-  scrapWidthPx: number,
-  scrapHeightPx: number,
+  scrapCenter: { x: number; y: number },
+  scrapRadiusPx: number,
   velocity: { vx: number; vy: number },
-  barrierVertices: Array<{ x: number; y: number }>,
   barrier: Barrier,
-  collision: { minOverlap: number; separatingAxis: { x: number; y: number } }
+  normal: { x: number; y: number },
+  penetration: number
 ): BarrierCollision => {
-  // Use the separating axis as the collision normal
-  let normal = collision.separatingAxis;
-  const penetration = collision.minOverlap;
-  
-  // Calculate barrier center from vertices
-  const barrierCenterX = barrierVertices.reduce((sum, v) => sum + v.x, 0) / barrierVertices.length;
-  const barrierCenterY = barrierVertices.reduce((sum, v) => sum + v.y, 0) / barrierVertices.length;
-  
-  // Ensure normal points from barrier toward scrap (for correct bounce direction)
-  const toScrap = vec2.subtract({ x: scrapCenterX, y: scrapCenterY }, { x: barrierCenterX, y: barrierCenterY });
-  if (vec2.dot(normal, toScrap) < 0) {
-    normal = { x: -normal.x, y: -normal.y };
-  }
+  // Push scrap out of barrier along collision normal
+  const correctedCenterX = scrapCenter.x + normal.x * penetration;
+  const correctedCenterY = scrapCenter.y + normal.y * penetration;
   
   // Calculate reflected velocity using: v' = v - (1 + restitution) × (v · n) × n
   const RESTITUTION = barrier.restitution;
@@ -356,7 +346,11 @@ const resolveCollision = (
     collided: true,
     normal,
     penetration,
-    newVelocity: finalVelocity
+    newVelocity: finalVelocity,
+    correctedPositionPx: {
+      x: correctedCenterX,
+      y: correctedCenterY
+    }
   };
 };
 
@@ -365,22 +359,20 @@ const resolveCollision = (
  * Used for debug visualization
  */
 export const checkAndUpdateBarrierOverlap = (
-  scrapLeftXPx: number,
-  scrapTopYPx: number,
-  scrapWidthPx: number,
-  scrapHeightPx: number,
+  scrapCenterXPx: number,
+  scrapCenterYPx: number,
   barrier: Barrier,
   viewportWidth: number,
   viewportHeight: number
 ): boolean => {
   if (!DEBUG_BARRIER_BOUNDS) return false;
   
+  const scrapRadiusPx = getScrapRadiusPx(viewportWidth, viewportHeight);
   const barrierBounds = getBarrierBounds(barrier, viewportWidth, viewportHeight);
   const overlaps = checkBoundingBoxOverlap(
-    scrapLeftXPx,
-    scrapTopYPx,
-    scrapWidthPx,
-    scrapHeightPx,
+    scrapCenterXPx,
+    scrapCenterYPx,
+    scrapRadiusPx,
     barrierBounds
   );
   

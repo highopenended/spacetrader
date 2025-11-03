@@ -68,7 +68,7 @@ export const useScrapBarrierCollisions = (
         setVelocity,
         adjustPosition
     } = options;
-    const { viewport, worldSizeToPx, worldToScreenPx } = useCameraUtils();
+    const { viewport, worldToScreenPx } = useCameraUtils();
 
     const checkBarrierCollisions = useCallback(
         (prevState: ScrapSpawnState) => {
@@ -80,8 +80,6 @@ export const useScrapBarrierCollisions = (
                 return prevState;
             }
 
-            // Calculate scrap size in pixels
-            const scrapSizePx = worldSizeToPx(SCRAP_SIZE_WU);
             // Calculate zoom factor for velocity conversion (world units/s -> pixels/s)
             const zoomX = viewport.width / 20; // WORLD_WIDTH = 20
             const zoomY = viewport.height / 10; // WORLD_HEIGHT = 10
@@ -95,15 +93,11 @@ export const useScrapBarrierCollisions = (
                 // Check all active scrap against all barriers for bounding box overlap
                 prevState.activeScrap.forEach(scrap => {
                     const centerPos = getRenderedPosition(scrap);
-                    const scrapLeftXPx = centerPos.x - scrapSizePx / 2;
-                    const scrapTopYPx = centerPos.y - scrapSizePx / 2;
                     
                     for (const barrier of enabledBarriers) {
                         checkAndUpdateBarrierOverlap(
-                            scrapLeftXPx,
-                            scrapTopYPx,
-                            scrapSizePx,
-                            scrapSizePx,
+                            centerPos.x,
+                            centerPos.y,
                             barrier,
                             viewport.width,
                             viewport.height
@@ -122,10 +116,6 @@ export const useScrapBarrierCollisions = (
                 for (const barrier of enabledBarriers) {
                     // Get scrap position in screen pixels (center point)
                     const centerPos = getRenderedPosition(scrap);
-                    
-                    // Convert to top-left corner (for collision function)
-                    const scrapLeftXPx = centerPos.x - scrapSizePx / 2;
-                    const scrapTopYPx = centerPos.y - scrapSizePx / 2; // Y increases downward, top=0
 
                     // Use AVERAGED velocity over last 5 frames for stable, accurate collision response
                     const velocityWu = getAveragedVelocity(scrap.id);
@@ -139,42 +129,40 @@ export const useScrapBarrierCollisions = (
                         vy: -velocityWu.vy * zoom  // Negate because physics Y-up vs screen Y-down
                     };
 
-                    // Get previous position for swept collision detection (in pixels, top Y)
+                    // Get previous position for swept collision detection (in pixels, center Y)
                     const airborneState = getAirborneState(scrap.id);
-                    let prevScrapTopYPx: number | undefined = undefined;
+                    let prevScrapCenterYPx: number | undefined = undefined;
                     if (airborneState?.prevYWu !== undefined) {
                         // Convert world unit prevY to screen pixels
                         const prevWorldYFromBottomWu = SCRAP_BASELINE_BOTTOM_WU + airborneState.prevYWu;
                         const prevCenterYWu = WORLD_HEIGHT - prevWorldYFromBottomWu;
                         const prevCenterXPx = scrap.x + SCRAP_SIZE_WU / 2;
                         const prevScreenPos = worldToScreenPx(prevCenterXPx, prevCenterYWu);
-                        prevScrapTopYPx = prevScreenPos.y - scrapSizePx / 2;
+                        prevScrapCenterYPx = prevScreenPos.y;
                     }
 
                     const collision = checkBarrierCollision(
-                        scrapLeftXPx,
-                        scrapTopYPx,
-                        scrapSizePx,
-                        scrapSizePx,
+                        centerPos.x,
+                        centerPos.y,
                         velocityPx,
                         barrier,
                         viewport.width,
                         viewport.height,
-                        prevScrapTopYPx
+                        prevScrapCenterYPx
                     );
 
                     if (collision.collided) {
-                        // If swept collision provided a corrected position, use it directly
+                        // Collision response always provides corrected position (center coordinates in pixels)
                         if (collision.correctedPositionPx !== undefined) {
-                            // Swept collision: place scrap at the collision point
-                            // Convert from pixels back to world units for adjustPosition
-                            const correctedCenterXPx = collision.correctedPositionPx.x + scrapSizePx / 2;
-                            const correctedCenterYPx = collision.correctedPositionPx.y + scrapSizePx / 2;
+                            // Convert corrected center position back to world units
+                            const correctedWorld = screenToWorld(
+                                collision.correctedPositionPx.x, 
+                                collision.correctedPositionPx.y, 
+                                viewport.width, 
+                                viewport.height
+                            );
                             
-                            // Convert corrected position back to world units
-                            const correctedWorld = screenToWorld(correctedCenterXPx, correctedCenterYPx, viewport.width, viewport.height);
-                            
-                            // Update X position
+                            // Update X position (convert center to left edge)
                             const correctedXWu = correctedWorld.x - SCRAP_SIZE_WU / 2;
                             newState = {
                                 ...newState,
@@ -187,28 +175,6 @@ export const useScrapBarrierCollisions = (
                             const worldYFromBottomWu = WORLD_HEIGHT - correctedWorld.y;
                             const correctedYWu = worldYFromBottomWu - SCRAP_BASELINE_BOTTOM_WU;
                             adjustPosition(scrap.id, correctedYWu - (airborneState?.yWu || 0));
-                        } else {
-                            // Standard collision: push scrap out along normal (in pixels)
-                            const correctionXPx = collision.normal.x * collision.penetration;
-                            const correctionYPx = collision.normal.y * collision.penetration;
-
-                            // Convert correction from pixels to world units
-                            const correctionXWu = correctionXPx / zoom;
-                            // IMPORTANT: Screen Y-down to physics Y-up conversion
-                            // Positive correctionYPx = move down in screen = negative delta in physics (less height above baseline)
-                            const correctionYWu = -correctionYPx / zoom;
-
-                            // Update X position
-                            const newX = scrap.x + correctionXWu;
-                            newState = {
-                                ...newState,
-                                activeScrap: newState.activeScrap.map(s =>
-                                    s.id === scrap.id ? { ...s, x: newX } : s
-                                )
-                            };
-
-                            // Update Y position (vertical in world units for airborne system)
-                            adjustPosition(scrap.id, correctionYWu);
                         }
 
                         // Apply reflected velocity (convert from pixels/s back to world units/s)
@@ -235,7 +201,6 @@ export const useScrapBarrierCollisions = (
             setVelocity,
             adjustPosition,
             viewport,
-            worldSizeToPx,
             worldToScreenPx
         ]
     );

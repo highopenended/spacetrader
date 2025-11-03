@@ -2,6 +2,7 @@
  * useScrapBinCollisions Hook
  *
  * Handles collision detection between scrap objects and the collection bin.
+ * Treats scrap as circles and bin as rectangle for accurate collision detection.
  * Collects overlapping scrap and manages credit rewards.
  *
  * WORLD UNITS:
@@ -11,7 +12,7 @@
 
 import { useCallback } from "react";
 import { SCRAP_SIZE_WU } from "../constants/physicsConstants";
-import { checkRectOverlap, domRectToRect, Rect } from "../utils/collisionUtils";
+import { domRectToRect, Rect } from "../utils/collisionUtils";
 import { collectScrap, calculateScrapValue, ActiveScrapObject } from "../utils/scrapUtils";
 import { ScrapSpawnState } from "../utils/scrapUtils";
 import { useCameraUtils } from "./useCameraUtils";
@@ -38,6 +39,32 @@ export interface UseScrapBinCollisionsApi {
     checkBinCollisions: (prevState: ScrapSpawnState) => ScrapSpawnState;
 }
 
+/**
+ * Check if a circle overlaps with an axis-aligned rectangle
+ * 
+ * @param circleCenter - Center point of the circle (in screen pixels)
+ * @param circleRadius - Radius of the circle (in screen pixels)
+ * @param rect - Rectangle bounds (in screen pixels)
+ * @returns true if circle overlaps rectangle
+ */
+const checkCircleRectOverlap = (
+    circleCenter: { x: number; y: number },
+    circleRadius: number,
+    rect: Rect
+): boolean => {
+    // Find closest point on rectangle to circle center
+    const closestX = Math.max(rect.left, Math.min(circleCenter.x, rect.right));
+    const closestY = Math.max(rect.top, Math.min(circleCenter.y, rect.bottom));
+    
+    // Calculate distance from circle center to closest point
+    const distanceX = circleCenter.x - closestX;
+    const distanceY = circleCenter.y - closestY;
+    const distanceSquared = distanceX * distanceX + distanceY * distanceY;
+    
+    // Check if distance is less than radius (collision)
+    return distanceSquared < (circleRadius * circleRadius);
+};
+
 export const useScrapBinCollisions = (
     options: UseScrapBinCollisionsOptions
 ): UseScrapBinCollisionsApi => {
@@ -50,7 +77,7 @@ export const useScrapBinCollisions = (
                 return prevState;
             }
 
-            const scrapSizePx = worldSizeToPx(SCRAP_SIZE_WU);
+            const scrapRadiusPx = worldSizeToPx(SCRAP_SIZE_WU) / 2;
             const binRect = domRectToRect(binRef.current.getBoundingClientRect());
 
             let newState = prevState;
@@ -63,16 +90,8 @@ export const useScrapBinCollisions = (
                 // Get current rendered position in screen pixels (center)
                 const centerPos = getRenderedPosition(scrap);
 
-                // Convert center position + size to rect (top-left corner)
-                const scrapRect: Rect = {
-                    left: centerPos.x - scrapSizePx / 2,
-                    top: centerPos.y - scrapSizePx / 2,
-                    right: centerPos.x + scrapSizePx / 2,
-                    bottom: centerPos.y + scrapSizePx / 2
-                };
-
-                // Check collision
-                if (checkRectOverlap(scrapRect, binRect)) {
+                // Check circle-to-rectangle collision
+                if (checkCircleRectOverlap(centerPos, scrapRadiusPx, binRect)) {
                     // Collect this scrap
                     const result = collectScrap(scrap.id, newState);
                     newState = result.spawnState;
