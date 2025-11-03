@@ -8,6 +8,7 @@
 
 import React from 'react';
 import { useDragStore, useGameStore } from '../../stores';
+import { worldToScreen } from '../../constants/cameraConstants';
 import './GrabbedScrapDebugReadout.css';
 
 interface GrabbedScrapDebugReadoutProps {
@@ -42,11 +43,22 @@ const GrabbedScrapDebugReadout: React.FC<GrabbedScrapDebugReadoutProps> = ({
     : 0;
   
   // Calculate distance from cursor to grabbed object (for spring physics debugging)
+  // Convert grabbed object position (world units) to screen pixels to match cursor position
   const cursorDistance = isScrapDragging && globalMousePosition
-    ? Math.sqrt(
-        (globalMousePosition.x - grabbedObject.position.x) ** 2 + 
-        (globalMousePosition.y - grabbedObject.position.y) ** 2
-      )
+    ? (() => {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const scrapScreenPos = worldToScreen(
+          grabbedObject.position.x,
+          grabbedObject.position.y,
+          viewportWidth,
+          viewportHeight
+        );
+        return Math.sqrt(
+          (globalMousePosition.x - scrapScreenPos.x) ** 2 + 
+          (globalMousePosition.y - scrapScreenPos.y) ** 2
+        );
+      })()
     : 0;
 
   return (
