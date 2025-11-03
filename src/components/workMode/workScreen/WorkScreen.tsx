@@ -114,14 +114,27 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
           enabled: true
         },
         {
+          id: 'barrier-wall-middle0',
+          position: {
+            x: 3.7,         // Center X position (world units, 0-20)
+            yFromBottom: 7.5 // Center Y position from bottom (world units, 0-10)
+          },
+          width: 3,         // Width in world units (approx 3.93 to match endpoints)
+          height: 0.1,      // Height (thickness) in world units
+          rotation: 170,     // Rotation in degrees (0 = horizontal, positive = clockwise)
+          restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
+          friction: 0.05,    // Friction (0 = ice, 1 = sticky)
+          enabled: true
+        },
+        {
           id: 'barrier-wall-middle1',
           position: {
-            x: 8.7,         // Center X position (world units, 0-20)
-            yFromBottom: 3 // Center Y position from bottom (world units, 0-10)
+            x: 1.76,         // Center X position (world units, 0-20)
+            yFromBottom: 6.385 // Center Y position from bottom (world units, 0-10)
           },
-          width: 4,         // Width in world units (approx 3.93 to match endpoints)
+          width: 2,         // Width in world units (approx 3.93 to match endpoints)
           height: 0.1,      // Height (thickness) in world units
-          rotation: 45,     // Rotation in degrees (0 = horizontal, positive = clockwise)
+          rotation: 120,     // Rotation in degrees (0 = horizontal, positive = clockwise)
           restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
           friction: 0.05,    // Friction (0 = ice, 1 = sticky)
           enabled: true
@@ -129,16 +142,86 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
         {
           id: 'barrier-wall-middle2',
           position: {
-            x: 11.3,         // Center X position (world units, 0-20)
-            yFromBottom: 3 // Center Y position from bottom (world units, 0-10)
+            x: 1.4,         // Center X position (world units, 0-20)
+            yFromBottom: 3.5 // Center Y position from bottom (world units, 0-10)
           },
-          width: 4,         // Width in world units (approx 3.93 to match endpoints)
+          width: 3,         // Width in world units (approx 3.93 to match endpoints)
+          height: 0.1,      // Height (thickness) in world units
+          rotation: 20,     // Rotation in degrees (0 = horizontal, positive = clockwise)
+          restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
+          friction: 0.05,    // Friction (0 = ice, 1 = sticky)
+          enabled: true
+        },
+        {
+          id: 'barrier-wall-middle3',
+          position: {
+            x: 6.4,         // Center X position (world units, 0-20)
+            yFromBottom: 4.5 // Center Y position from bottom (world units, 0-10)
+          },
+          width: 6,         // Width in world units (approx 3.93 to match endpoints)
+          height: 0.1,      // Height (thickness) in world units
+          rotation: 150,     // Rotation in degrees (0 = horizontal, positive = clockwise)
+          restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
+          friction: 0.05,    // Friction (0 = ice, 1 = sticky)
+          enabled: true
+        },
+        {
+          id: 'barrier-wall-middle-top-left1',
+          position: {
+            x: 5.4,         // Center X position (world units, 0-20)
+            yFromBottom: 9.9 // Center Y position from bottom (world units, 0-10)
+          },
+          width: 11,         // Width in world units (approx 3.93 to match endpoints)
+          height: 0.1,      // Height (thickness) in world units
+          rotation: 0,     // Rotation in degrees (0 = horizontal, positive = clockwise)
+          restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
+          friction: 0.05,    // Friction (0 = ice, 1 = sticky)
+          enabled: true
+        },        
+        {
+          id: 'barrier-wall-middle-top-left2',
+          position: {
+            x: .75,         // Center X position (world units, 0-20)
+            yFromBottom: 9.4 // Center Y position from bottom (world units, 0-10)
+          },
+          width: 2,         // Width in world units (approx 3.93 to match endpoints)
           height: 0.1,      // Height (thickness) in world units
           rotation: 135,     // Rotation in degrees (0 = horizontal, positive = clockwise)
           restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
           friction: 0.05,    // Friction (0 = ice, 1 = sticky)
           enabled: true
-        }
+        },
+
+
+
+
+
+        // {
+        //   id: 'barrier-wall-middle1',
+        //   position: {
+        //     x: 8.7,         // Center X position (world units, 0-20)
+        //     yFromBottom: 3 // Center Y position from bottom (world units, 0-10)
+        //   },
+        //   width: 4,         // Width in world units (approx 3.93 to match endpoints)
+        //   height: 0.1,      // Height (thickness) in world units
+        //   rotation: 45,     // Rotation in degrees (0 = horizontal, positive = clockwise)
+        //   restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
+        //   friction: 0.05,    // Friction (0 = ice, 1 = sticky)
+        //   enabled: true
+        // },
+        // {
+        //   id: 'barrier-wall-middle2',
+        //   position: {
+        //     x: 11.3,         // Center X position (world units, 0-20)
+        //     yFromBottom: 3 // Center Y position from bottom (world units, 0-10)
+        //   },
+        //   width: 4,         // Width in world units (approx 3.93 to match endpoints)
+        //   height: 0.1,      // Height (thickness) in world units
+        //   rotation: 135,     // Rotation in degrees (0 = horizontal, positive = clockwise)
+        //   restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
+        //   friction: 0.05,    // Friction (0 = ice, 1 = sticky)
+        //   enabled: true
+        // }
       ]);
     } else {
       // Clear barriers when work mode ends
