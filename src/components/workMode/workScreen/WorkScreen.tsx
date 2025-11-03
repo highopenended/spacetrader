@@ -89,14 +89,14 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
         {
           id: 'test-barrier-1',
           position: {
-            x: 5.9,         // Center X position (world units, 0-20)
-            yFromBottom: 2.5 // Center Y position from bottom (world units, 0-10)
+            x: 8,         // Center X position (world units, 0-20)
+            yFromBottom: 5.5 // Center Y position from bottom (world units, 0-10)
           },
-          width: 4,         // Width in world units (approx 3.93 to match endpoints)
-          height: 0.2,      // Height (thickness) in world units
-          rotation: 15,     // Rotation in degrees (0 = horizontal, positive = clockwise)
+          width: 16,         // Width in world units (approx 3.93 to match endpoints)
+          height: 0.1,      // Height (thickness) in world units
+          rotation: 45,     // Rotation in degrees (0 = horizontal, positive = clockwise)
           restitution: 0.7, // Bounciness (0 = no bounce, 1 = perfect bounce)
-          friction: 0.2,    // Friction (0 = ice, 1 = sticky)
+          friction: 0.7,    // Friction (0 = ice, 1 = sticky)
           enabled: true
         }
       ]);

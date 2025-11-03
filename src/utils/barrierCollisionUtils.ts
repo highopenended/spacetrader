@@ -11,7 +11,20 @@
  */
 
 import { Barrier, BarrierCollision } from '../types/barrierTypes';
-import { getBarrierVertices as getSharedBarrierVertices } from './barrierGeometry';
+import { getBarrierVertices as getSharedBarrierVertices, getBarrierBounds } from './barrierGeometry';
+
+/**
+ * Debug mode: Show bounding box overlays for barriers
+ * - Green: Bounding box has overlapping scrap
+ * - Red: No scrap overlapping bounding box
+ */
+export const DEBUG_BARRIER_BOUNDS = true;
+
+/**
+ * Module-level state tracking which barriers have overlapping bounding boxes
+ * Updated during collision detection, read by debug rendering
+ */
+const barrierOverlapState = new Map<string, boolean>();
 
 /**
  * 2D vector operations
@@ -115,8 +128,31 @@ const checkRectangleOverlap = (
 };
 
 /**
+ * Broad-phase collision detection: Check if axis-aligned bounding boxes overlap
+ * Fast approximate check before expensive SAT algorithm
+ */
+const checkBoundingBoxOverlap = (
+  scrapLeftXPx: number,
+  scrapTopYPx: number,
+  scrapWidthPx: number,
+  scrapHeightPx: number,
+  barrierBounds: { minX: number; maxX: number; minY: number; maxY: number }
+): boolean => {
+  const scrapRightXPx = scrapLeftXPx + scrapWidthPx;
+  const scrapBottomYPx = scrapTopYPx + scrapHeightPx;
+  
+  // Check if bounding boxes overlap (AABB collision)
+  return !(
+    scrapRightXPx < barrierBounds.minX ||  // Scrap is to the left
+    scrapLeftXPx > barrierBounds.maxX ||   // Scrap is to the right
+    scrapBottomYPx < barrierBounds.minY || // Scrap is above
+    scrapTopYPx > barrierBounds.maxY       // Scrap is below
+  );
+};
+
+/**
  * Check collision between scrap and rotated barrier rectangle
- * Uses actual geometric rectangle-rectangle intersection (SAT algorithm)
+ * Uses broad-phase (bounding box) check first, then narrow-phase (SAT algorithm)
  * Supports swept collision detection to prevent tunneling
  * 
  * @param scrapLeftXPx - Scrap left X position (screen pixels)
@@ -141,6 +177,27 @@ export const checkBarrierCollision = (
   viewportHeight: number,
   prevScrapTopYPx?: number
 ): BarrierCollision => {
+  // BROAD-PHASE: Check bounding box overlap first (fast approximate check)
+  const barrierBounds = getBarrierBounds(barrier, viewportWidth, viewportHeight);
+  const boundingBoxOverlaps = checkBoundingBoxOverlap(
+    scrapLeftXPx,
+    scrapTopYPx,
+    scrapWidthPx,
+    scrapHeightPx,
+    barrierBounds
+  );
+  
+  // Early exit: no bounding box overlap means no collision possible
+  if (!boundingBoxOverlaps) {
+    return {
+      collided: false,
+      normal: { x: 0, y: 0 },
+      penetration: 0,
+      newVelocity: velocity
+    };
+  }
+  
+  // NARROW-PHASE: Bounding boxes overlap, check precise geometric collision
   // Convert barrier from world units to screen pixels for collision detection
   const barrierVertices = getSharedBarrierVertices(barrier, viewportWidth, viewportHeight);
   
@@ -301,6 +358,55 @@ const resolveCollision = (
     penetration,
     newVelocity: finalVelocity
   };
+};
+
+/**
+ * Check if scrap overlaps barrier bounding box and update debug state
+ * Used for debug visualization
+ */
+export const checkAndUpdateBarrierOverlap = (
+  scrapLeftXPx: number,
+  scrapTopYPx: number,
+  scrapWidthPx: number,
+  scrapHeightPx: number,
+  barrier: Barrier,
+  viewportWidth: number,
+  viewportHeight: number
+): boolean => {
+  if (!DEBUG_BARRIER_BOUNDS) return false;
+  
+  const barrierBounds = getBarrierBounds(barrier, viewportWidth, viewportHeight);
+  const overlaps = checkBoundingBoxOverlap(
+    scrapLeftXPx,
+    scrapTopYPx,
+    scrapWidthPx,
+    scrapHeightPx,
+    barrierBounds
+  );
+  
+  if (overlaps) {
+    barrierOverlapState.set(barrier.id, true);
+  }
+  
+  return overlaps;
+};
+
+/**
+ * Get whether a barrier's bounding box currently has overlapping scrap
+ * Used for debug visualization
+ * 
+ * @param barrierId - Barrier ID to check
+ * @returns true if bounding box has overlap, false otherwise
+ */
+export const getBarrierOverlapState = (barrierId: string): boolean => {
+  return barrierOverlapState.get(barrierId) || false;
+};
+
+/**
+ * Clear overlap state for all barriers (call at start of frame)
+ */
+export const clearBarrierOverlapState = (): void => {
+  barrierOverlapState.clear();
 };
 
 

@@ -20,7 +20,7 @@
 import { useCallback } from "react";
 import { SCRAP_BASELINE_BOTTOM_WU, SCRAP_SIZE_WU } from "../constants/physicsConstants";
 import { WORLD_HEIGHT, screenToWorld } from "../constants/cameraConstants";
-import { checkBarrierCollision } from "../utils/barrierCollisionUtils";
+import { checkBarrierCollision, clearBarrierOverlapState, DEBUG_BARRIER_BOUNDS, checkAndUpdateBarrierOverlap } from "../utils/barrierCollisionUtils";
 import { ScrapSpawnState, ActiveScrapObject } from "../utils/scrapUtils";
 import { useCameraUtils } from "./useCameraUtils";
 import { useBarrierStore } from "../stores";
@@ -86,6 +86,31 @@ export const useScrapBarrierCollisions = (
             const zoomX = viewport.width / 20; // WORLD_WIDTH = 20
             const zoomY = viewport.height / 10; // WORLD_HEIGHT = 10
             const zoom = Math.min(zoomX, zoomY);
+
+            // Clear overlap state at start of frame (for debug visualization)
+            if (DEBUG_BARRIER_BOUNDS) {
+                clearBarrierOverlapState();
+                
+                // Update overlap state for all scrap (for debug visualization)
+                // Check all active scrap against all barriers for bounding box overlap
+                prevState.activeScrap.forEach(scrap => {
+                    const centerPos = getRenderedPosition(scrap);
+                    const scrapLeftXPx = centerPos.x - scrapSizePx / 2;
+                    const scrapTopYPx = centerPos.y - scrapSizePx / 2;
+                    
+                    for (const barrier of enabledBarriers) {
+                        checkAndUpdateBarrierOverlap(
+                            scrapLeftXPx,
+                            scrapTopYPx,
+                            scrapSizePx,
+                            scrapSizePx,
+                            barrier,
+                            viewport.width,
+                            viewport.height
+                        );
+                    }
+                });
+            }
 
             let newState = prevState;
 
