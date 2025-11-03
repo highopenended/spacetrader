@@ -41,13 +41,12 @@ import EndingCutscene from './components/endings/EndingCutscene';
 
 // Global Clock System
 import ClockManager from './components/clock/ClockManager';
-import ClockDebugReadout from './components/clock/ClockDebugReadout';
 
 // Global Mouse Tracking
 import GlobalMouseTracker from './components/GlobalMouseTracker';
-import MouseDebugReadout from './components/clock/MouseDebugReadout';
-import GrabbedScrapDebugReadout from './components/clock/GrabbedScrapDebugReadout';
-import CameraDebugReadout from './components/clock/CameraDebugReadout';
+
+// Debug Readouts
+import DebugReadoutsContainer from './components/clock/DebugReadoutsContainer';
 
 // Global Viewport Tracking
 import GlobalViewportTracker from './components/GlobalViewportTracker';
@@ -323,10 +322,7 @@ function App() {
         <QuickBarManager installedApps={installedApps} />
         <VisualOverlayManager />
         <GameOptionsGear />
-        <ClockDebugReadout visible={true} position="bottom-left" />
-        <MouseDebugReadout visible={true} position="bottom-left" />
-        <GrabbedScrapDebugReadout visible={true} position="bottom-left" />
-        <CameraDebugReadout visible={true} position="bottom-center" />
+        <DebugReadoutsContainer visible={true} />
         {/* <ClockTestSubscriber visible={true} position="bottom-left" /> */}
         <DataReadout {...componentProps.dataReadout} />
         <QuickKeysBar installedApps={installedApps} />

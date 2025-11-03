@@ -15,7 +15,7 @@ interface CameraDebugReadoutProps {
   visible?: boolean;
   
   /** Optional custom position */
-  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'bottom-center';
+  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'bottom-center' | 'inline';
 }
 
 const CameraDebugReadout: React.FC<CameraDebugReadoutProps> = ({ 

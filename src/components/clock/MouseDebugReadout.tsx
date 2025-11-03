@@ -16,7 +16,7 @@ interface MouseDebugReadoutProps {
   visible?: boolean;
   
   /** Optional custom position */
-  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'inline';
 }
 
 const MouseDebugReadout: React.FC<MouseDebugReadoutProps> = ({ 

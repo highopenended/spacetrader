@@ -15,7 +15,7 @@ interface ClockDebugReadoutProps {
   visible?: boolean;
   
   /** Optional custom position */
-  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'inline';
 }
 
 const ClockDebugReadout: React.FC<ClockDebugReadoutProps> = ({ 

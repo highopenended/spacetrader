@@ -48,6 +48,15 @@
   transform: translateX(-50%);
 }
 
+.camera-debug-readout--inline {
+  position: relative;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  transform: none;
+}
+
 .camera-debug-readout__header {
   display: flex;
   justify-content: space-between;

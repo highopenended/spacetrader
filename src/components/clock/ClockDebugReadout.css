@@ -40,6 +40,15 @@
   right: 0.5rem;
 }
 
+.clock-debug-readout--inline {
+  position: relative;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  transform: none;
+}
+
 .clock-debug-readout__header {
   display: flex;
   justify-content: space-between;

@@ -1,0 +1,46 @@
+/**
+ * DebugReadoutsContainer Styles
+ * 
+ * Container styling for debug readouts that stacks them horizontally
+ * at the bottom-left with no gaps.
+ */
+
+.debug-readouts-container {
+  position: fixed;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0; /* No gaps between debug readouts */
+  flex-wrap: nowrap;
+}
+
+/* When debug readouts are in the container (inline position), 
+   they should not use fixed positioning - use more specific selectors to override */
+.debug-readouts-container .clock-debug-readout.clock-debug-readout--inline,
+.debug-readouts-container .mouse-debug-readout.mouse-debug-readout--inline,
+.debug-readouts-container .grabbed-scrap-debug-readout.grabbed-scrap-debug-readout--inline,
+.debug-readouts-container .camera-debug-readout.camera-debug-readout--inline {
+  position: relative;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  transform: none;
+}
+
+/* Remove right border and border-radius from all but the last item */
+.debug-readouts-container > *:not(:last-child) {
+  border-right: none;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Remove left border-radius from all but the first item */
+.debug-readouts-container > *:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
