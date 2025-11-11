@@ -6,6 +6,7 @@ import {
     ActiveScrapObject,
     collectScrap,
 } from "../../../utils/scrapUtils";
+import { MutatorRegistry } from "../../../constants/mutatorRegistry";
 import AssemblyLine from "../assemblyLine/AssemblyLine";
 import ScrapBin from "../scrapBin/ScrapBin";
 import WorkTimer from "../workTimer/WorkTimer";
@@ -223,6 +224,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
         getAveragedVelocity,
         setVelocity,
         adjustPosition,
+        consumeLandingImpacts,
     } = useScrapPhysics();
 
     // Get scrap store actions
@@ -233,6 +235,7 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
     const addBeingCollectedId = useScrapStore((state) => state.addBeingCollectedId);
     const removeBeingCollectedId = useScrapStore((state) => state.removeBeingCollectedId);
     const getBeingCollectedIds = useScrapStore((state) => state.getBeingCollectedIds);
+    const applyMutatorChanges = useScrapStore((state) => state.applyMutatorChanges);
 
     // Drag handling for scrap items
     const { getDraggableProps, getDragStyle, draggedScrapId } = useScrapDrag({
@@ -426,6 +429,20 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
 
             // Physics step first so horizontal deltas are available this frame
             stepAirborne(dtSeconds);
+            
+            // Process landing impacts (fragile breaking on baseline collision)
+            const landingImpacts = consumeLandingImpacts();
+            const fragileThreshold = MutatorRegistry.fragile.impactThreshold || 0;
+            for (const impact of landingImpacts) {
+                const scrap = getScrap(impact.scrapId);
+                if (scrap && scrap.mutators.includes('fragile') && impact.impactSpeedWu > fragileThreshold) {
+                    applyMutatorChanges(impact.scrapId, {
+                        remove: ['fragile'],
+                        add: ['broken']
+                    });
+                }
+            }
+            
             updateScrapPositions(scaledDeltaTime);
             checkScrapSpawning(scaledTimeRef.current); // Use scaled time for spawn timing
 

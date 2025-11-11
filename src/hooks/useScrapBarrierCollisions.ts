@@ -23,8 +23,9 @@ import { WORLD_HEIGHT, screenToWorld } from "../constants/cameraConstants";
 import { checkBarrierCollision, clearBarrierOverlapState, DEBUG_BARRIER_BOUNDS, checkAndUpdateBarrierOverlap } from "../utils/barrierCollisionUtils";
 import { ScrapSpawnState, ActiveScrapObject } from "../utils/scrapUtils";
 import { useCameraUtils } from "./useCameraUtils";
-import { useBarrierStore } from "../stores";
+import { useBarrierStore, useScrapStore } from "../stores";
 import { AirborneState } from "./useScrapPhysics";
+import { MutatorRegistry } from "../constants/mutatorRegistry";
 
 export interface UseScrapBarrierCollisionsOptions {
     /** Get rendered position (from useScrapRendering) */
@@ -49,10 +50,11 @@ export interface UseScrapBarrierCollisionsOptions {
 export interface UseScrapBarrierCollisionsApi {
     /**
      * Check all airborne scrap for collisions with barriers and apply physics responses.
-     * Updates spawn state with position corrections.
+     * Reads scrap from store, updates positions via spawn state updates, and applies
+     * mutator changes (fragile breaking) directly via store actions.
      * 
-     * @param prevState - Current scrap spawn state
-     * @returns Updated scrap spawn state with collision corrections applied
+     * @param prevState - Current scrap spawn state (for position updates only)
+     * @returns Updated scrap spawn state with position corrections applied
      */
     checkBarrierCollisions: (prevState: ScrapSpawnState) => ScrapSpawnState;
 }
@@ -161,7 +163,38 @@ export const useScrapBarrierCollisions = (
                 // Process collisions
                 if (collisions.length === 0) {
                     return; // No collisions
-                } else if (collisions.length === 1) {
+                }
+                
+                // Check for fragile breaking BEFORE updating velocities (use incoming speed)
+                // Read fresh scrap state from store (not stale prevState) to get current mutators
+                const freshScrap = useScrapStore.getState().getScrap(scrap.id);
+                const hasFragile = freshScrap?.mutators.includes('fragile') ?? false;
+                
+                if (hasFragile) {
+                    const fragileThreshold = MutatorRegistry.fragile.impactThreshold || 0;
+                    
+                    // For each collision, check if impact speed exceeds threshold
+                    for (const { collision } of collisions) {
+                        // Velocity into surface (dot product with normal) - positive = moving into surface
+                        const velocityDotNormal = velocityPx.vx * collision.normal.x + velocityPx.vy * collision.normal.y;
+                        const impactSpeedPx = Math.abs(velocityDotNormal);
+                        
+                        // Convert impact speed from pixels/s to world units/s
+                        const impactSpeedWu = impactSpeedPx / zoom;
+                        
+                        if (impactSpeedWu > fragileThreshold) {
+                            // Break the fragile scrap - update store directly
+                            const { applyMutatorChanges } = useScrapStore.getState();
+                            applyMutatorChanges(scrap.id, {
+                                remove: ['fragile'],
+                                add: ['broken']
+                            });
+                            break; // Only need to break once
+                        }
+                    }
+                }
+                
+                if (collisions.length === 1) {
                     // Single collision - handle as before
                     const { collision } = collisions[0];
                     

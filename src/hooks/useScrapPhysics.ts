@@ -26,6 +26,14 @@ export interface AirborneState {
   momentumMultiplier?: number; // Custom momentum multiplier for this scrap
 }
 
+/**
+ * Landing impact event - records when scrap hits baseline
+ */
+export interface LandingImpact {
+  scrapId: string;
+  impactSpeedWu: number; // Downward speed at impact (world units per second)
+}
+
 export interface UseScrapPhysicsApi {
   // Query
   getAirborneState: (scrapId: string) => AirborneState | undefined;
@@ -50,6 +58,8 @@ export interface UseScrapPhysicsApi {
   stepAirborne: (dtSeconds: number) => boolean;
   // Horizontal integration output: deltas (world units) to apply per id since last step
   consumeHorizontalDeltas: () => Map<string, number>;
+  // Landing impacts: consume all landing events since last call
+  consumeLandingImpacts: () => LandingImpact[];
 }
 
 export const useScrapPhysics = (): UseScrapPhysicsApi => {
@@ -57,6 +67,8 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
   const [version, setVersion] = useState(0); // trigger re-render when states change
   // Accumulated horizontal deltas per id since last consume
   const horizontalDeltaRef = useRef<Map<string, number>>(new Map());
+  // Accumulated landing impacts since last consume
+  const landingImpactsRef = useRef<LandingImpact[]>([]);
 
   const getAirborneState = useCallback((scrapId: string) => statesRef.current.get(scrapId), []);
   const isAirborne = useCallback((scrapId: string) => !!statesRef.current.get(scrapId)?.isAirborne, []);
@@ -180,6 +192,13 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
 
       if (y <= 0) {
         // Land - scrap hit baseline
+        // Record landing impact (downward speed in world units)
+        const impactSpeedWu = Math.abs(vy); // vy is negative when falling (physics Y-up)
+        landingImpactsRef.current.push({
+          scrapId: id,
+          impactSpeedWu
+        });
+        
         statesRef.current.set(id, { 
           isAirborne: false, 
           yWu: 0, 
@@ -221,6 +240,13 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
     return out;
   }, []);
 
+  const consumeLandingImpacts = useCallback(() => {
+    // Return a copy and clear for next step
+    const out = [...landingImpactsRef.current];
+    landingImpactsRef.current = [];
+    return out;
+  }, []);
+
   return useMemo(
     () => ({ 
       getAirborneState, 
@@ -233,9 +259,10 @@ export const useScrapPhysics = (): UseScrapPhysicsApi => {
       adjustPosition, 
       landScrap, 
       stepAirborne, 
-      consumeHorizontalDeltas 
+      consumeHorizontalDeltas,
+      consumeLandingImpacts
     }),
-    [consumeHorizontalDeltas, getAirborneState, getHorizontalVelocity, getVelocity, getAveragedVelocity, isAirborne, landScrap, launchAirborneFromRelease, setVelocity, adjustPosition, stepAirborne]
+    [consumeHorizontalDeltas, consumeLandingImpacts, getAirborneState, getHorizontalVelocity, getVelocity, getAveragedVelocity, isAirborne, landScrap, launchAirborneFromRelease, setVelocity, adjustPosition, stepAirborne]
   );
 };
 

@@ -13,10 +13,8 @@ interface ScrapItemProps {
 
 const ScrapItem: React.FC<ScrapItemProps> = ({ scrap, style, draggableProps }) => {
   // Memoize appearance calculation to prevent recalculation on every render
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const appearance = useMemo(() => getScrapAppearance(scrap, false), [
-    scrap.typeId
-  ]);
+  // Depends on scrap to update when mutators change (fragile → broken, etc.)
+  const appearance = useMemo(() => getScrapAppearance(scrap, false), [scrap]);
   
   return (
     <div className="scrap-item" data-scrap-id={scrap.id} style={style} {...draggableProps}>
