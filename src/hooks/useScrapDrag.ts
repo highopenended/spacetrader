@@ -140,7 +140,7 @@ export const useScrapDrag = (options: UseScrapDragOptions = {}): UseScrapDragApi
     if (!releasedState || !releasedState.scrapId) {
       return;
     }
-
+    
     // Position and velocity are already in world units from physics system
     const releasePositionWu = releasedState.position;
     const releaseVelocityWuPerSec = releasedState.velocity;

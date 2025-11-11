@@ -430,18 +430,21 @@ const WorkScreen: React.FC<WorkScreenProps> = ({ updateCredits, installedApps })
             // Physics step first so horizontal deltas are available this frame
             stepAirborne(dtSeconds);
             
-            // Process landing impacts (fragile breaking on baseline collision)
-            const landingImpacts = consumeLandingImpacts();
-            const fragileThreshold = MutatorRegistry.fragile.impactThreshold || 0;
-            for (const impact of landingImpacts) {
-                const scrap = getScrap(impact.scrapId);
-                if (scrap && scrap.mutators.includes('fragile') && impact.impactSpeedWu > fragileThreshold) {
+        // Process landing impacts (fragile breaking on baseline collision)
+        const landingImpacts = consumeLandingImpacts();
+        const fragileThreshold = MutatorRegistry.fragile.impactThreshold || 0;
+        for (const impact of landingImpacts) {
+            // Read fresh scrap state from store (not stale getScrap closure)
+            const scrap = useScrapStore.getState().getScrap(impact.scrapId);
+            if (scrap && scrap.mutators.includes('fragile')) {
+                if (impact.impactSpeedWu > fragileThreshold) {
                     applyMutatorChanges(impact.scrapId, {
                         remove: ['fragile'],
                         add: ['broken']
                     });
                 }
             }
+        }
             
             updateScrapPositions(scaledDeltaTime);
             checkScrapSpawning(scaledTimeRef.current); // Use scaled time for spawn timing

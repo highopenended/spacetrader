@@ -215,12 +215,27 @@ const DumpsterVisionOverlay: React.FC<VisualOverlayProps> = ({ isExiting, animat
       }
     }
     
-    // Add elements for new anchors
+    // Add or update elements for current anchors
     currentAnchors.forEach((anchor, index) => {
-      if (!labelRefs.current.has(anchor.id)) {
+      const existingLabel = labelRefs.current.get(anchor.id);
+      
+      if (existingLabel) {
+        // Check if label text changed - extract current text from DOM
+        const currentText = Array.from(existingLabel.children)
+          .map(child => child.textContent)
+          .join('\n');
+        
+        if (currentText !== anchor.label) {
+          // Text changed (e.g. mutator swap) - recreate the label with new content
+          removeLabelElement(anchor.id);
+          addLabelElement(anchor, index);
+        }
+      } else {
+        // New anchor - create label
         addLabelElement(anchor, index);
       }
       
+      // Handle connectors - create if needed
       if (!connectorRefs.current.has(anchor.id) && anchor.cxPx != null && anchor.cyPx != null) {
         addConnectorElement(anchor);
       }
