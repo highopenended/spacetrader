@@ -477,3 +477,69 @@ export const changeScrapState = (
   };
 };
 
+export interface MutatorChangeSet {
+  add?: MutatorId[];
+  remove?: MutatorId[];
+}
+
+/**
+ * Apply mutator changes on a specific scrap object.
+ *
+ * Removes any mutators listed in `remove` and adds any mutators listed in `add`.
+ * Returns the original state when no changes are required.
+ */
+export const applyMutatorChangesToScrap = (
+  spawnState: ScrapSpawnState,
+  scrapId: string,
+  { add = [], remove = [] }: MutatorChangeSet
+): ScrapSpawnState => {
+  if (add.length === 0 && remove.length === 0) {
+    return spawnState;
+  }
+
+  const scrapIndex = spawnState.activeScrap.findIndex(scrap => scrap.id === scrapId);
+  if (scrapIndex === -1) {
+    return spawnState;
+  }
+
+  const scrap = spawnState.activeScrap[scrapIndex];
+  const scrapMutators = scrap.mutators as MutatorId[];
+  const removeSet = new Set(remove);
+  const addSet = new Set(add);
+
+  let changed = false;
+
+  const updatedMutators = scrapMutators.reduce<MutatorId[]>((acc, mutatorId) => {
+    if (removeSet.has(mutatorId)) {
+      changed = true;
+      return acc;
+    }
+    acc.push(mutatorId);
+    return acc;
+  }, []);
+
+  addSet.forEach(mutatorId => {
+    if (!updatedMutators.includes(mutatorId)) {
+      updatedMutators.push(mutatorId);
+      changed = true;
+    }
+  });
+
+  if (!changed) {
+    return spawnState;
+  }
+
+  const updatedScrap: ActiveScrapObject = {
+    ...scrap,
+    mutators: updatedMutators
+  };
+
+  const newActiveScrap = [...spawnState.activeScrap];
+  newActiveScrap[scrapIndex] = updatedScrap;
+
+  return {
+    ...spawnState,
+    activeScrap: newActiveScrap
+  };
+};
+

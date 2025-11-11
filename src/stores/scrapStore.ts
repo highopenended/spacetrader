@@ -9,7 +9,8 @@
  */
 
 import { create } from 'zustand';
-import { ScrapSpawnState, ActiveScrapObject, initializeScrapSpawnState } from '../utils/scrapUtils';
+import { ScrapSpawnState, ActiveScrapObject, initializeScrapSpawnState, applyMutatorChangesToScrap, MutatorChangeSet } from '../utils/scrapUtils';
+import { MutatorId } from '../types/mutatorTypes';
 
 interface ScrapState {
   // Scrap state storage (ref-based for game loop performance)
@@ -52,7 +53,11 @@ interface ScrapActions {
   /**
    * Get mutators for a scrap (does not cause re-render)
    */
-  getScrapMutators: (scrapId: string) => string[];
+  getScrapMutators: (scrapId: string) => MutatorId[];
+  /**
+   * Apply mutator add/remove changes to a scrap object
+   */
+  applyMutatorChanges: (scrapId: string, changes: MutatorChangeSet) => void;
   
   /**
    * Get current spawn state (does not cause re-render)
@@ -119,6 +124,10 @@ export const useScrapStore = create<ScrapStore>((set, get) => ({
   getScrapMutators: (scrapId: string) => {
     const scrap = get().spawnStateRef.activeScrap.find(s => s.id === scrapId);
     return scrap?.mutators || [];
+  },
+  
+  applyMutatorChanges: (scrapId: string, changes: MutatorChangeSet) => {
+    get().updateSpawnState(prev => applyMutatorChangesToScrap(prev, scrapId, changes));
   },
   
   getSpawnState: () => {
