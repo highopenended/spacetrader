@@ -24,26 +24,9 @@ export const ScrapRegistry = {
     baseValue: 5,
     baseMass: 1,
     appearance: '🖥️', 
-    weight: 5, 
-    states: {
-      intact: {
-        appearance: '🖥️',
-        mutators: ['highVoltage'] as MutatorId[],
-        baseValue: 8,
-        label: 'Circuitry',
-        description: 'Intact electronic components. Still carries dangerous electrical charges.',
-        spawnWeight: 1 // Rarer - intact circuitry is harder to find
-      },
-      broken: {
-        appearance: '🖥️', // Will be different sprite when we have art
-        mutators: [] as MutatorId[],
-        baseValue: 3,
-        label: 'Junk Circuitry',
-        description: 'Damaged electronic components. Always a good source of scrap.',
-        spawnWeight: 3 // More common - broken circuitry is easier to find
-      }
-    },
-    description: "Electronic components. The intact ones can be dangerous to handle." 
+    weight: 5,
+    alwaysMutators: ['highVoltage'] as MutatorId[],
+    description: "Electronic components. Can be dangerous to handle due to residual electrical charges." 
   },
   heavyPlating: { 
     id: 'heavyPlating', 
@@ -61,26 +44,9 @@ export const ScrapRegistry = {
     baseValue: 20,
     baseMass: 1,
     appearance: '🫙', 
-    weight: 10, 
-    neverMutators: ['dense'] as MutatorId[], // Cryotube can never be dense
-    states: {
-      intact: {
-        appearance: '🫙',
-        mutators: ['fragile'] as MutatorId[],
-        baseValue: 25,
-        label: 'Cryotube',
-        description: 'A cryogenic preservation tube. The occupants might still be alive... or not.',
-        spawnWeight: 1 // Rarer - intact cryotubes are harder to find
-      },
-      broken: {
-        appearance: '🫙', // Will be different sprite when we have art
-        mutators: ['sharp'] as MutatorId[],
-        baseValue: 15,
-        label: 'Shattered Cryotube',
-        description: 'Looks like the shattered remains of a cryogenic preservation tube. Doubt the occupants made it out alive.',
-        spawnWeight: 3 // More common - broken ones are easier to find
-      }
-    },
+    weight: 10,
+    alwaysMutators: ['fragile'] as MutatorId[],
+    neverMutators: ['dense'] as MutatorId[],
     description: "A cryogenic preservation tube. The occupants might still be alive... or not." 
   },
   corpCreds: { 

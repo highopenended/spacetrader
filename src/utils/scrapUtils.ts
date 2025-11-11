@@ -113,41 +113,12 @@ export const generateRandomMutators = (maxMutators: number = 2): MutatorId[] => 
   return mutators;
 };
 
-/**
- * Select a random state for scrap that has multiple states
- * Returns the state name based on spawn weights
- */
-export const selectRandomState = (states: Record<string, any>): string => {
-  const stateEntries = Object.entries(states);
-  if (stateEntries.length === 0) return 'default';
-  if (stateEntries.length === 1) return stateEntries[0][0];
-  
-  // Calculate total weight
-  const totalWeight = stateEntries.reduce((sum, [, state]) => {
-    return sum + (state.spawnWeight || 1);
-  }, 0);
-  
-  // Select based on weights
-  let random = Math.random() * totalWeight;
-  for (const [stateName, state] of stateEntries) {
-    random -= (state.spawnWeight || 1);
-    if (random <= 0) {
-      return stateName;
-    }
-  }
-  
-  // Fallback to first state
-  return stateEntries[0][0];
-};
 
 /**
- * Assign mutators to scrap based on type rules and state
- * Handles always/never mutators and state-specific mutators
+ * Assign mutators to scrap based on type rules
+ * Handles always/never mutators and random mutator assignment
  */
-export const assignMutatorsToScrap = (
-  typeId: ScrapTypeId, 
-  state?: string
-): MutatorId[] => {
+export const assignMutatorsToScrap = (typeId: ScrapTypeId): MutatorId[] => {
   const scrapType = ScrapRegistry[typeId as keyof typeof ScrapRegistry];
   if (!scrapType) return [];
   
@@ -156,14 +127,6 @@ export const assignMutatorsToScrap = (
   // Add always-applied mutators
   if ('alwaysMutators' in scrapType && scrapType.alwaysMutators) {
     mutators.push(...(scrapType.alwaysMutators as MutatorId[]));
-  }
-  
-  // Add state-specific mutators
-  if (state && 'states' in scrapType && scrapType.states) {
-    const stateData = (scrapType.states as any)[state];
-    if (stateData?.mutators) {
-      mutators.push(...(stateData.mutators as MutatorId[]));
-    }
   }
   
   // Add random mutators (excluding never-applied ones)
@@ -189,26 +152,17 @@ export const createRandomScrapObject = (options: {
   typeId?: ScrapTypeId;
   mutators?: MutatorId[];
   maxMutators?: number;
-  state?: string;
 } = {}): ScrapObject => {
   const typeId = options.typeId || getRandomScrapType();
-  const scrapType = ScrapRegistry[typeId as keyof typeof ScrapRegistry];
   
-  // Select state if not provided and scrap has states
-  let state = options.state;
-  if (!state && 'states' in scrapType && scrapType.states) {
-    state = selectRandomState(scrapType.states);
-  }
-  
-  // Assign mutators based on new system
-  const mutators = options.mutators || assignMutatorsToScrap(typeId, state);
+  // Assign mutators based on type rules
+  const mutators = options.mutators || assignMutatorsToScrap(typeId);
   
   return {
     id: generateScrapId(),
     typeId,
     mutators,
-    createdAt: Date.now(),
-    state
+    createdAt: Date.now()
   };
 };
 
@@ -360,14 +314,8 @@ export const calculateScrapValue = (scrap: ScrapObject): number => {
   const scrapType = ScrapRegistry[scrap.typeId as keyof typeof ScrapRegistry];
   if (!scrapType) return 0;
   
-  // Use state-specific base value if available
+  // Start with base value
   let value = scrapType.baseValue;
-  if (scrap.state && 'states' in scrapType && scrapType.states) {
-    const stateData = (scrapType.states as any)[scrap.state];
-    if (stateData?.baseValue) {
-      value = stateData.baseValue;
-    }
-  }
   
   // Apply mutator multipliers
   for (const mutatorId of scrap.mutators) {
@@ -389,14 +337,8 @@ export const getScrapAppearance = (scrap: ScrapObject, includeMutators: boolean 
   const scrapType = ScrapRegistry[scrap.typeId as keyof typeof ScrapRegistry];
   if (!scrapType) return '❓';
   
-  // Use state-specific appearance if available
+  // Start with base appearance
   let appearance = scrapType.appearance;
-  if (scrap.state && 'states' in scrapType && scrapType.states) {
-    const stateData = (scrapType.states as any)[scrap.state];
-    if (stateData?.appearance) {
-      appearance = stateData.appearance;
-    }
-  }
   
   // Add mutator appearance overlays when requested
   if (includeMutators) {
@@ -411,71 +353,6 @@ export const getScrapAppearance = (scrap: ScrapObject, includeMutators: boolean 
   return appearance;
 };
 
-/**
- * Change the state of a scrap object
- * Updates the scrap's state and recalculates its mutators based on the new state
- * @param scrapId - ID of scrap to change
- * @param newState - New state to transition to
- * @param spawnState - Current spawn state
- * @returns Updated spawn state with changed scrap
- */
-export const changeScrapState = (
-  scrapId: string,
-  newState: string,
-  spawnState: ScrapSpawnState
-): ScrapSpawnState => {
-  const scrapIndex = spawnState.activeScrap.findIndex(scrap => scrap.id === scrapId);
-  
-  if (scrapIndex === -1) {
-    return spawnState; // Scrap not found
-  }
-  
-  const scrap = spawnState.activeScrap[scrapIndex];
-  const scrapType = ScrapRegistry[scrap.typeId as keyof typeof ScrapRegistry];
-  
-  if (!scrapType || !('states' in scrapType) || !scrapType.states) {
-    return spawnState; // No states defined for this scrap type
-  }
-  
-  const stateData = (scrapType.states as any)[newState];
-  if (!stateData) {
-    return spawnState; // Invalid state
-  }
-  
-  // Create updated scrap with new state and mutators
-  const updatedScrap: ActiveScrapObject = {
-    ...scrap,
-    state: newState,
-    mutators: [...(stateData.mutators as MutatorId[] || [])]
-  };
-  
-  // Add always-applied mutators
-  if ('alwaysMutators' in scrapType && scrapType.alwaysMutators) {
-    updatedScrap.mutators.push(...(scrapType.alwaysMutators as MutatorId[]));
-  }
-  
-  // Add random mutators (excluding never-applied ones)
-  const neverMutators = new Set(('neverMutators' in scrapType ? scrapType.neverMutators : []) || []);
-  const availableMutators = MUTATOR_ENTRIES.filter(([mutatorId]) => 
-    !neverMutators.has(mutatorId as any) && 
-    !updatedScrap.mutators.includes(mutatorId as MutatorId) // Don't duplicate
-  );
-  
-  for (const [mutatorId, mutator] of availableMutators) {
-    if (Math.random() < mutator.rarity && updatedScrap.mutators.length < 3) { // Max 3 total mutators
-      updatedScrap.mutators.push(mutatorId as MutatorId);
-    }
-  }
-  
-  // Update the spawn state
-  const newActiveScrap = [...spawnState.activeScrap];
-  newActiveScrap[scrapIndex] = updatedScrap;
-  
-  return {
-    ...spawnState,
-    activeScrap: newActiveScrap
-  };
-};
 
 export interface MutatorChangeSet {
   add?: MutatorId[];
