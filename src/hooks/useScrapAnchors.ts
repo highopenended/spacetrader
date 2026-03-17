@@ -12,7 +12,7 @@
  *
  * WORLD UNITS:
  * - Uses getRenderedPosition which handles world-to-screen conversions
- * - Anchor positions are computed in screen pixels for overlay rendering
+ * - Anchor positions are computed in screen pixels for overlay rendering.
  */
 
 import { useEffect } from 'react';
