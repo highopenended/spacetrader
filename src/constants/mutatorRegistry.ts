@@ -124,18 +124,18 @@ export const MutatorRegistry = {
     rarity: 0.05,
     description: "Dispite numerous internal investigations, no links have been found between radiation exposure in the workplace and cancer."
   },
-  requested: {
-    id: 'requested',
-    label: 'Requested',
-    appearance: '📌',
+  hotCommodity: {
+    id: 'hotCommodity',
+    label: 'Hot Commodity',
+    appearance: '📈',
     creditMultiplier: 1.25,
     onInteract: ({ gameState, scrap }: ScrapInteractionContext) => {
-      // TODO: optional fulfillment / contract hooks
-      console.log('Requested scrap interaction - implement special logic');
+      // TODO: optional market / broker hooks
+      console.log('Hot commodity scrap interaction - implement special logic');
     },
     rarity: 0.1,
     description:
-      "A live requisition is attached: an off-station buyer has already committed credits for this lot. Standard salvage rates do not apply. Misdelivery is routed to Loss Prevention; repeated misdelivery is routed to you."
+      "Demand stays broad: brokers quote this SKU same-day. You are not discovering value—you are filling standing appetite. Misprice it anyway and Finance will explain margin in words you cannot appeal."
   },
   sharp: {
     id: 'sharp',
