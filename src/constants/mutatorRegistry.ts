@@ -135,7 +135,7 @@ export const MutatorRegistry = {
     },
     rarity: 0.1,
     description:
-      "Demand stays broad: brokers quote this SKU same-day. You are not discovering value—you are filling standing appetite. Misprice it anyway and Finance will explain margin in words you cannot appeal."
+      "Brokers quote this SKU same-day. Easy money, easy life. Get back to work."
   },
   sharp: {
     id: 'sharp',
