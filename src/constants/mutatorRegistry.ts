@@ -124,6 +124,19 @@ export const MutatorRegistry = {
     rarity: 0.05,
     description: "Dispite numerous internal investigations, no links have been found between radiation exposure in the workplace and cancer."
   },
+  requested: {
+    id: 'requested',
+    label: 'Requested',
+    appearance: '📌',
+    creditMultiplier: 1.25,
+    onInteract: ({ gameState, scrap }: ScrapInteractionContext) => {
+      // TODO: optional fulfillment / contract hooks
+      console.log('Requested scrap interaction - implement special logic');
+    },
+    rarity: 0.1,
+    description:
+      "A live requisition is attached: an off-station buyer has already committed credits for this lot. Standard salvage rates do not apply. Misdelivery is routed to Loss Prevention; repeated misdelivery is routed to you."
+  },
   sharp: {
     id: 'sharp',
     label: 'Sharp',
