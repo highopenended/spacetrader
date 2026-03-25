@@ -150,6 +150,19 @@ export const MutatorRegistry = {
     rarity: 0.05,
     description: `Scans indicate that jagged edges and exposed metal shards present a serious laceration risk. Ensure you are equipped with your standard-issue corporate gloves.
 **Note: Following numerous complaints from corporate leadership, the Glove Readiness Initiative Program has been officially discontinued. The corporation will no longer be issuing protective gloves at this time.**`
+  },
+  vintage: {
+    id: 'vintage',
+    label: 'Vintage',
+    appearance: '📼',
+    creditMultiplier: 1.15,
+    onInteract: ({ gameState, scrap }: ScrapInteractionContext) => {
+      // TODO: optional curator / provenance hooks
+      console.log('Vintage scrap interaction - implement special logic');
+    },
+    rarity: 0.09,
+    description:
+      "Manufacture predates the unified SKU era. Museums, obsessives, and fraud auditors disagree on what it is; all three still pay. Authenticity paperwork sold separately."
   }
 } as const satisfies Record<string, ScrapMutator>;
 
