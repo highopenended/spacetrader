@@ -176,6 +176,19 @@ export const MutatorRegistry = {
     },
     rarity: 0.12,
     description: "This salvage emits a powerful electromagnetic field that may interfere with nearby equipment, inventory management systems, and other metallic materials. Isolate from sensitive electronics. Previous handlers report difficulty separating magnetic items from cargo. The corporation is not responsible for damage to personal devices."
+  },
+  analogSignal: {
+    id: 'analogSignal',
+    label: 'Analog Signal',
+    appearance: '📻',
+    creditMultiplier: 1.6,
+    onInteract: ({ gameState, scrap }: ScrapInteractionContext) => {
+      // TODO: handle signal transmission - attract unwanted attention,
+      // trigger events, reveal hidden info, or cause interference
+      console.log('Analog signal scrap interaction - implement transmission logic');
+    },
+    rarity: 0.07,
+    description: "This equipment is actively broadcasting on deprecated analog frequencies. Transmissions include fragmented voice logs, navigation data, and unencrypted distress signals from decommissioned vessels. Signal triangulation by third parties is possible. Continued possession may attract scavengers, pirates, or corporate audit teams. Recommend immediate processing to discontinue broadcast."
   }
 } as const satisfies Record<string, ScrapMutator>;
 
