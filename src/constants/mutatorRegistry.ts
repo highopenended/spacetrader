@@ -163,6 +163,19 @@ export const MutatorRegistry = {
     },
     rarity: 0.03,
     description: "This material has been flagged as restricted under Section 12-C of the Salvage Operations Code. Possession without proper authorization may result in asset seizure, wage garnishment, contract termination, and/or criminal prosecution. Management is not aware of how this item entered your workspace. Dispose of it immediately through proper channels. Do not attempt to profit from restricted goods. We are monitoring your compliance."
+  },
+  magnetic: {
+    id: 'magnetic',
+    label: 'Magnetic',
+    appearance: '🧲',
+    creditMultiplier: 1.1,
+    onInteract: ({ gameState, scrap }: ScrapInteractionContext) => {
+      // TODO: handle magnetic interference - attract/repel nearby scrap,
+      // interfere with equipment, cause items to stick together
+      console.log('Magnetic scrap interaction - implement magnetic field logic');
+    },
+    rarity: 0.12,
+    description: "This salvage emits a powerful electromagnetic field that may interfere with nearby equipment, inventory management systems, and other metallic materials. Isolate from sensitive electronics. Previous handlers report difficulty separating magnetic items from cargo. The corporation is not responsible for damage to personal devices."
   }
 } as const satisfies Record<string, ScrapMutator>;
 
