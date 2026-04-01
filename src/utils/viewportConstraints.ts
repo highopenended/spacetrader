@@ -5,6 +5,8 @@
  * Ensures windows cannot be dragged or resized outside the visible screen area.
  */
 
+import { WINDOW_DEFAULTS, TERMINAL_VIEWPORT_WIDTH_RATIO } from '../constants/windowConstants';
+
 interface Position {
   x: number;
   y: number;
@@ -145,4 +147,27 @@ export const repositionOutOfBoundsWindows = <T extends { position: Position; siz
     
     return window;
   });
+};
+
+/**
+ * Calculate default window position anchored to the left edge of the terminal
+ * 
+ * Positions the window so its right edge aligns with the terminal's left edge.
+ * Maintains vertical staggering for multiple windows to prevent overlap.
+ * 
+ * @param viewportWidth - Current viewport width in pixels
+ * @param windowWidth - Width of the window to position
+ * @param openWindowCount - Number of windows already open (for vertical stagger)
+ * @returns Position object with x and y coordinates
+ */
+export const getDefaultWindowPositionAnchoredToTerminal = (
+  viewportWidth: number,
+  windowWidth: number,
+  openWindowCount: number
+): Position => {
+  const terminalWidthPx = viewportWidth * TERMINAL_VIEWPORT_WIDTH_RATIO;
+  const x = viewportWidth - terminalWidthPx - windowWidth;
+  const y = WINDOW_DEFAULTS.POSITION.y + (openWindowCount * WINDOW_DEFAULTS.POSITION_OFFSET);
+  
+  return { x, y };
 }; 

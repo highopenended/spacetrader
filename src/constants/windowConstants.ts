@@ -5,6 +5,12 @@
  * Used by window manager hook and components.
  */
 
+/**
+ * Terminal viewport width ratio
+ * MUST stay in sync with .terminal-screen { width: 18vw; } in TerminalScreen.css
+ */
+export const TERMINAL_VIEWPORT_WIDTH_RATIO = 0.18;
+
 export const WINDOW_DEFAULTS = {
   SIZE: { width: 250, height: 120 },
   MIN_SIZE: { width: 200, height: 100 },

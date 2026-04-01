@@ -13,7 +13,8 @@ import React from 'react';
 import { WindowData } from '../types/windowState';
 import { WINDOW_DEFAULTS, APP_WINDOW_DEFAULTS } from '../constants/windowConstants';
 import { APP_REGISTRY } from '../constants/appListConstants';
-import { clampPositionToBounds, isPositionOutOfBounds } from '../utils/viewportConstraints';
+import { clampPositionToBounds, isPositionOutOfBounds, getDefaultWindowPositionAnchoredToTerminal } from '../utils/viewportConstraints';
+import { useViewportStore } from './viewportStore';
 
 interface WindowState {
   // Core window data
@@ -97,13 +98,22 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
     
     // Use drop position if provided, otherwise use last known or defaults
     let lastPosition = dropPosition || state.lastWindowPositions[appType];
-    const defaultPosition = { 
-      x: WINDOW_DEFAULTS.POSITION.x + (state.windows.length * WINDOW_DEFAULTS.POSITION_OFFSET), 
-      y: WINDOW_DEFAULTS.POSITION.y + (state.windows.length * WINDOW_DEFAULTS.POSITION_OFFSET) 
-    };
     
+    // Calculate default size first (needed for position calculation)
     let lastSize = savedSize || state.lastWindowSizes[appType];
     const defaultSize = APP_WINDOW_DEFAULTS[appType] || WINDOW_DEFAULTS.SIZE;
+    const windowWidth = (lastSize || defaultSize).width;
+    
+    // Get viewport width for terminal-anchored positioning
+    const viewportWidth = useViewportStore.getState().viewport.width;
+    
+    // Calculate default position anchored to terminal (fallback to old behavior if viewport width is 0)
+    const defaultPosition = viewportWidth > 0
+      ? getDefaultWindowPositionAnchoredToTerminal(viewportWidth, windowWidth, state.windows.length)
+      : { 
+          x: WINDOW_DEFAULTS.POSITION.x + (state.windows.length * WINDOW_DEFAULTS.POSITION_OFFSET), 
+          y: WINDOW_DEFAULTS.POSITION.y + (state.windows.length * WINDOW_DEFAULTS.POSITION_OFFSET) 
+        };
     
     // If drop position is provided, center the window on the drop point
     if (dropPosition) {
