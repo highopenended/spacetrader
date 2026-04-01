@@ -150,6 +150,19 @@ export const MutatorRegistry = {
     rarity: 0.05,
     description: `Scans indicate that jagged edges and exposed metal shards present a serious laceration risk. Ensure you are equipped with your standard-issue corporate gloves.
 **Note: Following numerous complaints from corporate leadership, the Glove Readiness Initiative Program has been officially discontinued. The corporation will no longer be issuing protective gloves at this time.**`
+  },
+  contraband: {
+    id: 'contraband',
+    label: 'Contraband',
+    appearance: '🚫',
+    creditMultiplier: 3.5,
+    onInteract: ({ gameState, scrap }: ScrapInteractionContext) => {
+      // TODO: handle contraband risk logic - random inspection chance, 
+      // possible confiscation, or black market bonus
+      console.log('Contraband scrap interaction - implement illegal goods logic');
+    },
+    rarity: 0.03,
+    description: "This material has been flagged as restricted under Section 12-C of the Salvage Operations Code. Possession without proper authorization may result in asset seizure, wage garnishment, contract termination, and/or criminal prosecution. Management is not aware of how this item entered your workspace. Dispose of it immediately through proper channels. Do not attempt to profit from restricted goods. We are monitoring your compliance."
   }
 } as const satisfies Record<string, ScrapMutator>;
 
