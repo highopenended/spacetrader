@@ -96,18 +96,23 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
     const defaultContent = React.createElement('div', {}, 'No Data Available');
     const windowContent = content || defaultContent;
     
-    // Use drop position if provided, otherwise use last known or defaults
+    // POSITION PRIORITY: dropPosition > lastWindowPositions > defaultPosition
+    // 1. dropPosition: When user drags app from terminal to open it at specific coords
+    // 2. lastWindowPositions: Remembers where user moved/positioned the window
+    // 3. defaultPosition: First-time open with no saved position
     let lastPosition = dropPosition || state.lastWindowPositions[appType];
     
-    // Calculate default size first (needed for position calculation)
+    // Calculate window size (needed to determine how far from terminal edge to place it)
     let lastSize = savedSize || state.lastWindowSizes[appType];
     const defaultSize = APP_WINDOW_DEFAULTS[appType] || WINDOW_DEFAULTS.SIZE;
     const windowWidth = (lastSize || defaultSize).width;
     
-    // Get viewport width for terminal-anchored positioning
+    // Get current viewport dimensions from centralized store
     const viewportWidth = useViewportStore.getState().viewport.width;
     
-    // Calculate default position anchored to terminal (fallback to old behavior if viewport width is 0)
+    // DEFAULT POSITIONING: Align window's right edge with terminal's left edge (18vw from right)
+    // Example: 1920px viewport - (1920 * 0.18 = 345.6px terminal) - (300px window) = x: 1274px
+    // Falls back to legacy top-left cascade if viewport not initialized
     const defaultPosition = viewportWidth > 0
       ? getDefaultWindowPositionAnchoredToTerminal(viewportWidth, windowWidth, state.windows.length)
       : { 

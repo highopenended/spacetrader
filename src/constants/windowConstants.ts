@@ -7,7 +7,13 @@
 
 /**
  * Terminal viewport width ratio
+ * 
+ * The terminal panel is positioned at the right edge using CSS: width: 18vw
+ * This constant must match that value for correct window positioning.
+ * 
  * MUST stay in sync with .terminal-screen { width: 18vw; } in TerminalScreen.css
+ * 
+ * Used to calculate default window positions so they appear just left of the terminal.
  */
 export const TERMINAL_VIEWPORT_WIDTH_RATIO = 0.18;
 

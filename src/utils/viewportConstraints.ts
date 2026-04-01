@@ -153,7 +153,15 @@ export const repositionOutOfBoundsWindows = <T extends { position: Position; siz
  * Calculate default window position anchored to the left edge of the terminal
  * 
  * Positions the window so its right edge aligns with the terminal's left edge.
+ * The terminal is fixed at the right side of the viewport with width = 18vw.
+ * This creates a clean separation between the main workspace and terminal area.
+ * 
  * Maintains vertical staggering for multiple windows to prevent overlap.
+ * 
+ * Example: 1920px viewport, 300px window
+ *   terminalWidthPx = 1920 * 0.18 = 345.6px
+ *   x = 1920 - 345.6 - 300 = 1274.4px (window positioned just left of terminal)
+ *   y = 100 + (0 * 30) = 100px (first window at base position)
  * 
  * @param viewportWidth - Current viewport width in pixels
  * @param windowWidth - Width of the window to position
@@ -165,8 +173,13 @@ export const getDefaultWindowPositionAnchoredToTerminal = (
   windowWidth: number,
   openWindowCount: number
 ): Position => {
+  // Calculate terminal width in pixels (terminal uses 18vw)
   const terminalWidthPx = viewportWidth * TERMINAL_VIEWPORT_WIDTH_RATIO;
+  
+  // Position window so its right edge touches terminal's left edge
   const x = viewportWidth - terminalWidthPx - windowWidth;
+  
+  // Stagger vertically by 30px per open window to prevent total overlap
   const y = WINDOW_DEFAULTS.POSITION.y + (openWindowCount * WINDOW_DEFAULTS.POSITION_OFFSET);
   
   return { x, y };
