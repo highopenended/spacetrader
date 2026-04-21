@@ -5,18 +5,13 @@
  * Keep entries short, consistent, and easy to reference by id.
  */
 
-export type LoreEntry = {
-  id: string;
-  title: string;
-  /** Readonly so `as const` lore arrays type-check. */
-  body: readonly string[];
-  tags?: readonly string[];
-};
+import type { LoreEntry } from './loreTypes';
 
 export const MERCHANT_FAMILY_CATHEDRA_LORE = [
   {
     id: 'merchantFamily.overview',
     title: 'The Merchant Family',
+    category: 'Merchant family',
     body: [
       'The Merchant Family is not a surname. It is a ledger construct.',
       'Their power travels on paper and in permissions, not banners.',
@@ -27,6 +22,7 @@ export const MERCHANT_FAMILY_CATHEDRA_LORE = [
   {
     id: 'cathedra.definition',
     title: 'Cathedra',
+    category: 'Cathedra',
     body: [
       'A Cathedra is a seat of authority bound to a set of accounts.',
       'Seats can be granted, purchased, or married into, but never truly owned.',
@@ -37,6 +33,7 @@ export const MERCHANT_FAMILY_CATHEDRA_LORE = [
   {
     id: 'cathedra.minor',
     title: 'Cathedra Minor',
+    category: 'Cathedra',
     body: [
       'A Cathedra Minor is accepted, but not trusted.',
       'Patronage is their oxygen. Gifts are their language.',
@@ -47,6 +44,7 @@ export const MERCHANT_FAMILY_CATHEDRA_LORE = [
   {
     id: 'cathedra.dominus',
     title: 'Cathedra Dominus',
+    category: 'Cathedra',
     body: [
       'A Cathedra Dominus signs deals that move fleets.',
       'Their favors do not come with gratitude. They come with interest.',
@@ -57,6 +55,7 @@ export const MERCHANT_FAMILY_CATHEDRA_LORE = [
   {
     id: 'cathedra.ultima',
     title: 'Cathedra Ultima',
+    category: 'Cathedra',
     body: [
       'A Cathedra Ultima is the family made singular.',
       'They do not win arguments. They revise the ledger until the argument never existed.',
@@ -67,6 +66,7 @@ export const MERCHANT_FAMILY_CATHEDRA_LORE = [
   {
     id: 'merchantFamily.doctrine',
     title: 'Doctrine of the Ledger',
+    category: 'Doctrine',
     body: [
       'A debt unpaid is a story unfinished.',
       'A quota met is a prayer answered.',

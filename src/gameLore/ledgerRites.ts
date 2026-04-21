@@ -4,12 +4,13 @@
  * Short readouts for calendar and obligation flavor text.
  */
 
-import type { LoreEntry } from './merchantFamilyCathedra';
+import type { LoreEntry } from './loreTypes';
 
 export const LEDGER_RITES_LORE = [
   {
     id: 'ledger.titheBoundary',
     title: 'Tithe Boundaries',
+    category: 'Ledger and tithe',
     body: [
       'When the ledger cycle rolls, the tithe window opens.',
       'What you owe is already written. What you pay is proof you read it.',
