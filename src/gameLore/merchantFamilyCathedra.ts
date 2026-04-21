@@ -8,8 +8,9 @@
 export type LoreEntry = {
   id: string;
   title: string;
-  body: string[];
-  tags?: string[];
+  /** Readonly so `as const` lore arrays type-check. */
+  body: readonly string[];
+  tags?: readonly string[];
 };
 
 export const MERCHANT_FAMILY_CATHEDRA_LORE = [
