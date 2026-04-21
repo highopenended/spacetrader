@@ -15,6 +15,7 @@ import ScrAppStoreAppWindow from '../components/scr-apps/scrAppStoreApp/window/S
 import ChronoTrackAppWindow from '../components/scr-apps/chronoTrackApp/window/ChronoTrackAppWindow';
 import CacheSyncAppWindow from '../components/scr-apps/cacheSyncApp/window/CacheSyncAppWindow';
 import DumpsterVisionAppWindow from '../components/scr-apps/dumpsterVisionApp/window/DumpsterVisionAppWindow';
+import LoreAppWindow from '../components/scr-apps/loreApp/window/LoreAppWindow';
 import { WindowData } from '../types/windowState';
 import { GameTime, GamePhase, GameMode } from '../types/gameState';
 import { WindowManagerContext } from '../contexts/WindowManagerContext';
@@ -134,6 +135,12 @@ export const WINDOW_REGISTRY: Record<string, WindowConfig> = {
   },
   dumpsterVision: {
     component: DumpsterVisionAppWindow,
+    getProps: (window, windowController, windowManager, toggleData) => ({
+      ...buildCommonProps(window, windowController, windowManager, toggleData)
+    })
+  },
+  loreApp: {
+    component: LoreAppWindow,
     getProps: (window, windowController, windowManager, toggleData) => ({
       ...buildCommonProps(window, windowController, windowManager, toggleData)
     })

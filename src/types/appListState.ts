@@ -36,7 +36,17 @@ export interface AppListState {
   dragState: DragState;
 }
 
-export type AppType = 'credits' | 'jobTitle' | 'purgeZone' | 'scrAppStore' | 'scanner' | 'navMap' | 'chronoTrack' | 'cacheSync' | 'dumpsterVision';
+export type AppType =
+  | 'credits'
+  | 'jobTitle'
+  | 'purgeZone'
+  | 'scrAppStore'
+  | 'scanner'
+  | 'navMap'
+  | 'chronoTrack'
+  | 'cacheSync'
+  | 'dumpsterVision'
+  | 'loreApp';
 
 export interface AppOrderUpdateData {
   appId: string;

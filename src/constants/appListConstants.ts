@@ -13,6 +13,7 @@ import ChronoTrackApp from '../components/scr-apps/chronoTrackApp/listItem/Chron
 import CacheSyncApp from '../components/scr-apps/cacheSyncApp/listItem/CacheSyncAppItem';
 import { AppDefinition, AppType } from '../types/appListState';
 import DumpsterVisionApp from '../components/scr-apps/dumpsterVisionApp/listItem/DumpsterVisionAppItem';
+import LoreApp from '../components/scr-apps/loreApp/listItem/LoreAppItem';
 
 // Master registry of ALL possible apps (current + future)
 export const APP_REGISTRY: Record<string, AppDefinition> = {
@@ -90,6 +91,16 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     component: DumpsterVisionApp,
     deletable: true,
     description: 'Dumpster scanning interface',
+    purchaseCost: 100,
+    maintenanceCost: 10
+  },
+
+  loreApp: {
+    id: 'loreApp',
+    name: 'Game Lore',
+    component: LoreApp,
+    deletable: true,
+    description: 'Archives and setting text (placeholder)',
     purchaseCost: 100,
     maintenanceCost: 10
   },
