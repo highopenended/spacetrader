@@ -5,4 +5,4 @@
  * Keep lore data modular and export it from here for use in-game.
  */
 
-export {};
+export * from './merchantFamilyCathedra';
