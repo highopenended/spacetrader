@@ -5,20 +5,10 @@ import { filterLoreEntries, groupLoreByCategory } from '../../../../gameLore/lor
 import type { LoreEntry } from '../../../../gameLore/loreTypes';
 import './LoreAppWindow.css';
 
-/** Three discrete text sizes (rem on `.lore-app-root`). */
-const LORE_FONT_PRESETS = [
-  { rem: 0.875, label: 'Small' },
-  { rem: 1, label: 'Medium' },
-  { rem: 1.125, label: 'Large' },
-] as const;
-
-const DEFAULT_LORE_FONT_LEVEL = 1;
-
 interface LoreAppWindowProps extends BaseWindowProps {}
 
 const LoreAppWindow: React.FC<LoreAppWindowProps> = ({ ...windowProps }) => {
   const [query, setQuery] = useState('');
-  const [fontLevel, setFontLevel] = useState(DEFAULT_LORE_FONT_LEVEL);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
 
   const toggleExpanded = useCallback((id: string) => {
@@ -35,47 +25,9 @@ const LoreAppWindow: React.FC<LoreAppWindowProps> = ({ ...windowProps }) => {
     return groupLoreByCategory(filtered);
   }, [query]);
 
-  const fontPreset = LORE_FONT_PRESETS[fontLevel];
-  const fontRem = fontPreset.rem;
-  const fontLabel = fontPreset.label;
-  const canShrinkFont = fontLevel > 0;
-  const canGrowFont = fontLevel < LORE_FONT_PRESETS.length - 1;
-
   return (
     <ScrAppWindow title="Game Lore" {...windowProps}>
-      <div
-        className="window-content-padded lore-app-root"
-        style={{ fontSize: `${fontRem}rem` }}
-      >
-        <div className="lore-app-toolbar" role="group" aria-label="Text size">
-          <span className="lore-app-toolbar-label">TEXT SIZE</span>
-          <div className="lore-app-toolbar-controls">
-            <button
-              type="button"
-              className="lore-app-font-btn"
-              onClick={() => setFontLevel((n) => Math.max(0, n - 1))}
-              disabled={!canShrinkFont}
-              title="Smaller text"
-              aria-label="Decrease text size"
-            >
-              −
-            </button>
-            <span className="lore-app-font-readout" aria-live="polite">
-              {fontLabel}
-            </span>
-            <button
-              type="button"
-              className="lore-app-font-btn"
-              onClick={() => setFontLevel((n) => Math.min(LORE_FONT_PRESETS.length - 1, n + 1))}
-              disabled={!canGrowFont}
-              title="Larger text"
-              aria-label="Increase text size"
-            >
-              +
-            </button>
-          </div>
-        </div>
-
+      <div className="window-content-padded lore-app-root">
         <div className="lore-app-search-wrap">
           <input
             id="lore-app-search"
@@ -140,9 +92,11 @@ function LoreEntryRow({
       </div>
       {expanded && (
         <div className="lore-app-expand-panel">
-          {entry.body.map((paragraph, i) => (
-            <p key={i}>{paragraph}</p>
-          ))}
+          <div className="lore-app-expand-panel-body">
+            {entry.body.map((paragraph, i) => (
+              <p key={i}>{paragraph}</p>
+            ))}
+          </div>
         </div>
       )}
     </div>
