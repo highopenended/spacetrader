@@ -6,6 +6,72 @@
   gap: var(--spacing-sm);
 }
 
+.lore-app-toolbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid #333;
+}
+
+.lore-app-toolbar-label {
+  font-size: 0.85em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8a8;
+  font-family: 'Courier New', monospace;
+}
+
+.lore-app-toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Fixed slot sized for "Medium" (+ letter-spacing); keeps +/- spacing stable. */
+.lore-app-font-readout {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 8ch;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 1em;
+  color: #9f9;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.04em;
+  text-transform: capitalize;
+  vertical-align: middle;
+}
+
+.lore-app-font-btn {
+  min-width: 1.75rem;
+  height: 1.5rem;
+  padding: 0 var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  color: #9f9;
+  font-family: 'Courier New', monospace;
+  font-size: 1em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lore-app-font-btn:hover:not(:disabled) {
+  border-color: #666;
+  color: #cfc;
+}
+
+.lore-app-font-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .lore-app-search-wrap {
   flex-shrink: 0;
   padding-bottom: var(--spacing-xs);
@@ -19,7 +85,7 @@
   border: 1px solid #444;
   color: #ccc;
   font-family: 'Courier New', monospace;
-  font-size: var(--font-size-xsmall);
+  font-size: 1em;
   letter-spacing: 0.05em;
   padding: var(--spacing-xs) var(--spacing-sm);
   outline: none;
@@ -47,7 +113,7 @@
 }
 
 .lore-app-category-title {
-  font-size: var(--font-size-xsmall);
+  font-size: 0.85em;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #8a8;
@@ -72,7 +138,7 @@
   flex: 1;
   min-width: 0;
   color: #ccc;
-  font-size: var(--font-size-xsmall);
+  font-size: 1em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -90,7 +156,7 @@
   border: 1px solid #444;
   color: #9f9;
   font-family: 'Courier New', monospace;
-  font-size: var(--font-size-xsmall);
+  font-size: 1em;
   cursor: pointer;
   line-height: 1;
 }
@@ -110,7 +176,7 @@
 .lore-app-expand-panel p {
   margin: var(--spacing-xs) 0 0;
   color: #aaa;
-  font-size: var(--font-size-xxsmall);
+  font-size: 0.8125em;
   line-height: 1.45;
 }
 
@@ -120,6 +186,6 @@
 
 .lore-app-empty {
   color: #666;
-  font-size: var(--font-size-xsmall);
+  font-size: 1em;
   padding: var(--spacing-sm);
 }
