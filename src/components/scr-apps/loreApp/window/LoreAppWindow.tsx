@@ -74,22 +74,23 @@ function LoreEntryRow({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const label = expanded ? `Collapse: ${entry.title}` : `Expand: ${entry.title}`;
+
   return (
     <div className="lore-app-entry">
-      <div className="lore-app-entry-row">
-        <div className="lore-app-entry-title" title={entry.title}>
-          {entry.title}
-        </div>
-        <button
-          type="button"
-          className="lore-app-expand-btn"
-          onClick={onToggle}
-          aria-expanded={expanded}
-          aria-label={expanded ? 'Collapse entry' : 'Expand entry'}
-        >
+      <button
+        type="button"
+        className="lore-app-entry-row"
+        title={entry.title}
+        onClick={onToggle}
+        aria-expanded={expanded}
+        aria-label={label}
+      >
+        <span className="lore-app-entry-title">{entry.title}</span>
+        <span className="lore-app-expand-chevron" aria-hidden>
           {expanded ? '\u25BC' : '\u25B6'}
-        </button>
-      </div>
+        </span>
+      </button>
       {expanded && (
         <div className="lore-app-expand-panel">
           <div className="lore-app-expand-panel-body">
