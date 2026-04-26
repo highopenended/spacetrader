@@ -33,7 +33,7 @@ export const APP_WINDOW_DEFAULTS: Record<string, { width: number; height: number
   cacheSync: { width: 350, height: 350 },
   chronoTrack: { width: 350, height: 300 },
   dumpsterVision: { width: 250, height: 290 },
-  loreApp: { width: 320, height: 240 }
+  loreApp: { width: 350, height: 500 }
 };
 
 // App-specific minimum window sizes
@@ -45,5 +45,5 @@ export const APP_WINDOW_MIN_SIZES: Record<string, { width: number; height: numbe
   cacheSync: { width: 350, height: 350 },
   chronoTrack: { width: 350, height: 300 },
   dumpsterVision: { width: 250, height: 290 },
-  loreApp: { width: 320, height: 240 }
+  loreApp: { width: 350, height: 500 }
 }; 
