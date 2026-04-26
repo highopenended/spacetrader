@@ -32,13 +32,17 @@ const LoreAppWindow: React.FC<LoreAppWindowProps> = ({ ...windowProps }) => {
 
   const textSizeRem = LORE_TEXT_SIZE_REMS[textSizeIndex];
   const textSizeDisplay = textSizeIndex + 1;
+  const canDecreaseTextSize = textSizeIndex > 0;
+  const canIncreaseTextSize = textSizeIndex < LORE_TEXT_SIZE_REMS.length - 1;
 
   const decreaseTextSize = useCallback(() => {
-    setTextSizeIndex((i) => (i <= 0 ? LORE_TEXT_SIZE_REMS.length - 1 : i - 1));
+    setTextSizeIndex((i) => (i <= 0 ? i : i - 1));
   }, []);
 
   const increaseTextSize = useCallback(() => {
-    setTextSizeIndex((i) => (i >= LORE_TEXT_SIZE_REMS.length - 1 ? 0 : i + 1));
+    setTextSizeIndex((i) =>
+      i >= LORE_TEXT_SIZE_REMS.length - 1 ? i : i + 1
+    );
   }, []);
 
   return (
@@ -51,6 +55,7 @@ const LoreAppWindow: React.FC<LoreAppWindowProps> = ({ ...windowProps }) => {
               type="button"
               className="lore-app-text-size-arrow"
               onClick={decreaseTextSize}
+              disabled={!canDecreaseTextSize}
               aria-label="Smaller text"
             >
               ◀
@@ -66,6 +71,7 @@ const LoreAppWindow: React.FC<LoreAppWindowProps> = ({ ...windowProps }) => {
               type="button"
               className="lore-app-text-size-arrow"
               onClick={increaseTextSize}
+              disabled={!canIncreaseTextSize}
               aria-label="Larger text"
             >
               ▶

@@ -9,16 +9,18 @@
 .lore-app-text-size {
   flex-shrink: 0;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--spacing-xs);
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
   padding-bottom: var(--spacing-sm);
   border-bottom: 1px solid #333;
 }
 
 .lore-app-text-size-heading {
   margin: 0;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   text-align: left;
   font-size: var(--font-size-xsmall);
   font-weight: bold;
@@ -29,6 +31,7 @@
 }
 
 .lore-app-text-size-stepper {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
@@ -51,9 +54,14 @@
   cursor: pointer;
 }
 
-.lore-app-text-size-arrow:hover {
+.lore-app-text-size-arrow:hover:not(:disabled) {
   border-color: #666;
   color: #cfc;
+}
+
+/* At min/max: same look as active arrows; no pointer cursor (no click effect yet). */
+.lore-app-text-size-arrow:disabled {
+  cursor: default;
 }
 
 .lore-app-text-size-arrow:focus-visible {
