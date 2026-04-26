@@ -15,7 +15,7 @@ const LoreAppWindow: React.FC<LoreAppWindowProps> = ({ ...windowProps }) => {
   const [query, setQuery] = useState('');
   const [textSizeIndex, setTextSizeIndex] = useState(LORE_TEXT_SIZE_DEFAULT_INDEX);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
-  const textSizeStepperRef = useRef<HTMLDivElement>(null);
+  const textSizeReadoutRef = useRef<HTMLDivElement>(null);
 
   const toggleExpanded = useCallback((id: string) => {
     setExpandedIds((prev) => {
@@ -34,18 +34,18 @@ const LoreAppWindow: React.FC<LoreAppWindowProps> = ({ ...windowProps }) => {
   const textSizeRem = LORE_TEXT_SIZE_REMS[textSizeIndex];
   const textSizeDisplay = textSizeIndex + 1;
 
-  const shakeTextSizeStepper = useCallback(() => {
-    const el = textSizeStepperRef.current;
+  const shakeTextSizeReadout = useCallback(() => {
+    const el = textSizeReadoutRef.current;
     if (!el) return;
-    el.classList.remove('lore-app-text-size-stepper--shake');
+    el.classList.remove('lore-app-text-size-readout--shake');
     void el.offsetWidth;
-    el.classList.add('lore-app-text-size-stepper--shake');
+    el.classList.add('lore-app-text-size-readout--shake');
   }, []);
 
-  const handleTextSizeStepperAnimationEnd = useCallback(
+  const handleTextSizeReadoutAnimationEnd = useCallback(
     (e: React.AnimationEvent<HTMLDivElement>) => {
       if (e.animationName !== 'loreTextSizeShake') return;
-      e.currentTarget.classList.remove('lore-app-text-size-stepper--shake');
+      e.currentTarget.classList.remove('lore-app-text-size-readout--shake');
     },
     []
   );
@@ -53,33 +53,29 @@ const LoreAppWindow: React.FC<LoreAppWindowProps> = ({ ...windowProps }) => {
   const decreaseTextSize = useCallback(() => {
     setTextSizeIndex((i) => {
       if (i <= 0) {
-        shakeTextSizeStepper();
+        shakeTextSizeReadout();
         return i;
       }
       return i - 1;
     });
-  }, [shakeTextSizeStepper]);
+  }, [shakeTextSizeReadout]);
 
   const increaseTextSize = useCallback(() => {
     setTextSizeIndex((i) => {
       if (i >= LORE_TEXT_SIZE_REMS.length - 1) {
-        shakeTextSizeStepper();
+        shakeTextSizeReadout();
         return i;
       }
       return i + 1;
     });
-  }, [shakeTextSizeStepper]);
+  }, [shakeTextSizeReadout]);
 
   return (
     <ScrAppWindow title="Game Lore" {...windowProps}>
       <div className="window-content-padded lore-app-shell">
         <section className="lore-app-text-size" aria-label="Text size">
           <h2 className="lore-app-text-size-heading">Text Size</h2>
-          <div
-            ref={textSizeStepperRef}
-            className="lore-app-text-size-stepper"
-            onAnimationEnd={handleTextSizeStepperAnimationEnd}
-          >
+          <div className="lore-app-text-size-stepper">
             <button
               type="button"
               className="lore-app-text-size-arrow"
@@ -89,9 +85,11 @@ const LoreAppWindow: React.FC<LoreAppWindowProps> = ({ ...windowProps }) => {
               ◀
             </button>
             <div
+              ref={textSizeReadoutRef}
               className="lore-app-text-size-readout"
               aria-live="polite"
               aria-atomic="true"
+              onAnimationEnd={handleTextSizeReadoutAnimationEnd}
             >
               {textSizeDisplay}
             </div>

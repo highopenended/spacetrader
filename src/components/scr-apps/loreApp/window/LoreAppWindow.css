@@ -42,25 +42,22 @@
   100% {
     transform: translateX(0);
   }
-  18% {
-    transform: translateX(-5px);
-  }
-  36% {
-    transform: translateX(5px);
-  }
-  54% {
+  22% {
     transform: translateX(-3px);
   }
-  72% {
+  45% {
     transform: translateX(3px);
   }
-  90% {
-    transform: translateX(-1px);
+  68% {
+    transform: translateX(-2px);
+  }
+  88% {
+    transform: translateX(1px);
   }
 }
 
-.lore-app-text-size-stepper--shake {
-  animation: loreTextSizeShake 0.42s ease;
+.lore-app-text-size-readout--shake {
+  animation: loreTextSizeShake 0.24s cubic-bezier(0.32, 0, 0.24, 1);
 }
 
 .lore-app-text-size-arrow {
