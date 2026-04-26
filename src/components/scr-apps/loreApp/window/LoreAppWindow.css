@@ -37,6 +37,32 @@
   gap: var(--spacing-xs);
 }
 
+@keyframes loreTextSizeShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  18% {
+    transform: translateX(-5px);
+  }
+  36% {
+    transform: translateX(5px);
+  }
+  54% {
+    transform: translateX(-3px);
+  }
+  72% {
+    transform: translateX(3px);
+  }
+  90% {
+    transform: translateX(-1px);
+  }
+}
+
+.lore-app-text-size-stepper--shake {
+  animation: loreTextSizeShake 0.42s ease;
+}
+
 .lore-app-text-size-arrow {
   width: 1.75rem;
   height: 1.5rem;
@@ -54,14 +80,9 @@
   cursor: pointer;
 }
 
-.lore-app-text-size-arrow:hover:not(:disabled) {
+.lore-app-text-size-arrow:hover {
   border-color: #666;
   color: #cfc;
-}
-
-/* At min/max: same look as active arrows; no pointer cursor (no click effect yet). */
-.lore-app-text-size-arrow:disabled {
-  cursor: default;
 }
 
 .lore-app-text-size-arrow:focus-visible {
