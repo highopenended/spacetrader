@@ -5,10 +5,15 @@ import { filterLoreEntries, groupLoreByCategory } from '../../../../gameLore/lor
 import type { LoreEntry } from '../../../../gameLore/loreTypes';
 import './LoreAppWindow.css';
 
+/** Root rem for lore list + search; stepper shows 1–3. */
+const LORE_TEXT_SIZE_REMS = [0.8125, 0.9375, 1.0625] as const;
+const LORE_TEXT_SIZE_DEFAULT_INDEX = 1;
+
 interface LoreAppWindowProps extends BaseWindowProps {}
 
 const LoreAppWindow: React.FC<LoreAppWindowProps> = ({ ...windowProps }) => {
   const [query, setQuery] = useState('');
+  const [textSizeIndex, setTextSizeIndex] = useState(LORE_TEXT_SIZE_DEFAULT_INDEX);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
 
   const toggleExpanded = useCallback((id: string) => {
@@ -25,9 +30,53 @@ const LoreAppWindow: React.FC<LoreAppWindowProps> = ({ ...windowProps }) => {
     return groupLoreByCategory(filtered);
   }, [query]);
 
+  const textSizeRem = LORE_TEXT_SIZE_REMS[textSizeIndex];
+  const textSizeDisplay = textSizeIndex + 1;
+
+  const decreaseTextSize = useCallback(() => {
+    setTextSizeIndex((i) => (i <= 0 ? LORE_TEXT_SIZE_REMS.length - 1 : i - 1));
+  }, []);
+
+  const increaseTextSize = useCallback(() => {
+    setTextSizeIndex((i) => (i >= LORE_TEXT_SIZE_REMS.length - 1 ? 0 : i + 1));
+  }, []);
+
   return (
     <ScrAppWindow title="Game Lore" {...windowProps}>
-      <div className="window-content-padded lore-app-root">
+      <div className="window-content-padded lore-app-shell">
+        <section className="lore-app-text-size" aria-label="Text size">
+          <h2 className="lore-app-text-size-heading">Text Size</h2>
+          <div className="lore-app-text-size-stepper">
+            <button
+              type="button"
+              className="lore-app-text-size-arrow"
+              onClick={decreaseTextSize}
+              aria-label="Smaller text"
+            >
+              ◀
+            </button>
+            <div
+              className="lore-app-text-size-readout"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {textSizeDisplay}
+            </div>
+            <button
+              type="button"
+              className="lore-app-text-size-arrow"
+              onClick={increaseTextSize}
+              aria-label="Larger text"
+            >
+              ▶
+            </button>
+          </div>
+        </section>
+
+        <div
+          className="lore-app-root"
+          style={{ fontSize: `${textSizeRem}rem` }}
+        >
         <div className="lore-app-search-wrap">
           <input
             id="lore-app-search"
@@ -59,6 +108,7 @@ const LoreAppWindow: React.FC<LoreAppWindowProps> = ({ ...windowProps }) => {
               </section>
             ))
           )}
+        </div>
         </div>
       </div>
     </ScrAppWindow>

@@ -1,4 +1,82 @@
-/* Game Lore catalog: search, category groups, expandable rows */
+/* Game Lore catalog: text size, search, category groups, expandable rows */
+
+.lore-app-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.lore-app-text-size {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid #333;
+}
+
+.lore-app-text-size-heading {
+  margin: 0;
+  width: 100%;
+  text-align: left;
+  font-size: var(--font-size-xsmall);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #8a8;
+  font-family: 'Courier New', monospace;
+}
+
+.lore-app-text-size-stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.lore-app-text-size-arrow {
+  width: 1.75rem;
+  height: 1.5rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+  border: 1px solid #444;
+  color: #9f9;
+  font-family: 'Courier New', monospace;
+  font-size: var(--font-size-xsmall);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lore-app-text-size-arrow:hover {
+  border-color: #666;
+  color: #cfc;
+}
+
+.lore-app-text-size-arrow:focus-visible {
+  outline: 1px solid #666;
+  outline-offset: 1px;
+}
+
+.lore-app-text-size-readout {
+  min-width: 2.25rem;
+  height: 1.5rem;
+  padding: 0 var(--spacing-xs);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #080808 0%, #121212 100%);
+  border: 1px solid #555;
+  color: #ddd;
+  font-family: 'Courier New', monospace;
+  font-size: var(--font-size-xsmall);
+  font-weight: bold;
+  line-height: 1;
+}
 
 .lore-app-root {
   display: flex;
@@ -19,7 +97,7 @@
   border: 1px solid #444;
   color: #ccc;
   font-family: 'Courier New', monospace;
-  font-size: var(--font-size-xsmall);
+  font-size: 1em;
   letter-spacing: 0.05em;
   padding: var(--spacing-xs) var(--spacing-sm);
   outline: none;
@@ -47,7 +125,8 @@
 }
 
 .lore-app-category-title {
-  font-size: var(--font-size-xsmall);
+  margin: 0;
+  font-size: 0.85em;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #8a8;
@@ -90,7 +169,7 @@
   flex: 1;
   min-width: 0;
   color: #ccc;
-  font-size: var(--font-size-xsmall);
+  font-size: 1em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -107,7 +186,7 @@
   border: 1px solid #444;
   color: #9f9;
   font-family: 'Courier New', monospace;
-  font-size: var(--font-size-xsmall);
+  font-size: 1em;
   line-height: 1;
   pointer-events: none;
 }
@@ -140,7 +219,7 @@
 .lore-app-expand-panel-body p {
   margin: var(--spacing-xs) 0 0;
   color: #aaa;
-  font-size: var(--font-size-xxsmall);
+  font-size: 0.8125em;
   line-height: 1.45;
   cursor: text;
 }
@@ -151,6 +230,6 @@
 
 .lore-app-empty {
   color: #666;
-  font-size: var(--font-size-xsmall);
+  font-size: 1em;
   padding: var(--spacing-sm);
 }
